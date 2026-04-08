@@ -1,0 +1,5 @@
+# Virtual environment (uv creates this)
+.venv/
+
+# uv cache
+.uv-cache/
