@@ -1,0 +1,13 @@
+# oapi-codegen v2 configuration
+# https://github.com/oapi-codegen/oapi-codegen
+#
+# Run from apps/cli/:
+#   oapi-codegen -config .oapi-codegen.yaml http://localhost:8000/openapi.json
+#
+# Or via repo root:
+#   bash scripts/gen_types.sh
+package: apiclient
+output: internal/apiclient/client.gen.go
+generate:
+  models: true
+  client: true
