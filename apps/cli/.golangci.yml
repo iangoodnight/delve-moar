@@ -1,0 +1,34 @@
+version: "2"
+
+linters:
+  default: none
+  enable:
+    - errcheck      # ensure errors are handled
+    - govet         # go vet checks
+    - staticcheck   # staticcheck suite (replaces megacheck)
+    - revive        # opinionated linter, replaces golint
+    - unused        # detect unused code
+    - misspell      # common spelling mistakes in comments/strings
+    - bodyclose     # HTTP response body close checks
+
+formatters:
+  enable:
+    - gofmt         # formatting (fail if not gofmt'd)
+    - goimports     # import grouping + formatting
+
+linters-settings:
+  revive:
+    rules:
+      - name: exported
+        severity: warning
+      - name: var-naming
+        severity: warning
+      - name: package-comments
+        disabled: true  # small CLI — package doc comments optional
+
+  goimports:
+    local-prefixes: github.com/iangoodnight/dungeon-master
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
