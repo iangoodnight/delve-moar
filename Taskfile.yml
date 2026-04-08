@@ -1,0 +1,104 @@
+version: "3"
+
+vars:
+  API_DIR: apps/api
+  CLI_DIR: apps/cli
+  WEB_DIR: apps/web
+
+tasks:
+  # ── Development ────────────────────────────────────────────────────────────
+
+  dev:
+    desc: Start all services via Docker Compose
+    cmd: docker compose -f infra/docker-compose.yml up --build
+
+  # ── Linting ────────────────────────────────────────────────────────────────
+
+  lint:api:
+    desc: Lint and type-check the Python API
+    dir: "{{.API_DIR}}"
+    cmds:
+      - uv run ruff check .
+      - uv run mypy .
+
+  lint:web:
+    desc: Lint the TypeScript web app
+    dir: "{{.WEB_DIR}}"
+    cmd: pnpm lint
+
+  lint:cli:
+    desc: Lint the Go CLI
+    dir: "{{.CLI_DIR}}"
+    cmd: golangci-lint run ./...
+
+  lint:shell:
+    desc: Lint and format shell scripts
+    cmds:
+      - shellcheck scripts/*.sh
+      - shfmt --indent 2 --case-indent --binary-next-line --write scripts/*.sh
+
+  lint:
+    desc: Lint all services in parallel
+    deps: [lint:api, lint:web, lint:cli, lint:shell]
+
+  # ── Testing ────────────────────────────────────────────────────────────────
+
+  test:api:
+    desc: Run Python API tests
+    dir: "{{.API_DIR}}"
+    cmd: uv run pytest
+
+  test:web:
+    desc: Run web app tests
+    dir: "{{.WEB_DIR}}"
+    cmd: pnpm test
+
+  test:cli:
+    desc: Run Go CLI tests
+    dir: "{{.CLI_DIR}}"
+    cmd: go test ./...
+
+  test:
+    desc: Run all tests in parallel
+    deps: [test:api, test:web, test:cli]
+
+  # ── Building ───────────────────────────────────────────────────────────────
+
+  build:api:
+    desc: Build the API Docker image
+    cmd: docker build -t dm-api apps/api
+
+  build:web:
+    desc: Build the web app
+    dir: "{{.WEB_DIR}}"
+    cmd: pnpm build
+
+  build:cli:
+    desc: Build the CLI binary
+    dir: "{{.CLI_DIR}}"
+    cmd: go build -o bin/dm .
+
+  build:
+    desc: Build all services in parallel
+    deps: [build:api, build:web, build:cli]
+
+  # ── Code generation ────────────────────────────────────────────────────────
+
+  gen:types:
+    desc: Regenerate API types for web and CLI from the live OpenAPI schema
+    cmd: bash scripts/gen_types.sh
+
+  # ── Database ───────────────────────────────────────────────────────────────
+
+  seed:
+    desc: Seed the database with SRD data (stub)
+    dir: "{{.API_DIR}}"
+    cmd: uv run python scripts/seed_srd.py
+
+  # ── Developer setup ────────────────────────────────────────────────────────
+
+  hooks:install:
+    desc: Install pre-commit git hooks (run once after cloning)
+    cmds:
+      - pre-commit install
+      - pre-commit install --hook-type pre-push

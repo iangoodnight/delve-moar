@@ -1,0 +1,89 @@
+repos:
+  # ── General file hygiene ───────────────────────────────────────────────────
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-json
+        exclude: (tsconfig.*\.json$)
+      - id: check-toml
+      - id: check-added-large-files
+
+  # ── Shell — lint (shellcheck-py manages its own binary) ───────────────────
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.11.0.1
+    hooks:
+      - id: shellcheck
+
+  # ── Shell — format (requires: brew install shfmt) ─────────────────────────
+  - repo: local
+    hooks:
+      - id: shfmt
+        name: shfmt
+        language: system
+        entry: shfmt
+        args: [--indent, "2", --case-indent, --binary-next-line, --write]
+        files: \.sh$
+
+  # ── Python — ruff handles both lint and format ────────────────────────────
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.9
+    hooks:
+      - id: ruff
+        args: [--fix]
+        files: ^apps/api/
+      - id: ruff-format
+        files: ^apps/api/
+
+  # ── Go — lint (requires golangci-lint in PATH) ────────────────────────────
+  - repo: local
+    hooks:
+      - id: golangci-lint
+        name: golangci-lint (cli)
+        language: system
+        entry: bash -c 'cd apps/cli && golangci-lint run ./...'
+        files: ^apps/cli/.*\.go$
+        pass_filenames: false
+
+  # ── TypeScript / web ──────────────────────────────────────────────────────
+  - repo: local
+    hooks:
+      - id: eslint-web
+        name: eslint (web)
+        language: system
+        entry: pnpm --filter @dungeon-master/web lint
+        files: ^apps/web/src/.*\.(ts|tsx)$
+        pass_filenames: false
+
+      - id: prettier-web
+        name: prettier (web)
+        language: system
+        entry: pnpm --filter @dungeon-master/web format
+        files: ^apps/web/.*\.(ts|tsx|css|json)$
+        pass_filenames: false
+
+  # ── Tests (pre-push only) ─────────────────────────────────────────────────
+  - repo: local
+    hooks:
+      - id: test-api
+        name: pytest (api)
+        language: system
+        entry: bash -c 'cd apps/api && uv run pytest'
+        pass_filenames: false
+        stages: [pre-push]
+
+      - id: test-web
+        name: vitest (web)
+        language: system
+        entry: pnpm --filter @dungeon-master/web test
+        pass_filenames: false
+        stages: [pre-push]
+
+      - id: test-cli
+        name: go test (cli)
+        language: system
+        entry: bash -c 'cd apps/cli && go test ./...'
+        pass_filenames: false
+        stages: [pre-push]
