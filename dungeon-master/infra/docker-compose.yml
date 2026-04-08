@@ -37,8 +37,19 @@ services:
     ports:
       - "${API_PORT:-8000}:8000"
     volumes:
-      # Mount source for hot-reload; only active when Dockerfile target=dev
-      - ../apps/api:/app
+      # Mount source only — packages live in the container's .venv, not here.
+      # Uvicorn --reload watches this path for changes.
+      - ../apps/api/app:/app/app
+    command:
+      - uv
+      - run
+      - uvicorn
+      - app.main:app
+      - --host
+      - "0.0.0.0"
+      - --port
+      - "8000"
+      - --reload
     depends_on:
       postgres:
         condition: service_healthy
