@@ -60,7 +60,7 @@ plugins = ["pydantic.mypy"]
 
 [[tool.mypy.overrides]]
 module = ["asyncpg.*", "alembic.*"]
-ignore_missing_stubs = true
+ignore_missing_imports = true
 
 # =============================================================================
 # Pytest
