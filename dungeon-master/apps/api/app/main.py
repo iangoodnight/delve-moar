@@ -2,16 +2,27 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 
 from app.config import settings
 from app.routers import health
 
+_engine: AsyncEngine | None = None
+
+
+def get_engine() -> AsyncEngine:
+    if _engine is None:
+        raise RuntimeError("Database engine is not initialized")
+    return _engine
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-    # DB engine init will be wired in here once Alembic lands (commit #6)
+    global _engine
+    _engine = create_async_engine(settings.database_url, echo=settings.env == "development")
     yield
-    # DB engine teardown goes here
+    await _engine.dispose()
+    _engine = None
 
 
 app = FastAPI(
