@@ -6,7 +6,7 @@ Create Date: 2026-04-09
 
 Each table follows the same pattern:
   - Promoted scalar columns for filterable fields (indexed)
-  - ``content`` JSONB stores the full source payload without lossy transformation
+  - ``content`` JSONB stores the full source payload without lossy transforms
   - ``content_source`` JSONB stores license and attribution metadata
   - GIN index on ``content`` with jsonb_path_ops for future full-text search
 
@@ -15,7 +15,8 @@ SRD content carries:
       "type": "srd",
       "license": "CC BY 4.0",
       "license_url": "https://creativecommons.org/licenses/by/4.0/",
-      "attribution": "Wizards of the Coast LLC — Systems Reference Document 5.1",
+      "attribution":
+        "Wizards of the Coast LLC — Systems Reference Document 5.1",
       "data_provider": "5e-bits/5e-database",
       "data_provider_url": "https://github.com/5e-bits/5e-database"
   }
@@ -49,7 +50,9 @@ def upgrade() -> None:
         sa.Column("monster_type", sa.String(100), nullable=True),
         # CR stored as NUMERIC: "1/4" → 0.250, "1/2" → 0.500, "30" → 30.000.
         # Display formatting is the API layer's responsibility.
-        sa.Column("challenge_rating", sa.Numeric(precision=6, scale=3), nullable=True),
+        sa.Column(
+            "challenge_rating", sa.Numeric(precision=6, scale=3), nullable=True
+        ),
         sa.Column("content", JSONB(), nullable=False),
         sa.Column("content_source", JSONB(), nullable=False),
         sa.Column(
@@ -68,7 +71,9 @@ def upgrade() -> None:
         sa.UniqueConstraint("slug", name="uq_monsters_slug"),
     )
     op.create_index("ix_monsters_monster_type", "monsters", ["monster_type"])
-    op.create_index("ix_monsters_challenge_rating", "monsters", ["challenge_rating"])
+    op.create_index(
+        "ix_monsters_challenge_rating", "monsters", ["challenge_rating"]
+    )
     op.create_index(
         "ix_monsters_content_gin",
         "monsters",
@@ -162,17 +167,23 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    op.drop_index("ix_items_content_gin", table_name="items", postgresql_using="gin")
+    op.drop_index(
+        "ix_items_content_gin", table_name="items", postgresql_using="gin"
+    )
     op.drop_index("ix_items_rarity", table_name="items")
     op.drop_index("ix_items_item_category", table_name="items")
     op.drop_table("items")
 
-    op.drop_index("ix_spells_content_gin", table_name="spells", postgresql_using="gin")
+    op.drop_index(
+        "ix_spells_content_gin", table_name="spells", postgresql_using="gin"
+    )
     op.drop_index("ix_spells_school", table_name="spells")
     op.drop_index("ix_spells_level", table_name="spells")
     op.drop_table("spells")
 
-    op.drop_index("ix_monsters_content_gin", table_name="monsters", postgresql_using="gin")
+    op.drop_index(
+        "ix_monsters_content_gin", table_name="monsters", postgresql_using="gin"
+    )
     op.drop_index("ix_monsters_challenge_rating", table_name="monsters")
     op.drop_index("ix_monsters_monster_type", table_name="monsters")
     op.drop_table("monsters")

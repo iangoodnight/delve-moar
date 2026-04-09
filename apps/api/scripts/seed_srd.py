@@ -27,7 +27,11 @@ from typing import Any
 import httpx
 import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import insert as pg_insert
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import (
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
 
 from app.config import settings
 from app.models import Monster
@@ -63,7 +67,9 @@ def make_session_factory(database_url: str) -> async_sessionmaker[AsyncSession]:
 # ---------------------------------------------------------------------------
 
 
-async def fetch_index(client: httpx.AsyncClient, path: str) -> list[dict[str, Any]]:
+async def fetch_index(
+    client: httpx.AsyncClient, path: str
+) -> list[dict[str, Any]]:
     """Fetch a full index listing, handling the {count, results} envelope."""
     resp = await client.get(f"{BASE_URL}{path}")
     resp.raise_for_status()
@@ -100,7 +106,9 @@ def cr_display(value: float | int) -> str:
 # ---------------------------------------------------------------------------
 
 
-async def seed_monsters(session_factory: async_sessionmaker[AsyncSession]) -> None:
+async def seed_monsters(
+    session_factory: async_sessionmaker[AsyncSession],
+) -> None:
     print("→ Fetching monster index…")
     async with httpx.AsyncClient(timeout=30) as client:
         index = await fetch_index(client, "/monsters")
@@ -116,13 +124,19 @@ async def seed_monsters(session_factory: async_sessionmaker[AsyncSession]) -> No
                     "slug": detail["index"],
                     "name": detail["name"],
                     "monster_type": detail.get("type"),
-                    "challenge_rating": Decimal(str(cr_raw)).quantize(Decimal("0.001")),
+                    "challenge_rating": Decimal(str(cr_raw)).quantize(
+                        Decimal("0.001")
+                    ),
                     "content": detail,
                     "content_source": SRD_CONTENT_SOURCE,
                 }
             )
             cr_str = cr_display(cr_raw)
-            print(f"\r  Fetching {i}/{total} — {detail['name']} (CR {cr_str})", end="", flush=True)
+            print(
+                f"\r  Fetching {i}/{total} — {detail['name']} (CR {cr_str})",
+                end="",
+                flush=True,
+            )
             if i < total:
                 time.sleep(RATE_LIMIT_DELAY)
 
@@ -184,7 +198,9 @@ async def main(targets: list[str]) -> None:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Seed SRD data from dnd5eapi.co.")
+    parser = argparse.ArgumentParser(
+        description="Seed SRD data from dnd5eapi.co."
+    )
     parser.add_argument(
         "targets",
         nargs="+",
@@ -193,5 +209,9 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    targets: list[str] = ["monsters", "spells", "items"] if "all" in args.targets else args.targets
+    targets: list[str] = (
+        ["monsters", "spells", "items"]
+        if "all" in args.targets
+        else args.targets
+    )
     asyncio.run(main(targets))
