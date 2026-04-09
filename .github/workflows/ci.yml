@@ -152,7 +152,7 @@ jobs:
 
       - name: Install oapi-codegen
         run: |
-          go install github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen@latest
+          go install github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen@v2.6.0
           echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
 
       - name: Install API dependencies

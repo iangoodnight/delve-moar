@@ -45,7 +45,7 @@ API_PID=$!
 echo "→ Waiting for API to become healthy..."
 MAX_ATTEMPTS=30
 attempt=0
-until curl -sf "${API_URL}/health" > /dev/null 2>&1; do
+until curl -sf "${API_URL}/health" >/dev/null 2>&1; do
   attempt=$((attempt + 1))
   if [[ ${attempt} -ge ${MAX_ATTEMPTS} ]]; then
     echo "✗ API did not start after ${MAX_ATTEMPTS}s — check apps/api for errors." >&2
