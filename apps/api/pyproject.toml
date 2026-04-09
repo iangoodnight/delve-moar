@@ -60,9 +60,12 @@ known-first-party = ["app"]
 python_version = "3.12"
 strict = true
 plugins = ["pydantic.mypy"]
+# Alembic-generated boilerplate uses patterns that conflict with strict mode.
+# Application code in app/ is fully typed; migrations are infrastructure.
+exclude = ["alembic/"]
 
 [[tool.mypy.overrides]]
-module = ["asyncpg.*", "alembic.*"]
+module = ["asyncpg.*"]
 ignore_missing_imports = true
 
 # =============================================================================
