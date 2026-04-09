@@ -151,9 +151,9 @@ jobs:
           cache: true
 
       - name: Install oapi-codegen
-        run: >
-          go install
-          github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen@latest
+        run: |
+          go install github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen@latest
+          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
 
       - name: Install API dependencies
         run: uv sync
@@ -187,9 +187,9 @@ jobs:
           python-version: "3.12"
 
       - name: Install shfmt
-        run: go install mvdan.cc/sh/v3/cmd/shfmt@latest
-        env:
-          GOPATH: /home/runner/go
+        run: |
+          go install mvdan.cc/sh/v3/cmd/shfmt@latest
+          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
 
       - name: Install golangci-lint
         run: |
