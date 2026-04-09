@@ -54,9 +54,9 @@ tasks:
     cmd: pnpm test
 
   test:cli:
-    desc: Run Go CLI tests
+    desc: Run Go CLI tests (with race detector)
     dir: "{{.CLI_DIR}}"
-    cmd: go test ./...
+    cmd: go test -race ./...
 
   test:
     desc: Run all tests in parallel
