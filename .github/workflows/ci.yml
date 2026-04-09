@@ -1,0 +1,213 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ── Python API ─────────────────────────────────────────────────────────────
+  lint-and-test-api:
+    name: API — lint + test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/api
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: apps/api/uv.lock
+
+      - name: Install dependencies
+        run: uv sync --group dev
+
+      - name: ruff check
+        run: uv run ruff check .
+
+      - name: ruff format check
+        run: uv run ruff format --check .
+
+      - name: mypy
+        run: uv run mypy .
+
+      - name: pytest
+        run: uv run pytest
+        # When DB-touching tests are added, uncomment the service container below
+        # and set DATABASE_URL in the env block.
+        #
+        # env:
+        #   DATABASE_URL: postgresql+asyncpg://dm:dm_secret@localhost:5432/dungeon_master
+        #
+        # services:
+        #   postgres:
+        #     image: postgres:17-alpine
+        #     env:
+        #       POSTGRES_USER: dm
+        #       POSTGRES_PASSWORD: dm_secret
+        #       POSTGRES_DB: dungeon_master
+        #     ports: ["5432:5432"]
+        #     options: >-
+        #       --health-cmd pg_isready
+        #       --health-interval 5s
+        #       --health-timeout 5s
+        #       --health-retries 5
+
+  # ── TypeScript web app ─────────────────────────────────────────────────────
+  lint-and-test-web:
+    name: Web — lint + test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        working-directory: .
+
+      - name: ESLint
+        run: pnpm lint
+
+      - name: Prettier check
+        run: pnpm prettier --check .
+
+      - name: Vitest
+        run: pnpm test
+
+  # ── Go CLI ─────────────────────────────────────────────────────────────────
+  lint-and-test-cli:
+    name: CLI — lint + test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/cli
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: apps/cli/go.mod
+          cache: true
+
+      - name: Verify modules
+        run: go mod verify
+
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v8
+        with:
+          working-directory: apps/cli
+
+      - name: go test
+        run: go test ./...
+
+  # ── OpenAPI gen-types drift check ──────────────────────────────────────────
+  gen-types-check:
+    name: Gen types — drift check
+    runs-on: ubuntu-latest
+    needs: [lint-and-test-api]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: apps/api/uv.lock
+
+      - uses: pnpm/action-setup@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install pnpm dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: apps/cli/go.mod
+          cache: true
+
+      - name: Install oapi-codegen
+        run: |
+          go install github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen@v2.6.0
+          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+
+      - name: Install API dependencies
+        run: uv sync
+        working-directory: apps/api
+
+      - name: Run gen_types.sh
+        run: bash scripts/gen_types.sh
+
+      - name: Check for drift
+        run: |
+          git diff --exit-code \
+            packages/api-types/src/index.ts \
+            apps/cli/internal/apiclient/client.gen.go \
+          || {
+            echo ""
+            echo "Generated types are out of date."
+            echo "Run 'task gen:types' locally and commit the updated files."
+            exit 1
+          }
+
+  # ── pre-commit ─────────────────────────────────────────────────────────────
+  pre-commit:
+    name: pre-commit hooks
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install shfmt
+        run: |
+          go install mvdan.cc/sh/v3/cmd/shfmt@latest
+          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+
+      - name: Install golangci-lint
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh \
+            | sh -s -- -b /usr/local/bin
+
+      - uses: pnpm/action-setup@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install pnpm dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run pre-commit
+        uses: pre-commit/action@v3.0.1
+        env:
+          GOPATH: /home/runner/go
