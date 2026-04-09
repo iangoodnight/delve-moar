@@ -9,9 +9,9 @@ from app.routers import health
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-    # DB engine init will be wired in here once Alembic lands (commit #6)
+    # DB engine init and teardown will be wired here in a future issue
+    # once endpoints that need a live connection are introduced.
     yield
-    # DB engine teardown goes here
 
 
 app = FastAPI(
