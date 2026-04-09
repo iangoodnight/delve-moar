@@ -34,7 +34,7 @@ from sqlalchemy.ext.asyncio import (
 )
 
 from app.config import settings
-from app.models import Monster
+from app.models import Monster, Spell
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -42,6 +42,7 @@ from app.models import Monster
 
 BASE_URL = "https://www.dnd5eapi.co/api/2014"
 RATE_LIMIT_DELAY = 0.1  # seconds between detail requests — be polite
+SRD_NAMESPACE = "srd-5.1"
 
 SRD_CONTENT_SOURCE: dict[str, str] = {
     "type": "srd",
@@ -122,6 +123,7 @@ async def seed_monsters(
             rows.append(
                 {
                     "slug": detail["index"],
+                    "source_namespace": SRD_NAMESPACE,
                     "name": detail["name"],
                     "monster_type": detail.get("type"),
                     "challenge_rating": Decimal(str(cr_raw)).quantize(
@@ -146,7 +148,7 @@ async def seed_monsters(
     async with session_factory() as session:
         stmt = pg_insert(Monster).values(rows)
         stmt = stmt.on_conflict_do_update(
-            index_elements=["slug"],
+            index_elements=["slug", "source_namespace"],
             set_={
                 "name": stmt.excluded.name,
                 "monster_type": stmt.excluded.monster_type,
@@ -160,6 +162,65 @@ async def seed_monsters(
         await session.commit()
 
     print(f"✓ {total} monsters upserted.")
+    _print_attribution()
+
+
+# ---------------------------------------------------------------------------
+# Seed: spells
+# ---------------------------------------------------------------------------
+
+
+async def seed_spells(
+    session_factory: async_sessionmaker[AsyncSession],
+) -> None:
+    print("→ Fetching spell index…")
+    async with httpx.AsyncClient(timeout=30) as client:
+        index = await fetch_index(client, "/spells")
+        total = len(index)
+        print(f"  Found {total} spells.")
+
+        rows: list[dict[str, Any]] = []
+        for i, entry in enumerate(index, 1):
+            detail = await fetch_detail(client, entry["url"])
+            rows.append(
+                {
+                    "slug": detail["index"],
+                    "source_namespace": SRD_NAMESPACE,
+                    "name": detail["name"],
+                    "level": detail["level"],
+                    "school": detail["school"]["index"],
+                    "content": detail,
+                    "content_source": SRD_CONTENT_SOURCE,
+                }
+            )
+            print(
+                f"\r  Fetching {i}/{total} — {detail['name']}",
+                end="",
+                flush=True,
+            )
+            if i < total:
+                time.sleep(RATE_LIMIT_DELAY)
+
+    print()  # newline after progress line
+
+    print("→ Upserting spells…")
+    async with session_factory() as session:
+        stmt = pg_insert(Spell).values(rows)
+        stmt = stmt.on_conflict_do_update(
+            index_elements=["slug", "source_namespace"],
+            set_={
+                "name": stmt.excluded.name,
+                "level": stmt.excluded.level,
+                "school": stmt.excluded.school,
+                "content": stmt.excluded.content,
+                "content_source": stmt.excluded.content_source,
+                "updated_at": sa.text("NOW()"),
+            },
+        )
+        await session.execute(stmt)
+        await session.commit()
+
+    print(f"✓ {total} spells upserted.")
     _print_attribution()
 
 
@@ -189,9 +250,12 @@ async def main(targets: list[str]) -> None:
     for target in targets:
         if target == "monsters":
             await seed_monsters(session_factory)
+        elif target == "spells":
+            await seed_spells(session_factory)
         else:
             print(
-                f"✗ Unknown target: {target!r}. Currently supports: monsters",
+                f"✗ Unknown target: {target!r}. "
+                "Currently supports: monsters, spells, items",
                 file=sys.stderr,
             )
             sys.exit(1)
