@@ -70,8 +70,6 @@ jobs:
       - uses: actions/checkout@v4
 
       - uses: pnpm/action-setup@v4
-        with:
-          version: 10
 
       - name: Set up Node
         uses: actions/setup-node@v4
@@ -136,8 +134,6 @@ jobs:
           cache-dependency-glob: apps/api/uv.lock
 
       - uses: pnpm/action-setup@v4
-        with:
-          version: 10
 
       - name: Set up Node
         uses: actions/setup-node@v4
@@ -196,16 +192,11 @@ jobs:
           GOPATH: /home/runner/go
 
       - name: Install golangci-lint
-        uses: golangci/golangci-lint-action@v8
-        with:
-          working-directory: apps/cli
-          install-mode: binary
-          skip-build: true
-          skip-pkg-cache: true
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh \
+            | sh -s -- -b /usr/local/bin
 
       - uses: pnpm/action-setup@v4
-        with:
-          version: 10
 
       - name: Set up Node
         uses: actions/setup-node@v4
