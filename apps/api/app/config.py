@@ -8,7 +8,9 @@ class Settings(BaseSettings):
         case_sensitive=False,
     )
 
-    database_url: str = "postgresql+asyncpg://dm:dm_secret@localhost:5432/delve_moar"
+    database_url: str = (
+        "postgresql+asyncpg://dm:dm_secret@localhost:5432/delve_moar"
+    )
     env: str = "development"
     version: str = "0.0.1"
 
