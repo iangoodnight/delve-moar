@@ -1,7 +1,7 @@
 [project]
-name = "dungeon-master-api"
+name = "delve-moar-api"
 version = "0.0.1"
-description = "D&D utility API — homebrew-first DM tools"
+description = "TTRPG utility API — homebrew-first GM tools"
 requires-python = ">=3.12"
 dependencies = [
     "fastapi[standard]>=0.115",

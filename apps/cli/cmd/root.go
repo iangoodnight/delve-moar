@@ -9,8 +9,8 @@ import (
 
 var rootCmd = &cobra.Command{
 	Use:   "dm",
-	Short: "Dungeon Master — homebrew-first D&D utilities for the discerning DM",
-	Long: `dm is a command-line companion for Dungeon Masters.
+	Short: "Delve Moar — homebrew-first TTRPG utilities for the discerning GM",
+	Long: `dm is a command-line companion for tabletop RPG game masters.
 
 Look up monsters, spells, and conditions from the SRD catalog,
 build encounters, roll treasure, and more — all without leaving

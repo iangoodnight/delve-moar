@@ -1,5 +1,5 @@
 {
-  "name": "@dungeon-master/web",
+  "name": "@delve-moar/web",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -13,7 +13,7 @@
     "test:ui": "vitest --ui"
   },
   "dependencies": {
-    "@dungeon-master/api-types": "workspace:*",
+    "@delve-moar/api-types": "workspace:*",
     "@radix-ui/themes": "^3.3.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",

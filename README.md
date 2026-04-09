@@ -1,6 +1,6 @@
-# dungeon-master
+# delve-moar
 
-A homebrew-first D&D utility suite for DMs.
+A homebrew-first TTRPG utility suite for game masters.
 
 > **Status**: 🚧 Early development — Phase 0 (foundation)
 
@@ -8,7 +8,7 @@ A homebrew-first D&D utility suite for DMs.
 
 - **Catalog** — Monsters, spells, conditions, and homebrew entries seeded from the 5e SRD
 - **Encounter Builder** — Party-aware encounter building with XP budgets and CR calculations
-- **Character Sheets** — A usable alternative to DNDBeyond
+- **Character Sheets** — A usable, self-hosted alternative to commercial VTT tools
 - **CLI** — A TUI-powered power-user companion
 
 ## Stack

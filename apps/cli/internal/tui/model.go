@@ -39,8 +39,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 // View renders the current state of the TUI to a string.
 func (m Model) View() string {
-	title := titleStyle.Render("⚔  Dungeon Master")
-	subtitle := subtitleStyle.Render("homebrew-first D&D utilities")
+	title := titleStyle.Render("⚔  Delve Moar")
+	subtitle := subtitleStyle.Render("homebrew-first TTRPG utilities")
 	body := bodyStyle.Render("Coming soon:\n  monster & spell catalog\n  encounter builder\n  character sheets")
 	footer := footerStyle.Render("press q to quit")
 

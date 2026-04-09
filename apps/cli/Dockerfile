@@ -15,7 +15,7 @@ COPY . .
 
 ARG VERSION=dev
 RUN CGO_ENABLED=0 GOOS=linux go build \
-    -ldflags "-s -w -X github.com/iangoodnight/dungeon-master/cli/cmd.Version=${VERSION}" \
+    -ldflags "-s -w -X github.com/iangoodnight/delve-moar/cli/cmd.Version=${VERSION}" \
     -o dm .
 
 # ---------------------------------------------------------------------------

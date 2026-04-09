@@ -42,7 +42,7 @@ jobs:
         # and set DATABASE_URL in the env block.
         #
         # env:
-        #   DATABASE_URL: postgresql+asyncpg://dm:dm_secret@localhost:5432/dungeon_master
+        #   DATABASE_URL: postgresql+asyncpg://dm:dm_secret@localhost:5432/delve_moar
         #
         # services:
         #   postgres:
@@ -50,7 +50,7 @@ jobs:
         #     env:
         #       POSTGRES_USER: dm
         #       POSTGRES_PASSWORD: dm_secret
-        #       POSTGRES_DB: dungeon_master
+        #       POSTGRES_DB: delve_moar
         #     ports: ["5432:5432"]
         #     options: >-
         #       --health-cmd pg_isready

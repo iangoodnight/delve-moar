@@ -27,7 +27,7 @@ formatters:
   settings:
     goimports:
       local-prefixes:
-        - github.com/iangoodnight/dungeon-master
+        - github.com/iangoodnight/delve-moar
 
 issues:
   max-issues-per-linter: 0

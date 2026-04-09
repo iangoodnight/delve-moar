@@ -8,7 +8,7 @@ import (
 
 // Version is set at build time via -ldflags:
 //
-//	go build -ldflags "-X github.com/iangoodnight/dungeon-master/cli/cmd.Version=1.2.3"
+//	go build -ldflags "-X github.com/iangoodnight/delve-moar/cli/cmd.Version=1.2.3"
 var Version = "dev"
 
 var versionCmd = &cobra.Command{

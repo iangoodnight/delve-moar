@@ -14,7 +14,7 @@ importers:
 
   apps/web:
     dependencies:
-      '@dungeon-master/api-types':
+      '@delve-moar/api-types':
         specifier: workspace:*
         version: link:../../packages/api-types
       '@radix-ui/themes':
