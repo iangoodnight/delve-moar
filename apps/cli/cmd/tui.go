@@ -7,13 +7,13 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
 
-	"github.com/iangoodnight/dungeon-master/cli/internal/tui"
+	"github.com/iangoodnight/delve-moar/cli/internal/tui"
 )
 
 var tuiCmd = &cobra.Command{
 	Use:   "tui",
 	Short: "Launch the interactive TUI",
-	Long:  "Open the full-screen interactive terminal UI for Dungeon Master.",
+	Long:  "Open the full-screen interactive terminal UI for Delve Moar.",
 	Run: func(_ *cobra.Command, _ []string) {
 		p := tea.NewProgram(tui.InitialModel(), tea.WithAltScreen())
 		if _, err := p.Run(); err != nil {

@@ -15,7 +15,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
 
 app = FastAPI(
-    title="Dungeon Master API",
+    title="Delve Moar API",
     version=settings.version,
     openapi_url="/openapi.json",
     docs_url="/docs",

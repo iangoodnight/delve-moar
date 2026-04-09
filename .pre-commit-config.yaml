@@ -53,14 +53,14 @@ repos:
       - id: eslint-web
         name: eslint (web)
         language: system
-        entry: pnpm --filter @dungeon-master/web lint
+        entry: pnpm --filter @delve-moar/web lint
         files: ^apps/web/src/.*\.(ts|tsx)$
         pass_filenames: false
 
       - id: prettier-web
         name: prettier (web)
         language: system
-        entry: pnpm --filter @dungeon-master/web format
+        entry: pnpm --filter @delve-moar/web format
         files: ^apps/web/.*\.(ts|tsx|css|json)$
         pass_filenames: false
 
@@ -77,7 +77,7 @@ repos:
       - id: test-web
         name: vitest (web)
         language: system
-        entry: pnpm --filter @dungeon-master/web test
+        entry: pnpm --filter @delve-moar/web test
         pass_filenames: false
         stages: [pre-push]
 

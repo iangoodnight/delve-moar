@@ -1,4 +1,4 @@
-module github.com/iangoodnight/dungeon-master/cli
+module github.com/iangoodnight/delve-moar/cli
 
 go 1.26.2
 
