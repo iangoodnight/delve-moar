@@ -26,7 +26,10 @@ class Item(Base):
         primary_key=True,
         server_default=sa.text("gen_random_uuid()"),
     )
-    slug: Mapped[str] = mapped_column(sa.String(255), unique=True)
+    slug: Mapped[str] = mapped_column(sa.String(255))
+    # Composite UNIQUE(slug, source_namespace) enforced at DB level.
+    # "srd-5.1" | "srd-2024" | "user:{user_id}"
+    source_namespace: Mapped[str] = mapped_column(sa.String(50))
     name: Mapped[str] = mapped_column(sa.String(255))
     item_category: Mapped[str | None] = mapped_column(sa.String(100))
     rarity: Mapped[str | None] = mapped_column(sa.String(50))
