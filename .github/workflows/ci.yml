@@ -116,7 +116,7 @@ jobs:
           working-directory: apps/cli
 
       - name: go test
-        run: go test ./...
+        run: go test -race ./...
 
   # ── OpenAPI gen-types drift check ──────────────────────────────────────────
   gen-types-check:

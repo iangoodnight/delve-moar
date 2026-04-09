@@ -84,6 +84,6 @@ repos:
       - id: test-cli
         name: go test (cli)
         language: system
-        entry: bash -c 'cd apps/cli && go test ./...'
+        entry: bash -c 'cd apps/cli && go test -race ./...'
         pass_filenames: false
         stages: [pre-push]

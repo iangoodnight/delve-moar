@@ -18,6 +18,7 @@ dev = [
     "pytest>=8.0",
     "pytest-asyncio>=0.25",
     "httpx>=0.28",
+    "pytest-cov>=7.1.0",
 ]
 
 # =============================================================================
@@ -39,6 +40,8 @@ select = [
     "TCH", # flake8-type-checking
     "N",   # pep8-naming
     "RUF", # ruff-specific rules
+    "PT",  # flake8-pytest-style
+    "S",   # flake8-bandit (security)
 ]
 ignore = [
     "B008", # do not perform function call in default args (FastAPI Depends pattern)
@@ -68,3 +71,4 @@ ignore_missing_imports = true
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+addopts = "--cov=app --cov-report=term-missing --cov-fail-under=90"
