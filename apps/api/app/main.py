@@ -6,6 +6,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from app.config import settings
+from app.exceptions import register_exception_handlers
 from app.routers import health
 
 
@@ -28,4 +29,10 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+register_exception_handlers(app)
+
+# /health is intentionally outside /v1 -- it is infrastructure, not a resource.
 app.include_router(health.router)
+
+# Resource routers are mounted under /v1.
+# Routers for monsters, spells, and items will be added in #40-#42.
