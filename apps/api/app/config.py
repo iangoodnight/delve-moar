@@ -1,6 +1,13 @@
 """Application settings loaded from environment variables and .env file."""
 
+import tomllib
+from pathlib import Path
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+_pyproject = Path(__file__).parent.parent / "pyproject.toml"
+with _pyproject.open("rb") as _f:
+    _VERSION: str = tomllib.load(_f)["project"]["version"]
 
 
 class Settings(BaseSettings):
@@ -12,11 +19,10 @@ class Settings(BaseSettings):
         case_sensitive=False,
     )
 
-    database_url: str = (
-        "postgresql+asyncpg://dm:dm_secret@localhost:5432/delve_moar"
-    )
+    database_url: str = "postgresql+asyncpg://UNSET:UNSET@localhost:5432/UNSET"
     env: str = "development"
-    version: str = "0.0.1"
+    version: str = _VERSION
+    public_url: str = "http://localhost:8000"
 
 
 settings = Settings()
