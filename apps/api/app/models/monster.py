@@ -27,7 +27,10 @@ class Monster(Base):
         primary_key=True,
         server_default=sa.text("gen_random_uuid()"),
     )
-    slug: Mapped[str] = mapped_column(sa.String(255), unique=True)
+    slug: Mapped[str] = mapped_column(sa.String(255))
+    # Composite UNIQUE(slug, source_namespace) enforced at DB level.
+    # "srd-5.1" | "srd-2024" | "user:{user_id}"
+    source_namespace: Mapped[str] = mapped_column(sa.String(50))
     name: Mapped[str] = mapped_column(sa.String(255))
     monster_type: Mapped[str | None] = mapped_column(sa.String(100))
     # Stored as NUMERIC: "1/4" → 0.250, "1/2" → 0.500, "30" → 30.000

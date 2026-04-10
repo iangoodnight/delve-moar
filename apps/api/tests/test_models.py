@@ -25,6 +25,7 @@ def test_monster_columns() -> None:
     assert cols == {
         "id",
         "slug",
+        "source_namespace",
         "name",
         "monster_type",
         "challenge_rating",
@@ -44,6 +45,7 @@ def test_spell_columns() -> None:
     assert cols == {
         "id",
         "slug",
+        "source_namespace",
         "name",
         "level",
         "school",
@@ -63,6 +65,7 @@ def test_item_columns() -> None:
     assert cols == {
         "id",
         "slug",
+        "source_namespace",
         "name",
         "item_category",
         "rarity",
@@ -73,8 +76,16 @@ def test_item_columns() -> None:
     }
 
 
-def test_slug_columns_are_unique() -> None:
-    """All catalog tables enforce slug uniqueness at the DB level."""
-    for model in (Campaign, Monster, Spell, Item):
-        slug_col = model.__table__.columns["slug"]
-        assert slug_col.unique, f"{model.__tablename__}.slug should be UNIQUE"
+def test_campaign_slug_is_unique() -> None:
+    """campaigns.slug has a single-column UNIQUE constraint."""
+    slug_col = Campaign.__table__.columns["slug"]
+    assert slug_col.unique
+
+
+def test_catalog_slugs_have_source_namespace() -> None:
+    """Catalog tables carry source_namespace for composite uniqueness."""
+    for model in (Monster, Spell, Item):
+        cols = {c.key for c in model.__table__.columns}
+        assert "source_namespace" in cols, (
+            f"{model.__tablename__} missing source_namespace"
+        )
