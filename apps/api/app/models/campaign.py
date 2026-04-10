@@ -10,9 +10,7 @@ from app.models.base import Base
 
 
 class Campaign(Base):
-    """
-    A game campaign — the multi-tenancy anchor for all campaign-scoped content.
-    """
+    """A game campaign -- the container for all campaign-scoped content."""
 
     __tablename__ = "campaigns"
 

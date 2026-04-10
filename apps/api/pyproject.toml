@@ -59,6 +59,12 @@ known-first-party = ["app"]
     "S101", # allow assert in tests
     "D",    # docstrings not required in tests
 ]
+"alembic/**" = [
+    "D",    # migration boilerplate does not require docstrings
+]
+"**/__init__.py" = [
+    "D104", # package docstrings not required in __init__.py files
+]
 
 # =============================================================================
 # Mypy — strict type checking
