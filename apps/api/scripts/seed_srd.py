@@ -135,7 +135,8 @@ async def seed_monsters(
             )
             cr_str = cr_display(cr_raw)
             print(
-                f"\r  Fetching {i}/{total} — {detail['name']} (CR {cr_str})",
+                f"\r  Fetching {i}/{total} — {detail['name']} (CR {cr_str})"
+                "\033[K",
                 end="",
                 flush=True,
             )
@@ -194,7 +195,7 @@ async def seed_spells(
                 }
             )
             print(
-                f"\r  Fetching {i}/{total} — {detail['name']}",
+                f"\r  Fetching {i}/{total} — {detail['name']}\033[K",
                 end="",
                 flush=True,
             )
@@ -237,6 +238,7 @@ def _print_attribution() -> None:
     print("  • Data:    5e-bits/5e-database")
     print("    https://github.com/5e-bits/5e-database")
     print("  See scripts/SEED_ATTRIBUTION.md for full details.")
+    print()
 
 
 # ---------------------------------------------------------------------------
