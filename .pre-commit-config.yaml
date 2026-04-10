@@ -64,6 +64,15 @@ repos:
         files: ^apps/web/.*\.(ts|tsx|css|json)$
         pass_filenames: false
 
+  # ── Commit message — commitlint ──────────────────────────────────────────
+  - repo: local
+    hooks:
+      - id: commitlint
+        name: commitlint
+        language: system
+        entry: ./node_modules/.bin/commitlint --edit
+        stages: [commit-msg]
+
   # ── Tests (pre-push only) ─────────────────────────────────────────────────
   - repo: local
     hooks:
