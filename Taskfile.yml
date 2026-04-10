@@ -10,7 +10,7 @@ tasks:
 
   dev:
     desc: Start all services via Docker Compose
-    cmd: docker compose -f infra/docker-compose.yml up --build
+    cmd: docker compose -f infra/docker-compose.yml --env-file .env up --build
 
   # ── Linting ────────────────────────────────────────────────────────────────
 
@@ -89,6 +89,14 @@ tasks:
     cmd: bash scripts/gen_types.sh
 
   # ── Database ───────────────────────────────────────────────────────────────
+
+  db:up:
+    desc: Start only the PostgreSQL container
+    cmd: docker compose -f infra/docker-compose.yml --env-file .env up postgres -d
+
+  db:down:
+    desc: Stop and remove the PostgreSQL container
+    cmd: docker compose -f infra/docker-compose.yml --env-file .env down postgres
 
   db:migrate:
     desc: Apply all pending Alembic migrations
