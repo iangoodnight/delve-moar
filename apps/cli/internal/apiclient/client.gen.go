@@ -13,7 +13,7 @@ import (
 	"strings"
 )
 
-// HealthResponse defines model for HealthResponse.
+// HealthResponse Response schema for the health check endpoint.
 type HealthResponse struct {
 	Status  string `json:"status"`
 	Version string `json:"version"`

@@ -11,7 +11,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Health Check */
+        /**
+         * Health Check
+         * @description Return API status and current version.
+         */
         get: operations["health_check_health_get"];
         put?: never;
         post?: never;
@@ -25,7 +28,10 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
-        /** HealthResponse */
+        /**
+         * HealthResponse
+         * @description Response schema for the health check endpoint.
+         */
         HealthResponse: {
             /** Status */
             status: string;

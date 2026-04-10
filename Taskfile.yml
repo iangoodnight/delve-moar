@@ -122,9 +122,16 @@ tasks:
 
   # ── Developer setup ────────────────────────────────────────────────────────
 
-  hooks:install:
-    desc: Install pre-commit git hooks (run once after cloning)
+  setup:
+    desc: Install all developer tooling (run once after cloning)
     cmds:
       - pre-commit install
       - pre-commit install --hook-type pre-push
       - pre-commit install --hook-type commit-msg
+      - go install github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen@v2.6.0
+      - pnpm install
+
+  hooks:install:
+    desc: Install pre-commit git hooks — alias for setup
+    cmds:
+      - task: setup
