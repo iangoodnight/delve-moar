@@ -18,6 +18,10 @@ class Monster(Base):
     Filterable fields (monster_type, challenge_rating) are promoted to
     dedicated columns. The full source payload is preserved in ``content``
     for passthrough to API consumers without lossy transformation.
+
+    ``slug`` uniqueness is composite with ``source_namespace``, enforced
+    at the DB level. Known namespace values: ``"srd-5.1"``, ``"srd-2024"``,
+    ``"user:{user_id}"``.
     """
 
     __tablename__ = "monsters"
@@ -28,8 +32,6 @@ class Monster(Base):
         server_default=sa.text("gen_random_uuid()"),
     )
     slug: Mapped[str] = mapped_column(sa.String(255))
-    # Composite UNIQUE(slug, source_namespace) enforced at DB level.
-    # "srd-5.1" | "srd-2024" | "user:{user_id}"
     source_namespace: Mapped[str] = mapped_column(sa.String(50))
     name: Mapped[str] = mapped_column(sa.String(255))
     monster_type: Mapped[str | None] = mapped_column(sa.String(100))

@@ -30,22 +30,29 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = [
-    "E",   # pycodestyle errors
-    "W",   # pycodestyle warnings
-    "F",   # pyflakes
-    "I",   # isort
-    "UP",  # pyupgrade
-    "B",   # flake8-bugbear
-    "SIM", # flake8-simplify
-    "TCH", # flake8-type-checking
-    "N",   # pep8-naming
-    "RUF", # ruff-specific rules
-    "PT",  # flake8-pytest-style
-    "S",   # flake8-bandit (security)
-    "D",   # pydocstyle — docstring conventions
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # pyflakes
+    "I",    # isort
+    "UP",   # pyupgrade
+    "B",    # flake8-bugbear
+    "SIM",  # flake8-simplify
+    "TCH",  # flake8-type-checking
+    "N",    # pep8-naming
+    "RUF",  # ruff-specific rules
+    "PT",   # flake8-pytest-style
+    "S",    # flake8-bandit (security)
+    "D",    # pydocstyle — docstring conventions
+    "TID",  # flake8-tidy-imports — enforce absolute imports
+    "FBT",  # flake8-boolean-trap — no positional boolean args
+    "PERF", # perflint — performance anti-patterns
+    "ERA",  # eradicate — no commented-out code
+    "C90",  # mccabe — cyclomatic complexity
+    "PIE",  # flake8-pie — miscellaneous best practices
 ]
 ignore = [
-    "B008", # do not perform function call in default args (FastAPI Depends pattern)
+    "B008",  # FastAPI Depends pattern uses function calls in default args
+    "UP046", # Pydantic v2 does not support PEP 695 generic syntax yet
 ]
 
 [tool.ruff.lint.pydocstyle]
@@ -54,6 +61,12 @@ convention = "google"
 [tool.ruff.lint.isort]
 known-first-party = ["app"]
 
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "all"
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
+
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = [
     "S101", # allow assert in tests
@@ -61,6 +74,9 @@ known-first-party = ["app"]
 ]
 "alembic/**" = [
     "D",    # migration boilerplate does not require docstrings
+]
+"scripts/**" = [
+    "ERA001", # section banner comments are not commented-out code
 ]
 "**/__init__.py" = [
     "D104", # package docstrings not required in __init__.py files
