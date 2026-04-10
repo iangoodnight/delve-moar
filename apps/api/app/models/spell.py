@@ -15,7 +15,11 @@ class Spell(Base):
     """A spell entry — SRD spells or user homebrew.
 
     ``level`` is stored as an integer (0 = cantrip). Display strings
-    ("cantrip", "1st", "2nd", …) are produced at the API layer.
+    ("cantrip", "1st", "2nd", ...) are produced at the API layer.
+
+    ``slug`` uniqueness is composite with ``source_namespace``, enforced
+    at the DB level. Known namespace values: ``"srd-5.1"``, ``"srd-2024"``,
+    ``"user:{user_id}"``.
     """
 
     __tablename__ = "spells"
@@ -26,8 +30,6 @@ class Spell(Base):
         server_default=sa.text("gen_random_uuid()"),
     )
     slug: Mapped[str] = mapped_column(sa.String(255))
-    # Composite UNIQUE(slug, source_namespace) enforced at DB level.
-    # "srd-5.1" | "srd-2024" | "user:{user_id}"
     source_namespace: Mapped[str] = mapped_column(sa.String(50))
     name: Mapped[str] = mapped_column(sa.String(255))
     level: Mapped[int | None] = mapped_column(sa.SmallInteger())

@@ -17,6 +17,10 @@ class Item(Base):
     Mundane equipment and magic items share this table, distinguished by
     ``item_category``. Magic items carry a ``rarity`` value; mundane items
     leave it NULL.
+
+    ``slug`` uniqueness is composite with ``source_namespace``, enforced
+    at the DB level. Known namespace values: ``"srd-5.1"``, ``"srd-2024"``,
+    ``"user:{user_id}"``.
     """
 
     __tablename__ = "items"
@@ -27,8 +31,6 @@ class Item(Base):
         server_default=sa.text("gen_random_uuid()"),
     )
     slug: Mapped[str] = mapped_column(sa.String(255))
-    # Composite UNIQUE(slug, source_namespace) enforced at DB level.
-    # "srd-5.1" | "srd-2024" | "user:{user_id}"
     source_namespace: Mapped[str] = mapped_column(sa.String(50))
     name: Mapped[str] = mapped_column(sa.String(255))
     item_category: Mapped[str | None] = mapped_column(sa.String(100))
