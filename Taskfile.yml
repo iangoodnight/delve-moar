@@ -111,21 +111,29 @@ tasks:
   seed:srd:monsters:
     desc: Seed SRD monsters from dnd5eapi.co
     dir: "{{.API_DIR}}"
+    env:
+      PYTHONPATH: "."
     cmd: uv run python scripts/seed_srd.py monsters
 
   seed:srd:spells:
     desc: Seed SRD spells from dnd5eapi.co
     dir: "{{.API_DIR}}"
+    env:
+      PYTHONPATH: "."
     cmd: uv run python scripts/seed_srd.py spells
 
   seed:srd:items:
     desc: Seed SRD items (equipment + magic items) from dnd5eapi.co
     dir: "{{.API_DIR}}"
+    env:
+      PYTHONPATH: "."
     cmd: uv run python scripts/seed_srd.py items
 
   seed:srd:
     desc: Seed all SRD data — monsters, spells, and items
     dir: "{{.API_DIR}}"
+    env:
+      PYTHONPATH: "."
     cmd: uv run python scripts/seed_srd.py all
 
   # ── Developer setup ────────────────────────────────────────────────────────
