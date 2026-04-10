@@ -34,7 +34,7 @@ from sqlalchemy.ext.asyncio import (
 )
 
 from app.config import settings
-from app.models import Monster, Spell
+from app.models import Item, Monster, Spell
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -59,6 +59,25 @@ SRD_CONTENT_SOURCE: dict[str, str] = {
 
 
 def make_session_factory(database_url: str) -> async_sessionmaker[AsyncSession]:
+    """Create a SQLAlchemy async session factory for the given database URL.
+
+    Args:
+        database_url: The database connection URL.
+
+    Returns:
+        An async_sessionmaker that can be used to create AsyncSession instances.
+
+    Note:
+        The session factory is configured with expire_on_commit=False to prevent
+        automatic expiration of objects after commit, which is often desirable
+        in scripts that perform batch operations.
+
+    Usage:
+        session_factory = make_session_factory(settings.database_url)
+        async with session_factory() as session:
+            # Use session to interact with the database
+            ...
+    """
     engine = create_async_engine(database_url, echo=False)
     return async_sessionmaker(engine, expire_on_commit=False)
 
@@ -71,7 +90,25 @@ def make_session_factory(database_url: str) -> async_sessionmaker[AsyncSession]:
 async def fetch_index(
     client: httpx.AsyncClient, path: str
 ) -> list[dict[str, Any]]:
-    """Fetch a full index listing, handling the {count, results} envelope."""
+    """Fetch a full index listing, handling the {count, results} envelope.
+
+    Args:
+        client: An instance of httpx.AsyncClient to use for the request.
+        path: The relative API path to fetch (e.g., "/monsters", "/spells").
+
+    Returns:
+        A list of result entries extracted from the API response.
+
+    Note:
+        The API response is expected to be a JSON object containing a "results"
+        field, which is a list of entries. This function extracts and returns
+        that list directly.
+
+    Usage:
+        async with httpx.AsyncClient() as client:
+            monsters = await fetch_index(client, "/monsters")
+            spells = await fetch_index(client, "/spells")
+    """
     resp = await client.get(f"{BASE_URL}{path}")
     resp.raise_for_status()
     data: dict[str, Any] = resp.json()
@@ -79,7 +116,24 @@ async def fetch_index(
 
 
 async def fetch_detail(client: httpx.AsyncClient, url: str) -> dict[str, Any]:
-    """Fetch a single resource detail by its relative URL."""
+    """Fetch a single resource detail by its relative URL.
+
+    Args:
+        client: An instance of httpx.AsyncClient to use for the request.
+        url: The relative URL of the resource to fetch (e.g., "/monsters/1").
+
+    Returns:
+        A dictionary containing the detailed data of the resource.
+
+    Note:
+        The URL should be a relative path as provided in the index results. This
+        function constructs the full URL by prefixing it with the base API URL
+        and then performs the GET request to retrieve the resource details.
+
+    Usage:
+        async with httpx.AsyncClient() as client:
+            detail = await fetch_detail(client, "/monsters/1")
+    """
     resp = await client.get(f"https://www.dnd5eapi.co{url}")
     resp.raise_for_status()
     result: dict[str, Any] = resp.json()
@@ -98,6 +152,31 @@ _CR_DISPLAY: dict[Decimal, str] = {
 
 
 def cr_display(value: float | int) -> str:
+    """Convert a numeric CR value to a human-friendly display string.
+
+    Uses fractional notation for common fractional CRs (1/8, 1/4, 1/2) and
+    otherwise displays the numeric value directly. This is intended for display
+    purposes only (e.g., in progress output) and does not affect how CR values
+    are stored.
+
+    Args:
+        value: The numeric CR value to convert.
+
+    Returns:
+        A string representation of the CR, using fractional notation for 1/8,
+        1/4, and 1/2 where appropriate.
+
+    Note:
+        This function is intended for display purposes only (e.g., in progress
+        output) and does not affect how CR values are stored in the database.
+
+    Usage:
+        print(f"CR: {cr_display(0.125)}")  # Output: CR: 1/8
+        print(f"CR: {cr_display(0.25)}")   # Output: CR: 1/4
+        print(f"CR: {cr_display(0.5)}")    # Output: CR: 1/2
+        print(f"CR: {cr_display(1)}")      # Output: CR: 1
+        print(f"CR: {cr_display(2.5)}")    # Output: CR: 2.5
+    """
     d = Decimal(str(value)).quantize(Decimal("0.001"))
     return _CR_DISPLAY.get(d, str(int(value) if value == int(value) else value))
 
@@ -110,6 +189,25 @@ def cr_display(value: float | int) -> str:
 async def seed_monsters(
     session_factory: async_sessionmaker[AsyncSession],
 ) -> None:
+    """Seed monsters from the SRD API.
+
+    This function performs the following steps:
+        1. Fetches the monster index from the API to get a list of all monsters.
+        2. Iterates through each monster entry in the index, fetching detailed
+           entries for each monster and preparing rows for database insertion.
+        3. Upserts the monster data into the database, ensuring that existing
+           entries are updated rather than duplicated.
+
+    Args:
+        session_factory: An async_sessionmaker for creating database sessions.
+
+    Returns:
+        None
+
+    Usage:
+        session_factory = make_session_factory(settings.database_url)
+        asyncio.run(seed_monsters(session_factory))
+    """
     print("→ Fetching monster index…")
     async with httpx.AsyncClient(timeout=30) as client:
         index = await fetch_index(client, "/monsters")
@@ -174,6 +272,25 @@ async def seed_monsters(
 async def seed_spells(
     session_factory: async_sessionmaker[AsyncSession],
 ) -> None:
+    """Seed spells from the SRD API.
+
+    This function performs the following steps:
+        1. Fetches the spell index from the API to get a list of all spells.
+        2. Iterates through each spell entry in the index, fetching detailed
+           entries for each spell and preparing rows for database insertion.
+        3. Upserts the spell data into the database, ensuring that existing
+           entries are updated rather than duplicated.
+
+    Args:
+        session_factory: An async_sessionmaker for creating database sessions.
+
+    Returns:
+        None
+
+    Usage:
+        session_factory = make_session_factory(settings.database_url)
+        asyncio.run(seed_spells(session_factory))
+    """
     print("→ Fetching spell index…")
     async with httpx.AsyncClient(timeout=30) as client:
         index = await fetch_index(client, "/spells")
@@ -226,6 +343,187 @@ async def seed_spells(
 
 
 # ---------------------------------------------------------------------------
+# Seed: items
+# ---------------------------------------------------------------------------
+
+
+async def seed_items(
+    session_factory: async_sessionmaker[AsyncSession],
+) -> None:
+    """Seed items from the SRD API.
+
+    This function calls both `seed_equipment` and `seed_magic_items` to perform
+    the seeding of equipment and magic items, respectively. For our purposes
+    these are both considered "items" and will be stored in the same database
+    table.
+
+    Args:
+        session_factory: An async_sessionmaker for creating database sessions.
+
+    Returns:
+        None
+
+    Usage:
+        session_factory = make_session_factory(settings.database_url)
+        asyncio.run(seed_items(session_factory))
+    """
+    print("→ Seeding equipment items…")
+    await seed_equipment(session_factory)
+    print("→ Seeding magic items…")
+    await seed_magic_items(session_factory)
+    print("✓ All items upserted.")
+
+
+async def seed_equipment(
+    session_factory: async_sessionmaker[AsyncSession],
+) -> None:
+    """Seed equipment from the SRD API.
+
+    This function performs the following steps:
+        1. Fetches the equipment index from the API to get a list of all
+           equipment items.
+        2. Iterates through each equipment entry in the index, fetching detailed
+           entries for each item and preparing rows for database insertion.
+        3. Upserts the equipment data into the database, ensuring that existing
+           entries are updated rather than duplicated.
+
+    Args:
+        session_factory: An async_sessionmaker for creating database sessions.
+
+    Returns:
+        None
+
+    Usage:
+        session_factory = make_session_factory(settings.database_url)
+        asyncio.run(seed_equipment(session_factory))
+    """
+    print("→ Fetching equipment index…")
+    async with httpx.AsyncClient(timeout=30) as client:
+        index = await fetch_index(client, "/equipment")
+        total = len(index)
+        print(f"  Found {total} equipment items.")
+
+        rows: list[dict[str, Any]] = []
+        for i, entry in enumerate(index, 1):
+            detail = await fetch_detail(client, entry["url"])
+            rows.append(
+                {
+                    "slug": detail["index"],
+                    "source_namespace": SRD_NAMESPACE,
+                    "name": detail["name"],
+                    "item_category": detail["equipment_category"]["index"],
+                    "rarity": None,  # only applies to magic items
+                    "content": detail,
+                    "content_source": SRD_CONTENT_SOURCE,
+                }
+            )
+            print(
+                f"\r  Fetching {i}/{total} — {detail['name']}\033[K",
+                end="",
+                flush=True,
+            )
+            if i < total:
+                time.sleep(RATE_LIMIT_DELAY)
+
+        print()  # newline after progress line
+
+        print("→ Upserting equipment…")
+        async with session_factory() as session:
+            stmt = pg_insert(Item).values(rows)
+            stmt = stmt.on_conflict_do_update(
+                index_elements=["slug", "source_namespace"],
+                set_={
+                    "name": stmt.excluded.name,
+                    "item_category": stmt.excluded.item_category,
+                    "rarity": stmt.excluded.rarity,
+                    "content": stmt.excluded.content,
+                    "content_source": stmt.excluded.content_source,
+                    "updated_at": sa.text("NOW()"),
+                },
+            )
+            await session.execute(stmt)
+            await session.commit()
+
+        print(f"✓ {total} equipment items upserted.")
+        _print_attribution()
+
+
+async def seed_magic_items(
+    session_factory: async_sessionmaker[AsyncSession],
+) -> None:
+    """Seed magic items from the SRD API.
+
+    This function performs the following steps:
+        1. Fetches the magic item index from the API to get a list of all
+           magic items.
+        2. Iterates through each magic item entry in the index, fetching
+           detailed entries for each item and preparing rows for database
+           insertion.
+        3. Upserts the magic item data into the database, ensuring that existing
+           entries are updated rather than duplicated.
+
+    Args:
+        session_factory: An async_sessionmaker for creating database sessions.
+
+    Returns:
+        None
+
+    Usage:
+        session_factory = make_session_factory(settings.database_url)
+        asyncio.run(seed_magic_items(session_factory))
+    """
+    print("→ Fetching magic item index…")
+    async with httpx.AsyncClient(timeout=30) as client:
+        index = await fetch_index(client, "/magic-items")
+        total = len(index)
+        print(f"  Found {total} magic items.")
+
+        rows: list[dict[str, Any]] = []
+        for i, entry in enumerate(index, 1):
+            detail = await fetch_detail(client, entry["url"])
+            rows.append(
+                {
+                    "slug": detail["index"],
+                    "source_namespace": SRD_NAMESPACE,
+                    "name": detail["name"],
+                    "item_category": detail["equipment_category"]["index"],
+                    "rarity": detail["rarity"]["name"].lower(),
+                    "content": detail,
+                    "content_source": SRD_CONTENT_SOURCE,
+                }
+            )
+            print(
+                f"\r  Fetching {i}/{total} — {detail['name']}\033[K",
+                end="",
+                flush=True,
+            )
+            if i < total:
+                time.sleep(RATE_LIMIT_DELAY)
+
+        print()  # newline after progress line
+
+        print("→ Upserting magic items…")
+        async with session_factory() as session:
+            stmt = pg_insert(Item).values(rows)
+            stmt = stmt.on_conflict_do_update(
+                index_elements=["slug", "source_namespace"],
+                set_={
+                    "name": stmt.excluded.name,
+                    "item_category": stmt.excluded.item_category,
+                    "rarity": stmt.excluded.rarity,
+                    "content": stmt.excluded.content,
+                    "content_source": stmt.excluded.content_source,
+                    "updated_at": sa.text("NOW()"),
+                },
+            )
+            await session.execute(stmt)
+            await session.commit()
+
+        print(f"✓ {total} magic items upserted.")
+        _print_attribution()
+
+
+# ---------------------------------------------------------------------------
 # Attribution notice
 # ---------------------------------------------------------------------------
 
@@ -247,6 +545,19 @@ def _print_attribution() -> None:
 
 
 async def main(targets: list[str]) -> None:
+    """Main entry point for the seed script.
+
+    Args:
+        targets: A list of strings indicating which data to seed. Valid values
+                 are "monsters", "spells", "items", or "all".
+
+    Returns:
+        None
+
+    Usage:
+        asyncio.run(main(["monsters", "spells"]))
+        asyncio.run(main(["all"]))
+    """
     session_factory = make_session_factory(settings.database_url)
 
     for target in targets:
@@ -254,6 +565,8 @@ async def main(targets: list[str]) -> None:
             await seed_monsters(session_factory)
         elif target == "spells":
             await seed_spells(session_factory)
+        elif target == "items":
+            await seed_items(session_factory)
         else:
             print(
                 f"✗ Unknown target: {target!r}. "

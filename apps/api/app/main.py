@@ -1,3 +1,5 @@
+"""FastAPI application factory and lifespan configuration."""
+
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
@@ -9,8 +11,11 @@ from app.routers import health
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-    # DB engine init and teardown will be wired here in a future issue
-    # once endpoints that need a live connection are introduced.
+    """Manage application startup and shutdown.
+
+    DB engine init and teardown will be wired here once endpoints that
+    need a live connection are introduced.
+    """
     yield
 
 
