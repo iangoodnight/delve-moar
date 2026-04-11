@@ -1,13 +1,13 @@
 """Item list and detail endpoints."""
 
-from typing import Annotated
+from typing import Annotated, Any
 
-from fastapi import APIRouter, Query, Request
+from fastapi import APIRouter, Depends, Query, Request, status
 from sqlalchemy import select
 
 from app.constants import SRD_NAMESPACE
 from app.db import DbSession
-from app.dependencies import Pagination
+from app.dependencies import Pagination, ordering_dep
 from app.exceptions import get_or_404
 from app.models import Item
 from app.schemas.errors import ErrorResponse
@@ -17,19 +17,33 @@ from app.utils import build_links, fetch_page, paginate
 
 router = APIRouter(prefix="/items", tags=["Items"])
 
+_ITEM_ORDERING = ordering_dep(
+    {
+        "item_category": Item.item_category,
+        "name": Item.name,
+        "rarity": Item.rarity,
+    },
+    default="item_category:asc,name:asc",
+)
+ItemOrdering = Annotated[list[Any], Depends(_ITEM_ORDERING)]
+
 
 @router.get(
     "",
     response_model=PaginatedResultset[ItemSummary],
     summary="List items",
     responses={
-        422: {"model": ErrorResponse, "description": "Validation error"},
+        status.HTTP_422_UNPROCESSABLE_CONTENT: {
+            "model": ErrorResponse,
+            "description": "Validation error",
+        },
     },
 )
 async def list_items(
     request: Request,
     session: DbSession,
     params: Pagination,
+    ordering: ItemOrdering,
     search: Annotated[
         str | None,
         Query(description="Case-insensitive substring match on item name."),
@@ -58,6 +72,7 @@ async def list_items(
         request: Current HTTP request, used to build pagination links.
         session: Database session, injected by dependency.
         params: Pagination parameters, injected by dependency.
+        ordering: SQLAlchemy ordering expressions, injected by dependency.
         search: Optional case-insensitive search term against item name.
         item_category: Optional exact match for the item_category field.
         rarity: Optional exact match for the rarity field. Set to 'none' to
@@ -70,7 +85,8 @@ async def list_items(
     Example:
         GET /v1/items?search=sword&item_category=weapon&rarity=rare&limit=2
         GET /v1/items?item_category=potion&rarity=none
-        GET /v1/items?search=ring&limit=5&offset=10
+        GET /v1/items?order_by=name:asc&limit=5&offset=10
+        GET /v1/items?order_by=rarity:desc,name:asc
     """
     stmt = select(Item).where(Item.source_namespace == SRD_NAMESPACE)
 
@@ -87,7 +103,7 @@ async def list_items(
     total, rows = await fetch_page(
         session,
         stmt,
-        ordering=[Item.item_category.asc().nulls_last(), Item.name.asc()],
+        ordering=ordering,
         params=params,
     )
     return paginate(
@@ -103,7 +119,10 @@ async def list_items(
     response_model=ItemDetail,
     summary="Get item details",
     responses={
-        404: {"model": ErrorResponse, "description": "Item not found"},
+        status.HTTP_404_NOT_FOUND: {
+            "model": ErrorResponse,
+            "description": "Item not found",
+        },
     },
 )
 async def get_item(

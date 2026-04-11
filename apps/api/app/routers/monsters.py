@@ -1,14 +1,14 @@
 """Monster list and detail endpoints."""
 
 from decimal import Decimal
-from typing import Annotated
+from typing import Annotated, Any
 
-from fastapi import APIRouter, Query, Request
+from fastapi import APIRouter, Depends, Query, Request, status
 from sqlalchemy import select
 
 from app.constants import SRD_NAMESPACE
 from app.db import DbSession
-from app.dependencies import Pagination
+from app.dependencies import Pagination, ordering_dep
 from app.exceptions import get_or_404
 from app.models import Monster
 from app.schemas.errors import ErrorResponse
@@ -18,19 +18,33 @@ from app.utils import build_links, fetch_page, paginate
 
 router = APIRouter(prefix="/monsters", tags=["Monsters"])
 
+_MONSTER_ORDERING = ordering_dep(
+    {
+        "challenge_rating": Monster.challenge_rating,
+        "monster_type": Monster.monster_type,
+        "name": Monster.name,
+    },
+    default="challenge_rating:asc,name:asc",
+)
+MonsterOrdering = Annotated[list[Any], Depends(_MONSTER_ORDERING)]
+
 
 @router.get(
     "",
     response_model=PaginatedResultset[MonsterSummary],
     summary="List monsters",
     responses={
-        422: {"model": ErrorResponse, "description": "Validation error"},
+        status.HTTP_422_UNPROCESSABLE_CONTENT: {
+            "model": ErrorResponse,
+            "description": "Validation error",
+        },
     },
 )
 async def list_monsters(
     request: Request,
     session: DbSession,
     params: Pagination,
+    ordering: MonsterOrdering,
     search: Annotated[
         str | None,
         Query(description="Case-insensitive substring match on monster name."),
@@ -57,6 +71,7 @@ async def list_monsters(
         request: Current HTTP request, used to build pagination links.
         session: Database session, injected by dependency.
         params: Pagination parameters, injected by dependency.
+        ordering: SQLAlchemy ordering expressions, injected by dependency.
         search: Optional case-insensitive search term against monster name.
         monster_type: Optional exact match for the monster_type field.
         cr_min: Inclusive minimum challenge rating filter.
@@ -69,8 +84,8 @@ async def list_monsters(
     Example:
         GET /v1/monsters?search=dragon&limit=5&offset=10
         GET /v1/monsters?type=undead&cr_min=1&cr_max=5
-        GET /v1/monsters?cr_max=0.25
-        GET /v1/monsters?search=giant&type=humanoid&cr_min=2
+        GET /v1/monsters?cr_max=0.25&order_by=name:asc
+        GET /v1/monsters?order_by=challenge_rating:desc,name:asc
     """
     stmt = select(Monster).where(Monster.source_namespace == SRD_NAMESPACE)
 
@@ -86,10 +101,7 @@ async def list_monsters(
     total, rows = await fetch_page(
         session,
         stmt,
-        ordering=[
-            Monster.challenge_rating.asc().nulls_last(),
-            Monster.name.asc(),
-        ],
+        ordering=ordering,
         params=params,
     )
     return paginate(
@@ -105,7 +117,10 @@ async def list_monsters(
     response_model=MonsterDetail,
     summary="Get monster",
     responses={
-        404: {"model": ErrorResponse, "description": "Monster not found"},
+        status.HTTP_404_NOT_FOUND: {
+            "model": ErrorResponse,
+            "description": "Monster not found",
+        },
     },
 )
 async def get_monster(
