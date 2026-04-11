@@ -68,7 +68,16 @@ echo "→ Generating Go API client → apps/cli/internal/apiclient/client.gen.go
   "${API_URL}/openapi.json")
 echo "✓ Go client generated."
 
+# ── 5. Sync Go module dependencies ────────────────────────────────────────
+# The generated client may import new oapi-codegen runtime packages.
+# go mod tidy ensures go.mod and go.sum stay consistent after each run.
+echo "→ Running go mod tidy in apps/cli..."
+(cd "${REPO_ROOT}/apps/cli" && go mod tidy)
+echo "✓ Go modules synced."
+
 echo ""
 echo "All done. Review then commit the generated files:"
 echo "  packages/api-types/src/index.ts"
 echo "  apps/cli/internal/apiclient/client.gen.go"
+echo "  apps/cli/go.mod (if dependencies changed)"
+echo "  apps/cli/go.sum (if dependencies changed)"

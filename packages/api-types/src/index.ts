@@ -24,10 +24,256 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List items
+         * @description Return a paginated list of items with optional filters.
+         *
+         *     Args:
+         *         request: Current HTTP request, used to build pagination links.
+         *         session: Database session, injected by dependency.
+         *         params: Pagination parameters, injected by dependency.
+         *         ordering: SQLAlchemy ordering expressions, injected by dependency.
+         *         search: Parsed search filter, injected by dependency.
+         *         item_category: Optional exact match for the item_category field.
+         *         rarity: Optional exact match for the rarity field. Set to 'none' to
+         *             filter for items with no rarity (equipment).
+         *
+         *     Returns:
+         *         A paginated list of items matching the filters, with summary information
+         *         and pagination metadata.
+         *
+         *     Example:
+         *         GET /v1/items?search=sword&item_category=weapon&rarity=rare&limit=2
+         *         GET /v1/items?item_category=potion&rarity=none
+         *         GET /v1/items?order_by=name:asc&limit=5&offset=10
+         *         GET /v1/items?order_by=rarity:desc,name:asc
+         */
+        get: operations["list_items_v1_items_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/items/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get item details
+         * @description Return full details for a single item by slug and namespace.
+         *
+         *     Args:
+         *         slug: The unique slug identifier for the item.
+         *         session: Database session, injected by dependency.
+         *         namespace: The source namespace to look up the item in.
+         *
+         *     Returns:
+         *         The full details of the item, including all original content fields.
+         *
+         *     Raises:
+         *         AppError: With status 404 if no item is found.
+         *
+         *     Example:
+         *         GET /v1/items/flame-tongue?namespace=srd-5.1
+         *         GET /v1/items/amulet-of-health?namespace=user:1234
+         */
+        get: operations["get_item_v1_items__slug__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/monsters": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List monsters
+         * @description Return a paginated list of monsters with optional filters.
+         *
+         *     Args:
+         *         request: Current HTTP request, used to build pagination links.
+         *         session: Database session, injected by dependency.
+         *         params: Pagination parameters, injected by dependency.
+         *         ordering: SQLAlchemy ordering expressions, injected by dependency.
+         *         search: Parsed search filter, injected by dependency.
+         *         monster_type: Optional exact match for the monster_type field.
+         *         cr_min: Inclusive minimum challenge rating filter.
+         *         cr_max: Inclusive maximum challenge rating filter.
+         *
+         *     Returns:
+         *         A paginated resultset containing monster summaries and pagination
+         *         metadata.
+         *
+         *     Example:
+         *         GET /v1/monsters?search=dragon&limit=5&offset=10
+         *         GET /v1/monsters?type=undead&cr_min=1&cr_max=5
+         *         GET /v1/monsters?cr_max=0.25&order_by=name:asc
+         *         GET /v1/monsters?order_by=challenge_rating:desc,name:asc
+         */
+        get: operations["list_monsters_v1_monsters_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/monsters/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get monster
+         * @description Return full details for a single monster by slug.
+         *
+         *     Args:
+         *         slug: The URL-safe unique identifier for the monster.
+         *         session: Database session, injected by dependency.
+         *         namespace: The source namespace to look in (default: srd-5.1).
+         *
+         *     Returns:
+         *         The full monster details, including all original content fields.
+         *
+         *     Raises:
+         *         AppError: With status 404 if no monster is found.
+         *
+         *     Example:
+         *         GET /v1/monsters/tarrasque
+         *         GET /v1/monsters/giant-spider?namespace=user:1234
+         */
+        get: operations["get_monster_v1_monsters__slug__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/spells": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List spells
+         * @description Return a paginated list of spells with optional filters.
+         *
+         *     Args:
+         *         request: Current HTTP request, used to build pagination links.
+         *         session: Database session, injected by dependency.
+         *         params: Pagination parameters, injected by dependency.
+         *         ordering: SQLAlchemy ordering expressions, injected by dependency.
+         *         search: Parsed search filter, injected by dependency.
+         *         school: Optional exact match for spell school.
+         *         level_min: Optional minimum spell level (inclusive).
+         *         level_max: Optional maximum spell level (inclusive).
+         *
+         *     Returns:
+         *         A paginated resultset containing spell summaries that match the
+         *         provided filters.
+         *
+         *     Example:
+         *         GET /v1/spells?search=fire&level_min=1&level_max=3&school=evocation
+         *         GET /v1/spells?level_max=0
+         *         GET /v1/spells?order_by=name:asc
+         *         GET /v1/spells?order_by=level:desc,name:asc&limit=5&offset=10
+         */
+        get: operations["list_spells_v1_spells_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/spells/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get spell
+         * @description Return full details for a single spell by slug.
+         *
+         *     Args:
+         *         slug: The URL-safe unique identifier for the spell.
+         *         session: Database session, injected by dependency.
+         *         namespace: The source namespace to look in (default: srd-5.1).
+         *
+         *     Returns:
+         *         The full spell details, including all original content fields.
+         *
+         *     Raises:
+         *         AppError: With status 404 if no spell is found.
+         *
+         *     Example:
+         *         GET /v1/spells/fireball
+         *         GET /v1/spells/fireball?namespace=user:1234
+         */
+        get: operations["get_spell_v1_spells__slug__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /**
+         * ErrorResponse
+         * @description Standard error response schema.
+         */
+        ErrorResponse: {
+            /** Status */
+            status: number;
+            /** Developermessage */
+            developerMessage: string;
+            /** Usermessage */
+            userMessage: string;
+            /** Errorcode */
+            errorCode: string;
+            /** Moreinfo */
+            moreInfo: string;
+        };
+        /** HTTPValidationError */
+        HTTPValidationError: {
+            /** Detail */
+            detail?: components["schemas"]["ValidationError"][];
+        };
         /**
          * HealthResponse
          * @description Response schema for the health check endpoint.
@@ -37,6 +283,212 @@ export interface components {
             status: string;
             /** Version */
             version: string;
+        };
+        /**
+         * ItemDetail
+         * @description Full item details, used in detail endpoints.
+         *
+         *     Attributes:
+         *         content: The full item data as ingested from the source, with all
+         *             original fields and structure preserved.
+         *         content_source: Metadata about the source of the item data, such as
+         *             the original URL or source file name.
+         */
+        ItemDetail: {
+            /** Slug */
+            slug: string;
+            /** Name */
+            name: string;
+            /** Itemcategory */
+            itemCategory: string | null;
+            /** Rarity */
+            rarity: string | null;
+            /** Content */
+            content: {
+                [key: string]: unknown;
+            };
+            /** Contentsource */
+            contentSource: {
+                [key: string]: unknown;
+            };
+        };
+        /**
+         * ItemSummary
+         * @description Summary info for an item, used in list endpoints.
+         *
+         *     Attributes:
+         *         slug: Unique identifier for the item, used in URLs.
+         *         name: The item's name.
+         *         item_category: The category of the item (e.g. "Weapon", "Potion"),
+         *             if available. This is not guaranteed to be present for all items, as
+         *             it depends on the source data.
+         *         rarity: The rarity of the item (e.g. "Common", "Rare"), if available.
+         */
+        ItemSummary: {
+            /** Slug */
+            slug: string;
+            /** Name */
+            name: string;
+            /** Itemcategory */
+            itemCategory: string | null;
+            /** Rarity */
+            rarity: string | null;
+        };
+        /**
+         * Links
+         * @description Prev/next navigation links for a paginated resultset.
+         *
+         *     Attributes:
+         *         prev: Absolute URL for the previous page, or null on the first page.
+         *         next: Absolute URL for the next page, or null on the last page.
+         */
+        Links: {
+            /** Prev */
+            prev: string | null;
+            /** Next */
+            next: string | null;
+        };
+        /**
+         * MetadataEnvelope
+         * @description Envelopes a paginated resultset with metadata.
+         */
+        MetadataEnvelope: {
+            resultset: components["schemas"]["ResultsetMeta"];
+            links: components["schemas"]["Links"];
+        };
+        /**
+         * MonsterDetail
+         * @description Full monster details, used in detail endpoints.
+         *
+         *     Attributes:
+         *         content: The full monster data as ingested from the source, with all
+         *             original fields and structure preserved.
+         *         content_source: Metadata about the source of the monster data, such as
+         *             the original URL or source file name.
+         */
+        MonsterDetail: {
+            /** Slug */
+            slug: string;
+            /** Name */
+            name: string;
+            /** Monstertype */
+            monsterType: string | null;
+            /** Challengerating */
+            challengeRating: string;
+            /** Content */
+            content: {
+                [key: string]: unknown;
+            };
+            /** Contentsource */
+            contentSource: {
+                [key: string]: unknown;
+            };
+        };
+        /**
+         * MonsterSummary
+         * @description Summary info for a monster, used in list endpoints.
+         *
+         *     Attributes:
+         *         slug: Unique identifier for the monster, used in URLs.
+         *         name: The monster's name.
+         *         monster_type: The type or category of the monster (e.g. "Dragon").
+         *         challenge_rating: The monster's challenge rating as a display string
+         *             (e.g. "1/2", "5", "10").
+         */
+        MonsterSummary: {
+            /** Slug */
+            slug: string;
+            /** Name */
+            name: string;
+            /** Monstertype */
+            monsterType: string | null;
+            /** Challengerating */
+            challengeRating: string;
+        };
+        /** PaginatedResultset[ItemSummary] */
+        PaginatedResultset_ItemSummary_: {
+            metadata: components["schemas"]["MetadataEnvelope"];
+            /** Data */
+            data: components["schemas"]["ItemSummary"][];
+        };
+        /** PaginatedResultset[MonsterSummary] */
+        PaginatedResultset_MonsterSummary_: {
+            metadata: components["schemas"]["MetadataEnvelope"];
+            /** Data */
+            data: components["schemas"]["MonsterSummary"][];
+        };
+        /** PaginatedResultset[SpellSummary] */
+        PaginatedResultset_SpellSummary_: {
+            metadata: components["schemas"]["MetadataEnvelope"];
+            /** Data */
+            data: components["schemas"]["SpellSummary"][];
+        };
+        /**
+         * ResultsetMeta
+         * @description Metadata about a paginated resultset.
+         */
+        ResultsetMeta: {
+            /** Count */
+            count: number;
+            /** Offset */
+            offset: number;
+            /** Limit */
+            limit: number;
+        };
+        /**
+         * SpellDetail
+         * @description Full spell details, used in the detail endpoint.
+         */
+        SpellDetail: {
+            /** Slug */
+            slug: string;
+            /** Name */
+            name: string;
+            /** Level */
+            level: string;
+            /** School */
+            school: string | null;
+            /** Content */
+            content: {
+                [key: string]: unknown;
+            };
+            /** Contentsource */
+            contentSource: {
+                [key: string]: unknown;
+            };
+        };
+        /**
+         * SpellSummary
+         * @description Summary info for a spell, used in list endpoints.
+         *
+         *     Attributes:
+         *         slug: Unique identifier for the spell, used in URLs.
+         *         name: The spell's name.
+         *         level: The spell's level as a display string (e.g. "Cantrip", "1st").
+         *         school: The spell's school of magic (e.g. "evocation").
+         */
+        SpellSummary: {
+            /** Slug */
+            slug: string;
+            /** Name */
+            name: string;
+            /** Level */
+            level: string;
+            /** School */
+            school: string | null;
+        };
+        /** ValidationError */
+        ValidationError: {
+            /** Location */
+            loc: (string | number)[];
+            /** Message */
+            msg: string;
+            /** Error Type */
+            type: string;
+            /** Input */
+            input?: unknown;
+            /** Context */
+            ctx?: Record<string, never>;
         };
     };
     responses: never;
@@ -63,6 +515,259 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HealthResponse"];
+                };
+            };
+        };
+    };
+    list_items_v1_items_get: {
+        parameters: {
+            query?: {
+                /** @description Exact match on item category (e.g. 'weapon'). This is not guaranteed to be present for all items, as it depends on the source data. */
+                item_category?: string | null;
+                /** @description Exact match on item rarity (e.g. 'common'). This is not guaranteed to be present for all items, as it depends on the source data. Set to 'none' to filter for items with no rarity (equipment). */
+                rarity?: string | null;
+                limit?: number;
+                offset?: number;
+                /** @description Comma-separated sort fields in column:direction format. Direction is 'asc' or 'desc' (case-insensitive); omitting direction defaults to 'asc'. Valid columns: item_category, name, rarity. */
+                order_by?: string | null;
+                /** @description Case-insensitive substring search. Matches against name, item_category. Results are relevance-ordered: earlier columns rank higher than later ones. */
+                search?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedResultset_ItemSummary_"];
+                };
+            };
+            /** @description Validation error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_item_v1_items__slug__get: {
+        parameters: {
+            query?: {
+                /** @description The source namespace of the item, used to disambiguate items with the same slug from different sources. Known values: 'srd-5.1', 'srd-2024', 'user:{user_id}'. */
+                namespace?: string;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItemDetail"];
+                };
+            };
+            /** @description Item not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_monsters_v1_monsters_get: {
+        parameters: {
+            query?: {
+                /** @description Exact match on monster type (e.g. 'undead'). */
+                type?: string | null;
+                /** @description Inclusive minimum challenge rating. */
+                cr_min?: (number | string) | null;
+                /** @description Inclusive maximum challenge rating. */
+                cr_max?: (number | string) | null;
+                limit?: number;
+                offset?: number;
+                /** @description Comma-separated sort fields in column:direction format. Direction is 'asc' or 'desc' (case-insensitive); omitting direction defaults to 'asc'. Valid columns: challenge_rating, monster_type, name. */
+                order_by?: string | null;
+                /** @description Case-insensitive substring search. Matches against name, monster_type. Results are relevance-ordered: earlier columns rank higher than later ones. */
+                search?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedResultset_MonsterSummary_"];
+                };
+            };
+            /** @description Validation error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_monster_v1_monsters__slug__get: {
+        parameters: {
+            query?: {
+                /** @description Source namespace to search in. Defaults to the SRD 5.1 namespace. Use 'user:{user_id}' for homebrew content. */
+                namespace?: string;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MonsterDetail"];
+                };
+            };
+            /** @description Monster not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_spells_v1_spells_get: {
+        parameters: {
+            query?: {
+                /** @description Exact match on spell school (e.g. 'evocation'). */
+                school?: string | null;
+                /** @description Inclusive minimum spell level (0-9). */
+                level_min?: number | null;
+                /** @description Inclusive maximum spell level (0-9). */
+                level_max?: number | null;
+                limit?: number;
+                offset?: number;
+                /** @description Comma-separated sort fields in column:direction format. Direction is 'asc' or 'desc' (case-insensitive); omitting direction defaults to 'asc'. Valid columns: level, name, school. */
+                order_by?: string | null;
+                /** @description Case-insensitive substring search. Matches against name. Results are relevance-ordered: earlier columns rank higher than later ones. */
+                search?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedResultset_SpellSummary_"];
+                };
+            };
+            /** @description Validation error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_spell_v1_spells__slug__get: {
+        parameters: {
+            query?: {
+                /** @description Source namespace to search in. Defaults to the SRD 5.1 namespace. Use 'user:{user_id}' for homebrew content. */
+                namespace?: string;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SpellDetail"];
+                };
+            };
+            /** @description Spell not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
