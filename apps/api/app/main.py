@@ -2,13 +2,15 @@
 
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+from typing import Any
 
 from fastapi import FastAPI
 
 from app.config import settings
 from app.db import init_db
 from app.exceptions import register_exception_handlers
-from app.routers import health, monsters
+from app.openapi import downgrade_to_openapi_30
+from app.routers import health, monsters, spells
 
 V1_PREFIX = "/v1"
 
@@ -18,13 +20,13 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Manage application startup and shutdown.
 
     Initializes the database engine on startup. Teardown logic for a
-    gracefull connection pool shutdown will be added here as needed
+    graceful connection pool shutdown will be added here as needed.
 
     Args:
         app: The FastAPI application instance.
 
-    Returns:
-        An async generator yielding control back to FastAPI after startup tasks.
+    Yields:
+        Control back to FastAPI after startup tasks complete.
     """
     init_db(settings.database_url)
     yield
@@ -46,3 +48,19 @@ app.include_router(health.router)
 
 # Resource routers are mounted under /v1.
 app.include_router(monsters.router, prefix=V1_PREFIX)
+app.include_router(spells.router, prefix=V1_PREFIX)
+
+
+# FastAPI + Pydantic v2 emit OpenAPI 3.1 by default, but oapi-codegen does
+# not yet support 3.1.  Override app.openapi() to downgrade the schema to
+# 3.0.3 at serve time so both the Go and TypeScript generators stay happy.
+# Remove once https://github.com/oapi-codegen/oapi-codegen/issues/373 lands.
+_base_openapi = app.openapi
+
+
+def _openapi_30() -> dict[str, Any]:
+    """Return the OpenAPI schema downgraded to 3.0.3."""
+    return downgrade_to_openapi_30(_base_openapi())
+
+
+app.openapi = _openapi_30  # type: ignore[method-assign]

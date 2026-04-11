@@ -2,6 +2,13 @@
 
 from decimal import Decimal
 
+from app.dependencies import PaginationParams
+from app.schemas.pagination import (
+    MetadataEnvelope,
+    PaginatedResultset,
+    ResultsetMeta,
+)
+
 _CR_DISPLAY: dict[Decimal, str] = {
     Decimal("0.125"): "1/8",
     Decimal("0.25"): "1/4",
@@ -37,3 +44,43 @@ def cr_display(value: float | int) -> str:
     """
     d = Decimal(str(value)).quantize(Decimal("0.001"))
     return _CR_DISPLAY.get(d, str(int(value) if value == int(value) else value))
+
+
+def paginate[T](
+    data: list[T],
+    total: int,
+    params: PaginationParams,
+) -> PaginatedResultset[T]:
+    """Wrap a page of schema objects in the standard response envelope.
+
+    Builds the ``PaginatedResultset`` that every list endpoint returns, keeping
+    the boilerplate out of individual routers.  The caller is responsible for
+    converting ORM rows to schema objects before passing ``data``.
+
+    Args:
+        data: A list of already-validated schema instances for the current page.
+        total: Total number of records matching the query (across all pages).
+        params: Pagination parameters (limit and offset) from the request.
+
+    Returns:
+        A ``PaginatedResultset`` with a ``metadata`` envelope and the ``data``
+        list.
+
+    Example:
+        rows = list((await session.execute(stmt)).scalars())
+        return paginate(
+            data=[MonsterSummary.model_validate(r) for r in rows],
+            total=total,
+            params=params,
+        )
+    """
+    return PaginatedResultset(
+        metadata=MetadataEnvelope(
+            resultset=ResultsetMeta(
+                count=total,
+                limit=params.limit,
+                offset=params.offset,
+            )
+        ),
+        data=data,
+    )
