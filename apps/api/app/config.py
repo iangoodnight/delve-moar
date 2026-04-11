@@ -5,9 +5,19 @@ from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-_pyproject = Path(__file__).parent.parent / "pyproject.toml"
-with _pyproject.open("rb") as _f:
-    _VERSION: str = tomllib.load(_f)["project"]["version"]
+
+def _read_version() -> str:
+    """Read version from pyproject.toml when present, fall back to 'dev'.
+
+    The container sets VERSION via the environment; pyproject.toml is only
+    present during local development.  Either source is fine — pydantic-settings
+    will prefer the env var over this default when VERSION is set.
+    """
+    pyproject = Path(__file__).parent.parent / "pyproject.toml"
+    if pyproject.is_file():
+        with pyproject.open("rb") as fh:
+            return str(tomllib.load(fh)["project"]["version"])
+    return "dev"
 
 
 class Settings(BaseSettings):
@@ -21,7 +31,7 @@ class Settings(BaseSettings):
 
     database_url: str = "postgresql+asyncpg://UNSET:UNSET@localhost:5432/UNSET"
     env: str = "development"
-    version: str = _VERSION
+    version: str = _read_version()
     public_url: str = "http://localhost:8000"
 
 
