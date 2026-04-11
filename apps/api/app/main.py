@@ -6,22 +6,32 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from app.config import settings
+from app.db import init_db
 from app.exceptions import register_exception_handlers
-from app.routers import health
+from app.routers import health, monsters
+
+V1_PREFIX = "/v1"
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Manage application startup and shutdown.
 
-    DB engine init and teardown will be wired here once endpoints that
-    need a live connection are introduced.
+    Initializes the database engine on startup. Teardown logic for a
+    gracefull connection pool shutdown will be added here as needed
+
+    Args:
+        app: The FastAPI application instance.
+
+    Returns:
+        An async generator yielding control back to FastAPI after startup tasks.
     """
+    init_db(settings.database_url)
     yield
 
 
 app = FastAPI(
-    title="Delve Moar API",
+    title="DelveMoar API",
     version=settings.version,
     openapi_url="/openapi.json",
     docs_url="/docs",
@@ -35,4 +45,4 @@ register_exception_handlers(app)
 app.include_router(health.router)
 
 # Resource routers are mounted under /v1.
-# Routers for monsters, spells, and items will be added in #40-#42.
+app.include_router(monsters.router, prefix=V1_PREFIX)
