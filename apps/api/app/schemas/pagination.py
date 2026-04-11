@@ -15,10 +15,23 @@ class ResultsetMeta(AppSchema):
     limit: int  # number of records in this page
 
 
+class Links(AppSchema):
+    """Prev/next navigation links for a paginated resultset.
+
+    Attributes:
+        prev: Absolute URL for the previous page, or null on the first page.
+        next: Absolute URL for the next page, or null on the last page.
+    """
+
+    prev: str | None
+    next: str | None
+
+
 class MetadataEnvelope(AppSchema):
     """Envelopes a paginated resultset with metadata."""
 
     resultset: ResultsetMeta
+    links: Links
 
 
 class PaginatedResultset(AppSchema, Generic[T]):
