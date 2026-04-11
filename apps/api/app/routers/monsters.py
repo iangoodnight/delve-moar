@@ -6,19 +6,15 @@ from typing import Annotated
 from fastapi import APIRouter, Query
 from sqlalchemy import func, select
 
+from app.constants import SRD_NAMESPACE
 from app.db import DbSession
 from app.dependencies import Pagination
 from app.exceptions import get_or_404
 from app.models import Monster
 from app.schemas.errors import ErrorResponse
 from app.schemas.monsters import MonsterDetail, MonsterSummary
-from app.schemas.pagination import (
-    MetadataEnvelope,
-    PaginatedResultset,
-    ResultsetMeta,
-)
-
-SRD_NAMESPACE = "srd-5.1"
+from app.schemas.pagination import PaginatedResultset
+from app.utils import paginate
 
 router = APIRouter(prefix="/monsters", tags=["Monsters"])
 
@@ -99,15 +95,10 @@ async def list_monsters(
     )
     rows = list((await session.execute(stmt)).scalars())
 
-    return PaginatedResultset[MonsterSummary](
-        metadata=MetadataEnvelope(
-            resultset=ResultsetMeta(
-                count=total,
-                limit=params.limit,
-                offset=params.offset,
-            )
-        ),
+    return paginate(
         data=[MonsterSummary.model_validate(row) for row in rows],
+        total=total,
+        params=params,
     )
 
 
@@ -155,5 +146,7 @@ async def get_monster(
             Monster.source_namespace == namespace,
         )
     )
-    monster = get_or_404(result, resource="monster", identifier=slug)
+    monster = get_or_404(
+        result, resource="monster", identifier=f"{namespace}:{slug}"
+    )
     return MonsterDetail.model_validate(monster)
