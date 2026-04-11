@@ -8,7 +8,7 @@ from sqlalchemy import select
 
 from app.constants import SRD_NAMESPACE
 from app.db import DbSession
-from app.dependencies import Pagination, ordering_dep
+from app.dependencies import Pagination, SearchFilter, ordering_dep, search_dep
 from app.exceptions import get_or_404
 from app.models import Monster
 from app.schemas.errors import ErrorResponse
@@ -28,6 +28,9 @@ _MONSTER_ORDERING = ordering_dep(
 )
 MonsterOrdering = Annotated[list[Any], Depends(_MONSTER_ORDERING)]
 
+_MONSTER_SEARCH = search_dep([Monster.name, Monster.monster_type])
+MonsterSearch = Annotated[SearchFilter, Depends(_MONSTER_SEARCH)]
+
 
 @router.get(
     "",
@@ -45,10 +48,7 @@ async def list_monsters(
     session: DbSession,
     params: Pagination,
     ordering: MonsterOrdering,
-    search: Annotated[
-        str | None,
-        Query(description="Case-insensitive substring match on monster name."),
-    ] = None,
+    search: MonsterSearch,
     monster_type: Annotated[
         str | None,
         Query(
@@ -72,7 +72,7 @@ async def list_monsters(
         session: Database session, injected by dependency.
         params: Pagination parameters, injected by dependency.
         ordering: SQLAlchemy ordering expressions, injected by dependency.
-        search: Optional case-insensitive search term against monster name.
+        search: Parsed search filter, injected by dependency.
         monster_type: Optional exact match for the monster_type field.
         cr_min: Inclusive minimum challenge rating filter.
         cr_max: Inclusive maximum challenge rating filter.
@@ -89,8 +89,8 @@ async def list_monsters(
     """
     stmt = select(Monster).where(Monster.source_namespace == SRD_NAMESPACE)
 
-    if search:
-        stmt = stmt.where(Monster.name.ilike(f"%{search}%"))
+    if search.where is not None:
+        stmt = stmt.where(search.where)
     if monster_type:
         stmt = stmt.where(Monster.monster_type == monster_type)
     if cr_min is not None:
@@ -101,7 +101,7 @@ async def list_monsters(
     total, rows = await fetch_page(
         session,
         stmt,
-        ordering=ordering,
+        ordering=[*search.order_priority, *ordering],
         params=params,
     )
     return paginate(

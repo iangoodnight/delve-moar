@@ -5,9 +5,29 @@ from dataclasses import dataclass
 from typing import Annotated, Any
 
 from fastapi import Depends, Query, status
+from sqlalchemy import case, or_
 from sqlalchemy.orm import InstrumentedAttribute
 
 from app.config import settings
+
+
+@dataclass
+class SearchFilter:
+    """Parsed search query: a WHERE clause and a relevance ordering expression.
+
+    Produced by ``search_dep`` and consumed by list route handlers.
+
+    Attributes:
+        where: SQLAlchemy filter expression (OR across all searchable columns),
+            or ``None`` when the search term is absent or blank.
+        order_priority: List containing a single CASE expression that ranks
+            rows by which column matched first. Prepend to the client-requested
+            ordering so name matches sort above type matches, etc. Empty when
+            search is absent.
+    """
+
+    where: Any
+    order_priority: list[Any]
 
 
 @dataclass
@@ -151,5 +171,79 @@ def ordering_dep(
                 expressions.append(col.desc().nulls_first())
 
         return expressions
+
+    return _dep
+
+
+def search_dep(
+    searchable_columns: list[InstrumentedAttribute[Any]],
+) -> Callable[..., SearchFilter]:
+    """Return a FastAPI dependency that parses the search query parameter.
+
+    The returned dependency accepts an optional ``search`` query parameter and
+    produces a ``SearchFilter`` containing:
+
+    - A WHERE clause that matches rows where *any* searchable column contains
+      the term (``ILIKE '%term%'``, OR logic).
+    - A CASE expression for relevance ordering: columns earlier in
+      ``searchable_columns`` rank higher (lower integer value), so name
+      matches sort before type matches when the client has not overridden
+      ordering. Prepend this to the client-requested ordering expressions.
+
+    An absent or blank search term returns a ``SearchFilter`` with
+    ``where=None`` and an empty ``order_priority``.
+
+    Args:
+        searchable_columns: ORM attributes to search, in priority order.
+            Earlier columns rank higher in the relevance sort.
+
+    Returns:
+        A FastAPI dependency function that injects a ``search`` query
+        parameter and returns a ``SearchFilter``.
+
+    Example:
+        _MONSTER_SEARCH = search_dep([Monster.name, Monster.monster_type])
+        MonsterSearch = Annotated[SearchFilter, Depends(_MONSTER_SEARCH)]
+    """
+    col_names = ", ".join(col.key for col in searchable_columns)
+
+    def _dep(
+        search: Annotated[
+            str | None,
+            Query(
+                description=(
+                    "Case-insensitive substring search. Matches against "
+                    f"{col_names}. Results are relevance-ordered: earlier "
+                    "columns rank higher than later ones."
+                ),
+            ),
+        ] = None,
+    ) -> SearchFilter:
+        """Parse search term and return a SearchFilter.
+
+        Args:
+            search: Optional search term. Stripped of leading/trailing
+                whitespace; treated as absent when blank.
+
+        Returns:
+            A ``SearchFilter`` with a WHERE clause and relevance ordering
+            expression when a non-blank term is provided, or a no-op
+            ``SearchFilter`` when the term is absent or blank.
+        """
+        term = (search or "").strip()
+        if not term:
+            return SearchFilter(where=None, order_priority=[])
+
+        pattern = f"%{term}%"
+        conditions = [col.ilike(pattern) for col in searchable_columns]
+        where = conditions[0] if len(conditions) == 1 else or_(*conditions)
+        priority = case(
+            *[
+                (col.ilike(pattern), idx)
+                for idx, col in enumerate(searchable_columns)
+            ],
+            else_=len(searchable_columns),
+        ).asc()
+        return SearchFilter(where=where, order_priority=[priority])
 
     return _dep

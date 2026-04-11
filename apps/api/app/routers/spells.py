@@ -7,7 +7,7 @@ from sqlalchemy import select
 
 from app.constants import SRD_NAMESPACE
 from app.db import DbSession
-from app.dependencies import Pagination, ordering_dep
+from app.dependencies import Pagination, SearchFilter, ordering_dep, search_dep
 from app.exceptions import get_or_404
 from app.models import Spell
 from app.schemas.errors import ErrorResponse
@@ -27,6 +27,11 @@ _SPELL_ORDERING = ordering_dep(
 )
 SpellOrdering = Annotated[list[Any], Depends(_SPELL_ORDERING)]
 
+_SPELL_SEARCH = search_dep([Spell.name])
+SpellSearch = Annotated[SearchFilter, Depends(_SPELL_SEARCH)]
+
+MAX_SPELL_LEVEL = 9
+
 
 @router.get(
     "",
@@ -44,21 +49,26 @@ async def list_spells(
     session: DbSession,
     params: Pagination,
     ordering: SpellOrdering,
-    search: Annotated[
-        str | None,
-        Query(description="Case-insensitive substring match on spell name."),
-    ] = None,
+    search: SpellSearch,
     school: Annotated[
         str | None,
         Query(description="Exact match on spell school (e.g. 'evocation')."),
     ] = None,
     level_min: Annotated[
         int | None,
-        Query(ge=0, le=9, description="Inclusive minimum spell level (0-9)."),
+        Query(
+            ge=0,
+            le=MAX_SPELL_LEVEL,
+            description="Inclusive minimum spell level (0-9).",
+        ),
     ] = None,
     level_max: Annotated[
         int | None,
-        Query(ge=0, le=9, description="Inclusive maximum spell level (0-9)."),
+        Query(
+            ge=0,
+            le=MAX_SPELL_LEVEL,
+            description="Inclusive maximum spell level (0-9).",
+        ),
     ] = None,
 ) -> PaginatedResultset[SpellSummary]:
     """Return a paginated list of spells with optional filters.
@@ -68,7 +78,7 @@ async def list_spells(
         session: Database session, injected by dependency.
         params: Pagination parameters, injected by dependency.
         ordering: SQLAlchemy ordering expressions, injected by dependency.
-        search: Optional case-insensitive substring to filter spell names.
+        search: Parsed search filter, injected by dependency.
         school: Optional exact match for spell school.
         level_min: Optional minimum spell level (inclusive).
         level_max: Optional maximum spell level (inclusive).
@@ -85,8 +95,8 @@ async def list_spells(
     """
     stmt = select(Spell).where(Spell.source_namespace == SRD_NAMESPACE)
 
-    if search:
-        stmt = stmt.where(Spell.name.ilike(f"%{search}%"))
+    if search.where is not None:
+        stmt = stmt.where(search.where)
     if school:
         stmt = stmt.where(Spell.school == school)
     if level_min is not None:
@@ -97,7 +107,7 @@ async def list_spells(
     total, rows = await fetch_page(
         session,
         stmt,
-        ordering=ordering,
+        ordering=[*search.order_priority, *ordering],
         params=params,
     )
     return paginate(
