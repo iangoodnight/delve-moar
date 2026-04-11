@@ -8,7 +8,7 @@ from fastapi import FastAPI
 from app.config import settings
 from app.db import init_db
 from app.exceptions import register_exception_handlers
-from app.routers import health, monsters
+from app.routers import health, monsters, spells
 
 V1_PREFIX = "/v1"
 
@@ -46,3 +46,4 @@ app.include_router(health.router)
 
 # Resource routers are mounted under /v1.
 app.include_router(monsters.router, prefix=V1_PREFIX)
+app.include_router(spells.router, prefix=V1_PREFIX)
