@@ -6,7 +6,11 @@ starting an HTTP server or touching the database.
 
 from typing import Any
 
-from app.openapi import _downgrade_nullable, downgrade_to_openapi_30
+from app.openapi import (
+    _downgrade_nullable,
+    _is_null_schema,
+    downgrade_to_openapi_30,
+)
 
 # ---------------------------------------------------------------------------
 # _downgrade_nullable
@@ -94,14 +98,68 @@ class TestDowngradeNullable:
             "description": "plain",
         }
 
-    def test_multiple_non_null_anyof_left_alone(self) -> None:
-        """anyOf with multiple non-null branches is not touched."""
+    # --- _is_null_schema ------------------------------------------------
+
+    def test_is_null_schema_exact_match(self) -> None:
+        """Exact {type: null} is identified as a null schema."""
+        assert _is_null_schema({"type": "null"}) is True
+
+    def test_is_null_schema_with_extra_keys(self) -> None:
+        """A null schema with extra fields (e.g. title) is still identified."""
+        assert _is_null_schema({"type": "null", "title": "NoneType"}) is True
+
+    def test_is_null_schema_non_null_type(self) -> None:
+        """A dict with a non-null type is not a null schema."""
+        assert _is_null_schema({"type": "string"}) is False
+
+    def test_is_null_schema_non_dict(self) -> None:
+        """Non-dict values are not null schemas."""
+        assert _is_null_schema("null") is False
+        assert _is_null_schema(None) is False
+
+    # --- multiple non-null branches -------------------------------------
+
+    def test_decimal_nullable_three_way_anyof(self) -> None:
+        """Decimal | None generates a 3-branch anyOf; null is removed.
+
+        Pydantic v2 emits number + string-pattern + null for Decimal | None.
+        The null branch should be removed and nullable: true hoisted.
+        """
         schema = {
-            "anyOf": [{"type": "string"}, {"type": "integer"}, {"type": "null"}]
+            "anyOf": [
+                {"type": "number", "minimum": 0.0},
+                {"type": "string", "pattern": "^[+-]?\\d*$"},
+                {"type": "null"},
+            ],
+            "title": "Cr Min",
         }
         result = _downgrade_nullable(schema)
-        # Should not be collapsed -- more than one non-null branch.
+        assert result["nullable"] is True
         assert "anyOf" in result
+        assert not any(
+            s.get("type") == "null"
+            for s in result["anyOf"]
+            if isinstance(s, dict)
+        )
+        assert result["title"] == "Cr Min"
+
+    def test_multi_branch_anyof_null_removed_nullable_hoisted(self) -> None:
+        """Multiple non-null branches: null removed, nullable hoisted."""
+        schema = {
+            "anyOf": [
+                {"type": "string"},
+                {"type": "integer"},
+                {"type": "null"},
+            ]
+        }
+        result = _downgrade_nullable(schema)
+        assert result["nullable"] is True
+        assert len(result["anyOf"]) == 2
+        assert not any(
+            s.get("type") == "null"
+            for s in result["anyOf"]
+            if isinstance(s, dict)
+        )
 
     def test_anyof_without_null_left_alone(self) -> None:
         """anyOf with no null branch is not touched."""
@@ -168,6 +226,42 @@ class TestDowngradeToOpenapi30:
             "schema"
         ]
         assert param_schema == {"type": "string", "nullable": True}
+
+    def test_rewrites_decimal_nullable_params_in_paths(self) -> None:
+        """Decimal | None three-branch anyOf is rewritten end-to-end."""
+        schema: dict[str, Any] = {
+            "openapi": "3.1.0",
+            "paths": {
+                "/v1/monsters": {
+                    "get": {
+                        "parameters": [
+                            {
+                                "name": "cr_min",
+                                "in": "query",
+                                "schema": {
+                                    "anyOf": [
+                                        {"type": "number", "minimum": 0.0},
+                                        {"type": "string", "pattern": "^\\d+$"},
+                                        {"type": "null"},
+                                    ],
+                                    "title": "Cr Min",
+                                },
+                            }
+                        ]
+                    }
+                }
+            },
+        }
+        result = downgrade_to_openapi_30(schema)
+        param_schema = result["paths"]["/v1/monsters"]["get"]["parameters"][0][
+            "schema"
+        ]
+        assert param_schema["nullable"] is True
+        assert not any(
+            s.get("type") == "null"
+            for s in param_schema["anyOf"]
+            if isinstance(s, dict)
+        )
 
     def test_idempotent(self) -> None:
         """Calling the function twice produces the same result."""
