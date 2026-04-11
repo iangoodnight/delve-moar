@@ -30,7 +30,8 @@ def _make_dep(columns: dict[str, Any], default: str = "name:asc") -> Any:
 
 def _call(dep: Any, order_by: str | None = None) -> list[Any]:
     """Invoke the inner dependency function synchronously."""
-    return dep(order_by=order_by)
+    result: list[Any] = dep(order_by=order_by)
+    return result
 
 
 # ---------------------------------------------------------------------------
