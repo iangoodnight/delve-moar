@@ -4,8 +4,8 @@ from typing import Any
 
 from pydantic import field_validator
 
+from app.display import cr_display
 from app.schemas.base import AppSchema
-from app.utils import cr_display
 
 
 class MonsterSummary(AppSchema):
