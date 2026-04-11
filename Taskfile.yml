@@ -12,6 +12,10 @@ tasks:
     desc: Start all services via Docker Compose
     cmd: docker compose -f infra/docker-compose.yml --env-file .env up --build
 
+  dev:api:
+    desc: Start only postgres + API (no web — useful while the UI Dockerfile is absent)
+    cmd: docker compose -f infra/docker-compose.yml --env-file .env up api --build
+
   # ── Linting ────────────────────────────────────────────────────────────────
 
   lint:api:
