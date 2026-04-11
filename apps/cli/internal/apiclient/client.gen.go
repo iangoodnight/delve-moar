@@ -11,12 +11,348 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+
+	"github.com/oapi-codegen/runtime"
 )
+
+// ErrorResponse Standard error response schema.
+type ErrorResponse struct {
+	DeveloperMessage string `json:"developerMessage"`
+	ErrorCode        string `json:"errorCode"`
+	MoreInfo         string `json:"moreInfo"`
+	Status           int    `json:"status"`
+	UserMessage      string `json:"userMessage"`
+}
+
+// HTTPValidationError defines model for HTTPValidationError.
+type HTTPValidationError struct {
+	Detail *[]ValidationError `json:"detail,omitempty"`
+}
 
 // HealthResponse Response schema for the health check endpoint.
 type HealthResponse struct {
 	Status  string `json:"status"`
 	Version string `json:"version"`
+}
+
+// ItemDetail Full item details, used in detail endpoints.
+//
+// Attributes:
+//
+//	content: The full item data as ingested from the source, with all
+//	    original fields and structure preserved.
+//	content_source: Metadata about the source of the item data, such as
+//	    the original URL or source file name.
+type ItemDetail struct {
+	Content       map[string]interface{} `json:"content"`
+	ContentSource map[string]interface{} `json:"contentSource"`
+	ItemCategory  *string                `json:"itemCategory"`
+	Name          string                 `json:"name"`
+	Rarity        *string                `json:"rarity"`
+	Slug          string                 `json:"slug"`
+}
+
+// ItemSummary Summary info for an item, used in list endpoints.
+//
+// Attributes:
+//
+//	slug: Unique identifier for the item, used in URLs.
+//	name: The item's name.
+//	item_category: The category of the item (e.g. "Weapon", "Potion"),
+//	    if available. This is not guaranteed to be present for all items, as
+//	    it depends on the source data.
+//	rarity: The rarity of the item (e.g. "Common", "Rare"), if available.
+type ItemSummary struct {
+	ItemCategory *string `json:"itemCategory"`
+	Name         string  `json:"name"`
+	Rarity       *string `json:"rarity"`
+	Slug         string  `json:"slug"`
+}
+
+// Links Prev/next navigation links for a paginated resultset.
+//
+// Attributes:
+//
+//	prev: Absolute URL for the previous page, or null on the first page.
+//	next: Absolute URL for the next page, or null on the last page.
+type Links struct {
+	Next *string `json:"next"`
+	Prev *string `json:"prev"`
+}
+
+// MetadataEnvelope Envelopes a paginated resultset with metadata.
+type MetadataEnvelope struct {
+	// Links Prev/next navigation links for a paginated resultset.
+	//
+	// Attributes:
+	//     prev: Absolute URL for the previous page, or null on the first page.
+	//     next: Absolute URL for the next page, or null on the last page.
+	Links Links `json:"links"`
+
+	// Resultset Metadata about a paginated resultset.
+	Resultset ResultsetMeta `json:"resultset"`
+}
+
+// MonsterDetail Full monster details, used in detail endpoints.
+//
+// Attributes:
+//
+//	content: The full monster data as ingested from the source, with all
+//	    original fields and structure preserved.
+//	content_source: Metadata about the source of the monster data, such as
+//	    the original URL or source file name.
+type MonsterDetail struct {
+	ChallengeRating string                 `json:"challengeRating"`
+	Content         map[string]interface{} `json:"content"`
+	ContentSource   map[string]interface{} `json:"contentSource"`
+	MonsterType     *string                `json:"monsterType"`
+	Name            string                 `json:"name"`
+	Slug            string                 `json:"slug"`
+}
+
+// MonsterSummary Summary info for a monster, used in list endpoints.
+//
+// Attributes:
+//
+//	slug: Unique identifier for the monster, used in URLs.
+//	name: The monster's name.
+//	monster_type: The type or category of the monster (e.g. "Dragon").
+//	challenge_rating: The monster's challenge rating as a display string
+//	    (e.g. "1/2", "5", "10").
+type MonsterSummary struct {
+	ChallengeRating string  `json:"challengeRating"`
+	MonsterType     *string `json:"monsterType"`
+	Name            string  `json:"name"`
+	Slug            string  `json:"slug"`
+}
+
+// PaginatedResultsetItemSummary defines model for PaginatedResultset_ItemSummary_.
+type PaginatedResultsetItemSummary struct {
+	Data []ItemSummary `json:"data"`
+
+	// Metadata Envelopes a paginated resultset with metadata.
+	Metadata MetadataEnvelope `json:"metadata"`
+}
+
+// PaginatedResultsetMonsterSummary defines model for PaginatedResultset_MonsterSummary_.
+type PaginatedResultsetMonsterSummary struct {
+	Data []MonsterSummary `json:"data"`
+
+	// Metadata Envelopes a paginated resultset with metadata.
+	Metadata MetadataEnvelope `json:"metadata"`
+}
+
+// PaginatedResultsetSpellSummary defines model for PaginatedResultset_SpellSummary_.
+type PaginatedResultsetSpellSummary struct {
+	Data []SpellSummary `json:"data"`
+
+	// Metadata Envelopes a paginated resultset with metadata.
+	Metadata MetadataEnvelope `json:"metadata"`
+}
+
+// ResultsetMeta Metadata about a paginated resultset.
+type ResultsetMeta struct {
+	Count  int `json:"count"`
+	Limit  int `json:"limit"`
+	Offset int `json:"offset"`
+}
+
+// SpellDetail Full spell details, used in the detail endpoint.
+type SpellDetail struct {
+	Content       map[string]interface{} `json:"content"`
+	ContentSource map[string]interface{} `json:"contentSource"`
+	Level         string                 `json:"level"`
+	Name          string                 `json:"name"`
+	School        *string                `json:"school"`
+	Slug          string                 `json:"slug"`
+}
+
+// SpellSummary Summary info for a spell, used in list endpoints.
+//
+// Attributes:
+//
+//	slug: Unique identifier for the spell, used in URLs.
+//	name: The spell's name.
+//	level: The spell's level as a display string (e.g. "Cantrip", "1st").
+//	school: The spell's school of magic (e.g. "evocation").
+type SpellSummary struct {
+	Level  string  `json:"level"`
+	Name   string  `json:"name"`
+	School *string `json:"school"`
+	Slug   string  `json:"slug"`
+}
+
+// ValidationError defines model for ValidationError.
+type ValidationError struct {
+	Ctx   *map[string]interface{}    `json:"ctx,omitempty"`
+	Input interface{}                `json:"input,omitempty"`
+	Loc   []ValidationError_Loc_Item `json:"loc"`
+	Msg   string                     `json:"msg"`
+	Type  string                     `json:"type"`
+}
+
+// ValidationErrorLoc0 defines model for .
+type ValidationErrorLoc0 = string
+
+// ValidationErrorLoc1 defines model for .
+type ValidationErrorLoc1 = int
+
+// ValidationError_Loc_Item defines model for ValidationError.loc.Item.
+type ValidationError_Loc_Item struct {
+	union json.RawMessage
+}
+
+// ListItemsV1ItemsGetParams defines parameters for ListItemsV1ItemsGet.
+type ListItemsV1ItemsGetParams struct {
+	// ItemCategory Exact match on item category (e.g. 'weapon'). This is not guaranteed to be present for all items, as it depends on the source data.
+	ItemCategory *string `form:"item_category,omitempty" json:"item_category,omitempty"`
+
+	// Rarity Exact match on item rarity (e.g. 'common'). This is not guaranteed to be present for all items, as it depends on the source data. Set to 'none' to filter for items with no rarity (equipment).
+	Rarity *string `form:"rarity,omitempty" json:"rarity,omitempty"`
+	Limit  *int    `form:"limit,omitempty" json:"limit,omitempty"`
+	Offset *int    `form:"offset,omitempty" json:"offset,omitempty"`
+
+	// OrderBy Comma-separated sort fields in column:direction format. Direction is 'asc' or 'desc' (case-insensitive); omitting direction defaults to 'asc'. Valid columns: item_category, name, rarity.
+	OrderBy *string `form:"order_by,omitempty" json:"order_by,omitempty"`
+
+	// Search Case-insensitive substring search. Matches against name, item_category. Results are relevance-ordered: earlier columns rank higher than later ones.
+	Search *string `form:"search,omitempty" json:"search,omitempty"`
+}
+
+// GetItemV1ItemsSlugGetParams defines parameters for GetItemV1ItemsSlugGet.
+type GetItemV1ItemsSlugGetParams struct {
+	// Namespace The source namespace of the item, used to disambiguate items with the same slug from different sources. Known values: 'srd-5.1', 'srd-2024', 'user:{user_id}'.
+	Namespace *string `form:"namespace,omitempty" json:"namespace,omitempty"`
+}
+
+// ListMonstersV1MonstersGetParams defines parameters for ListMonstersV1MonstersGet.
+type ListMonstersV1MonstersGetParams struct {
+	// Type Exact match on monster type (e.g. 'undead').
+	Type *string `form:"type,omitempty" json:"type,omitempty"`
+
+	// CrMin Inclusive minimum challenge rating.
+	CrMin *struct {
+		union json.RawMessage
+	} `form:"cr_min,omitempty" json:"cr_min,omitempty"`
+
+	// CrMax Inclusive maximum challenge rating.
+	CrMax *struct {
+		union json.RawMessage
+	} `form:"cr_max,omitempty" json:"cr_max,omitempty"`
+	Limit  *int `form:"limit,omitempty" json:"limit,omitempty"`
+	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
+
+	// OrderBy Comma-separated sort fields in column:direction format. Direction is 'asc' or 'desc' (case-insensitive); omitting direction defaults to 'asc'. Valid columns: challenge_rating, monster_type, name.
+	OrderBy *string `form:"order_by,omitempty" json:"order_by,omitempty"`
+
+	// Search Case-insensitive substring search. Matches against name, monster_type. Results are relevance-ordered: earlier columns rank higher than later ones.
+	Search *string `form:"search,omitempty" json:"search,omitempty"`
+}
+
+// ListMonstersV1MonstersGetParamsCrMin0 defines parameters for ListMonstersV1MonstersGet.
+type ListMonstersV1MonstersGetParamsCrMin0 = float32
+
+// ListMonstersV1MonstersGetParamsCrMin1 defines parameters for ListMonstersV1MonstersGet.
+type ListMonstersV1MonstersGetParamsCrMin1 = string
+
+// ListMonstersV1MonstersGetParamsCrMax0 defines parameters for ListMonstersV1MonstersGet.
+type ListMonstersV1MonstersGetParamsCrMax0 = float32
+
+// ListMonstersV1MonstersGetParamsCrMax1 defines parameters for ListMonstersV1MonstersGet.
+type ListMonstersV1MonstersGetParamsCrMax1 = string
+
+// GetMonsterV1MonstersSlugGetParams defines parameters for GetMonsterV1MonstersSlugGet.
+type GetMonsterV1MonstersSlugGetParams struct {
+	// Namespace Source namespace to search in. Defaults to the SRD 5.1 namespace. Use 'user:{user_id}' for homebrew content.
+	Namespace *string `form:"namespace,omitempty" json:"namespace,omitempty"`
+}
+
+// ListSpellsV1SpellsGetParams defines parameters for ListSpellsV1SpellsGet.
+type ListSpellsV1SpellsGetParams struct {
+	// School Exact match on spell school (e.g. 'evocation').
+	School *string `form:"school,omitempty" json:"school,omitempty"`
+
+	// LevelMin Inclusive minimum spell level (0-9).
+	LevelMin *int `form:"level_min,omitempty" json:"level_min,omitempty"`
+
+	// LevelMax Inclusive maximum spell level (0-9).
+	LevelMax *int `form:"level_max,omitempty" json:"level_max,omitempty"`
+	Limit    *int `form:"limit,omitempty" json:"limit,omitempty"`
+	Offset   *int `form:"offset,omitempty" json:"offset,omitempty"`
+
+	// OrderBy Comma-separated sort fields in column:direction format. Direction is 'asc' or 'desc' (case-insensitive); omitting direction defaults to 'asc'. Valid columns: level, name, school.
+	OrderBy *string `form:"order_by,omitempty" json:"order_by,omitempty"`
+
+	// Search Case-insensitive substring search. Matches against name. Results are relevance-ordered: earlier columns rank higher than later ones.
+	Search *string `form:"search,omitempty" json:"search,omitempty"`
+}
+
+// GetSpellV1SpellsSlugGetParams defines parameters for GetSpellV1SpellsSlugGet.
+type GetSpellV1SpellsSlugGetParams struct {
+	// Namespace Source namespace to search in. Defaults to the SRD 5.1 namespace. Use 'user:{user_id}' for homebrew content.
+	Namespace *string `form:"namespace,omitempty" json:"namespace,omitempty"`
+}
+
+// AsValidationErrorLoc0 returns the union data inside the ValidationError_Loc_Item as a ValidationErrorLoc0
+func (t ValidationError_Loc_Item) AsValidationErrorLoc0() (ValidationErrorLoc0, error) {
+	var body ValidationErrorLoc0
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromValidationErrorLoc0 overwrites any union data inside the ValidationError_Loc_Item as the provided ValidationErrorLoc0
+func (t *ValidationError_Loc_Item) FromValidationErrorLoc0(v ValidationErrorLoc0) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeValidationErrorLoc0 performs a merge with any union data inside the ValidationError_Loc_Item, using the provided ValidationErrorLoc0
+func (t *ValidationError_Loc_Item) MergeValidationErrorLoc0(v ValidationErrorLoc0) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsValidationErrorLoc1 returns the union data inside the ValidationError_Loc_Item as a ValidationErrorLoc1
+func (t ValidationError_Loc_Item) AsValidationErrorLoc1() (ValidationErrorLoc1, error) {
+	var body ValidationErrorLoc1
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromValidationErrorLoc1 overwrites any union data inside the ValidationError_Loc_Item as the provided ValidationErrorLoc1
+func (t *ValidationError_Loc_Item) FromValidationErrorLoc1(v ValidationErrorLoc1) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeValidationErrorLoc1 performs a merge with any union data inside the ValidationError_Loc_Item, using the provided ValidationErrorLoc1
+func (t *ValidationError_Loc_Item) MergeValidationErrorLoc1(v ValidationErrorLoc1) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+func (t ValidationError_Loc_Item) MarshalJSON() ([]byte, error) {
+	b, err := t.union.MarshalJSON()
+	return b, err
+}
+
+func (t *ValidationError_Loc_Item) UnmarshalJSON(b []byte) error {
+	err := t.union.UnmarshalJSON(b)
+	return err
 }
 
 // RequestEditorFn  is the function signature for the RequestEditor callback function
@@ -94,10 +430,100 @@ func WithRequestEditorFn(fn RequestEditorFn) ClientOption {
 type ClientInterface interface {
 	// HealthCheckHealthGet request
 	HealthCheckHealthGet(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListItemsV1ItemsGet request
+	ListItemsV1ItemsGet(ctx context.Context, params *ListItemsV1ItemsGetParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetItemV1ItemsSlugGet request
+	GetItemV1ItemsSlugGet(ctx context.Context, slug string, params *GetItemV1ItemsSlugGetParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListMonstersV1MonstersGet request
+	ListMonstersV1MonstersGet(ctx context.Context, params *ListMonstersV1MonstersGetParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetMonsterV1MonstersSlugGet request
+	GetMonsterV1MonstersSlugGet(ctx context.Context, slug string, params *GetMonsterV1MonstersSlugGetParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListSpellsV1SpellsGet request
+	ListSpellsV1SpellsGet(ctx context.Context, params *ListSpellsV1SpellsGetParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetSpellV1SpellsSlugGet request
+	GetSpellV1SpellsSlugGet(ctx context.Context, slug string, params *GetSpellV1SpellsSlugGetParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
 func (c *Client) HealthCheckHealthGet(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewHealthCheckHealthGetRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ListItemsV1ItemsGet(ctx context.Context, params *ListItemsV1ItemsGetParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListItemsV1ItemsGetRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetItemV1ItemsSlugGet(ctx context.Context, slug string, params *GetItemV1ItemsSlugGetParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetItemV1ItemsSlugGetRequest(c.Server, slug, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ListMonstersV1MonstersGet(ctx context.Context, params *ListMonstersV1MonstersGetParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListMonstersV1MonstersGetRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetMonsterV1MonstersSlugGet(ctx context.Context, slug string, params *GetMonsterV1MonstersSlugGetParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetMonsterV1MonstersSlugGetRequest(c.Server, slug, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ListSpellsV1SpellsGet(ctx context.Context, params *ListSpellsV1SpellsGetParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListSpellsV1SpellsGetRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetSpellV1SpellsSlugGet(ctx context.Context, slug string, params *GetSpellV1SpellsSlugGetParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetSpellV1SpellsSlugGetRequest(c.Server, slug, params)
 	if err != nil {
 		return nil, err
 	}
@@ -125,6 +551,593 @@ func NewHealthCheckHealthGetRequest(server string) (*http.Request, error) {
 	queryURL, err := serverURL.Parse(operationPath)
 	if err != nil {
 		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewListItemsV1ItemsGetRequest generates requests for ListItemsV1ItemsGet
+func NewListItemsV1ItemsGetRequest(server string, params *ListItemsV1ItemsGetParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/items")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.ItemCategory != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "item_category", *params.ItemCategory, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Rarity != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "rarity", *params.Rarity, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Limit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "limit", *params.Limit, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Offset != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "offset", *params.Offset, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.OrderBy != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "order_by", *params.OrderBy, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Search != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "search", *params.Search, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetItemV1ItemsSlugGetRequest generates requests for GetItemV1ItemsSlugGet
+func NewGetItemV1ItemsSlugGetRequest(server string, slug string, params *GetItemV1ItemsSlugGetParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "slug", slug, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/items/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.Namespace != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "namespace", *params.Namespace, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewListMonstersV1MonstersGetRequest generates requests for ListMonstersV1MonstersGet
+func NewListMonstersV1MonstersGetRequest(server string, params *ListMonstersV1MonstersGetParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/monsters")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.Type != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "type", *params.Type, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.CrMin != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "cr_min", *params.CrMin, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "", Format: ""}); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.CrMax != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "cr_max", *params.CrMax, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "", Format: ""}); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Limit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "limit", *params.Limit, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Offset != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "offset", *params.Offset, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.OrderBy != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "order_by", *params.OrderBy, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Search != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "search", *params.Search, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetMonsterV1MonstersSlugGetRequest generates requests for GetMonsterV1MonstersSlugGet
+func NewGetMonsterV1MonstersSlugGetRequest(server string, slug string, params *GetMonsterV1MonstersSlugGetParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "slug", slug, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/monsters/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.Namespace != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "namespace", *params.Namespace, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewListSpellsV1SpellsGetRequest generates requests for ListSpellsV1SpellsGet
+func NewListSpellsV1SpellsGetRequest(server string, params *ListSpellsV1SpellsGetParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/spells")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.School != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "school", *params.School, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.LevelMin != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "level_min", *params.LevelMin, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.LevelMax != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "level_max", *params.LevelMax, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Limit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "limit", *params.Limit, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Offset != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "offset", *params.Offset, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.OrderBy != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "order_by", *params.OrderBy, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Search != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "search", *params.Search, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetSpellV1SpellsSlugGetRequest generates requests for GetSpellV1SpellsSlugGet
+func NewGetSpellV1SpellsSlugGetRequest(server string, slug string, params *GetSpellV1SpellsSlugGetParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "slug", slug, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/spells/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.Namespace != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "namespace", *params.Namespace, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
 	}
 
 	req, err := http.NewRequest("GET", queryURL.String(), nil)
@@ -180,6 +1193,24 @@ func WithBaseURL(baseURL string) ClientOption {
 type ClientWithResponsesInterface interface {
 	// HealthCheckHealthGetWithResponse request
 	HealthCheckHealthGetWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*HealthCheckHealthGetResponse, error)
+
+	// ListItemsV1ItemsGetWithResponse request
+	ListItemsV1ItemsGetWithResponse(ctx context.Context, params *ListItemsV1ItemsGetParams, reqEditors ...RequestEditorFn) (*ListItemsV1ItemsGetResponse, error)
+
+	// GetItemV1ItemsSlugGetWithResponse request
+	GetItemV1ItemsSlugGetWithResponse(ctx context.Context, slug string, params *GetItemV1ItemsSlugGetParams, reqEditors ...RequestEditorFn) (*GetItemV1ItemsSlugGetResponse, error)
+
+	// ListMonstersV1MonstersGetWithResponse request
+	ListMonstersV1MonstersGetWithResponse(ctx context.Context, params *ListMonstersV1MonstersGetParams, reqEditors ...RequestEditorFn) (*ListMonstersV1MonstersGetResponse, error)
+
+	// GetMonsterV1MonstersSlugGetWithResponse request
+	GetMonsterV1MonstersSlugGetWithResponse(ctx context.Context, slug string, params *GetMonsterV1MonstersSlugGetParams, reqEditors ...RequestEditorFn) (*GetMonsterV1MonstersSlugGetResponse, error)
+
+	// ListSpellsV1SpellsGetWithResponse request
+	ListSpellsV1SpellsGetWithResponse(ctx context.Context, params *ListSpellsV1SpellsGetParams, reqEditors ...RequestEditorFn) (*ListSpellsV1SpellsGetResponse, error)
+
+	// GetSpellV1SpellsSlugGetWithResponse request
+	GetSpellV1SpellsSlugGetWithResponse(ctx context.Context, slug string, params *GetSpellV1SpellsSlugGetParams, reqEditors ...RequestEditorFn) (*GetSpellV1SpellsSlugGetResponse, error)
 }
 
 type HealthCheckHealthGetResponse struct {
@@ -204,6 +1235,147 @@ func (r HealthCheckHealthGetResponse) StatusCode() int {
 	return 0
 }
 
+type ListItemsV1ItemsGetResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *PaginatedResultsetItemSummary
+	JSON422      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r ListItemsV1ItemsGetResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListItemsV1ItemsGetResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetItemV1ItemsSlugGetResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *ItemDetail
+	JSON404      *ErrorResponse
+	JSON422      *HTTPValidationError
+}
+
+// Status returns HTTPResponse.Status
+func (r GetItemV1ItemsSlugGetResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetItemV1ItemsSlugGetResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ListMonstersV1MonstersGetResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *PaginatedResultsetMonsterSummary
+	JSON422      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r ListMonstersV1MonstersGetResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListMonstersV1MonstersGetResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetMonsterV1MonstersSlugGetResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *MonsterDetail
+	JSON404      *ErrorResponse
+	JSON422      *HTTPValidationError
+}
+
+// Status returns HTTPResponse.Status
+func (r GetMonsterV1MonstersSlugGetResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetMonsterV1MonstersSlugGetResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ListSpellsV1SpellsGetResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *PaginatedResultsetSpellSummary
+	JSON422      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r ListSpellsV1SpellsGetResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListSpellsV1SpellsGetResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetSpellV1SpellsSlugGetResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *SpellDetail
+	JSON404      *ErrorResponse
+	JSON422      *HTTPValidationError
+}
+
+// Status returns HTTPResponse.Status
+func (r GetSpellV1SpellsSlugGetResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetSpellV1SpellsSlugGetResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 // HealthCheckHealthGetWithResponse request returning *HealthCheckHealthGetResponse
 func (c *ClientWithResponses) HealthCheckHealthGetWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*HealthCheckHealthGetResponse, error) {
 	rsp, err := c.HealthCheckHealthGet(ctx, reqEditors...)
@@ -211,6 +1383,60 @@ func (c *ClientWithResponses) HealthCheckHealthGetWithResponse(ctx context.Conte
 		return nil, err
 	}
 	return ParseHealthCheckHealthGetResponse(rsp)
+}
+
+// ListItemsV1ItemsGetWithResponse request returning *ListItemsV1ItemsGetResponse
+func (c *ClientWithResponses) ListItemsV1ItemsGetWithResponse(ctx context.Context, params *ListItemsV1ItemsGetParams, reqEditors ...RequestEditorFn) (*ListItemsV1ItemsGetResponse, error) {
+	rsp, err := c.ListItemsV1ItemsGet(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListItemsV1ItemsGetResponse(rsp)
+}
+
+// GetItemV1ItemsSlugGetWithResponse request returning *GetItemV1ItemsSlugGetResponse
+func (c *ClientWithResponses) GetItemV1ItemsSlugGetWithResponse(ctx context.Context, slug string, params *GetItemV1ItemsSlugGetParams, reqEditors ...RequestEditorFn) (*GetItemV1ItemsSlugGetResponse, error) {
+	rsp, err := c.GetItemV1ItemsSlugGet(ctx, slug, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetItemV1ItemsSlugGetResponse(rsp)
+}
+
+// ListMonstersV1MonstersGetWithResponse request returning *ListMonstersV1MonstersGetResponse
+func (c *ClientWithResponses) ListMonstersV1MonstersGetWithResponse(ctx context.Context, params *ListMonstersV1MonstersGetParams, reqEditors ...RequestEditorFn) (*ListMonstersV1MonstersGetResponse, error) {
+	rsp, err := c.ListMonstersV1MonstersGet(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListMonstersV1MonstersGetResponse(rsp)
+}
+
+// GetMonsterV1MonstersSlugGetWithResponse request returning *GetMonsterV1MonstersSlugGetResponse
+func (c *ClientWithResponses) GetMonsterV1MonstersSlugGetWithResponse(ctx context.Context, slug string, params *GetMonsterV1MonstersSlugGetParams, reqEditors ...RequestEditorFn) (*GetMonsterV1MonstersSlugGetResponse, error) {
+	rsp, err := c.GetMonsterV1MonstersSlugGet(ctx, slug, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetMonsterV1MonstersSlugGetResponse(rsp)
+}
+
+// ListSpellsV1SpellsGetWithResponse request returning *ListSpellsV1SpellsGetResponse
+func (c *ClientWithResponses) ListSpellsV1SpellsGetWithResponse(ctx context.Context, params *ListSpellsV1SpellsGetParams, reqEditors ...RequestEditorFn) (*ListSpellsV1SpellsGetResponse, error) {
+	rsp, err := c.ListSpellsV1SpellsGet(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListSpellsV1SpellsGetResponse(rsp)
+}
+
+// GetSpellV1SpellsSlugGetWithResponse request returning *GetSpellV1SpellsSlugGetResponse
+func (c *ClientWithResponses) GetSpellV1SpellsSlugGetWithResponse(ctx context.Context, slug string, params *GetSpellV1SpellsSlugGetParams, reqEditors ...RequestEditorFn) (*GetSpellV1SpellsSlugGetResponse, error) {
+	rsp, err := c.GetSpellV1SpellsSlugGet(ctx, slug, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetSpellV1SpellsSlugGetResponse(rsp)
 }
 
 // ParseHealthCheckHealthGetResponse parses an HTTP response from a HealthCheckHealthGetWithResponse call
@@ -233,6 +1459,225 @@ func ParseHealthCheckHealthGetResponse(rsp *http.Response) (*HealthCheckHealthGe
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListItemsV1ItemsGetResponse parses an HTTP response from a ListItemsV1ItemsGetWithResponse call
+func ParseListItemsV1ItemsGetResponse(rsp *http.Response) (*ListItemsV1ItemsGetResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListItemsV1ItemsGetResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PaginatedResultsetItemSummary
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetItemV1ItemsSlugGetResponse parses an HTTP response from a GetItemV1ItemsSlugGetWithResponse call
+func ParseGetItemV1ItemsSlugGetResponse(rsp *http.Response) (*GetItemV1ItemsSlugGetResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetItemV1ItemsSlugGetResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ItemDetail
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest HTTPValidationError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListMonstersV1MonstersGetResponse parses an HTTP response from a ListMonstersV1MonstersGetWithResponse call
+func ParseListMonstersV1MonstersGetResponse(rsp *http.Response) (*ListMonstersV1MonstersGetResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListMonstersV1MonstersGetResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PaginatedResultsetMonsterSummary
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetMonsterV1MonstersSlugGetResponse parses an HTTP response from a GetMonsterV1MonstersSlugGetWithResponse call
+func ParseGetMonsterV1MonstersSlugGetResponse(rsp *http.Response) (*GetMonsterV1MonstersSlugGetResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetMonsterV1MonstersSlugGetResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest MonsterDetail
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest HTTPValidationError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListSpellsV1SpellsGetResponse parses an HTTP response from a ListSpellsV1SpellsGetWithResponse call
+func ParseListSpellsV1SpellsGetResponse(rsp *http.Response) (*ListSpellsV1SpellsGetResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListSpellsV1SpellsGetResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PaginatedResultsetSpellSummary
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetSpellV1SpellsSlugGetResponse parses an HTTP response from a GetSpellV1SpellsSlugGetWithResponse call
+func ParseGetSpellV1SpellsSlugGetResponse(rsp *http.Response) (*GetSpellV1SpellsSlugGetResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetSpellV1SpellsSlugGetResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SpellDetail
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest HTTPValidationError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
 
 	}
 
