@@ -23,6 +23,9 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 # ---------------------------------------------------------------------------
 # Application source
 # ---------------------------------------------------------------------------
+# pyproject.toml is read by config.py to seed the default version string.
+# The VERSION env var (set by docker-compose) takes precedence at runtime.
+COPY pyproject.toml ./
 COPY app/ ./app/
 
 EXPOSE 8000
