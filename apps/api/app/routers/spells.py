@@ -1,13 +1,13 @@
 """Spell list and detail endpoints."""
 
-from typing import Annotated
+from typing import Annotated, Any
 
-from fastapi import APIRouter, Query, Request
+from fastapi import APIRouter, Depends, Query, Request, status
 from sqlalchemy import select
 
 from app.constants import SRD_NAMESPACE
 from app.db import DbSession
-from app.dependencies import Pagination
+from app.dependencies import Pagination, ordering_dep
 from app.exceptions import get_or_404
 from app.models import Spell
 from app.schemas.errors import ErrorResponse
@@ -17,19 +17,33 @@ from app.utils import build_links, fetch_page, paginate
 
 router = APIRouter(prefix="/spells", tags=["Spells"])
 
+_SPELL_ORDERING = ordering_dep(
+    {
+        "level": Spell.level,
+        "name": Spell.name,
+        "school": Spell.school,
+    },
+    default="level:asc,name:asc",
+)
+SpellOrdering = Annotated[list[Any], Depends(_SPELL_ORDERING)]
+
 
 @router.get(
     "",
     response_model=PaginatedResultset[SpellSummary],
     summary="List spells",
     responses={
-        422: {"model": ErrorResponse, "description": "Validation error"},
+        status.HTTP_422_UNPROCESSABLE_CONTENT: {
+            "model": ErrorResponse,
+            "description": "Validation error",
+        },
     },
 )
 async def list_spells(
     request: Request,
     session: DbSession,
     params: Pagination,
+    ordering: SpellOrdering,
     search: Annotated[
         str | None,
         Query(description="Case-insensitive substring match on spell name."),
@@ -53,6 +67,7 @@ async def list_spells(
         request: Current HTTP request, used to build pagination links.
         session: Database session, injected by dependency.
         params: Pagination parameters, injected by dependency.
+        ordering: SQLAlchemy ordering expressions, injected by dependency.
         search: Optional case-insensitive substring to filter spell names.
         school: Optional exact match for spell school.
         level_min: Optional minimum spell level (inclusive).
@@ -65,9 +80,8 @@ async def list_spells(
     Example:
         GET /v1/spells?search=fire&level_min=1&level_max=3&school=evocation
         GET /v1/spells?level_max=0
-        GET /v1/spells?school=illusion
-        GET /v1/spells?search=light
-        GET /v1/spells?limit=5&offset=10
+        GET /v1/spells?order_by=name:asc
+        GET /v1/spells?order_by=level:desc,name:asc&limit=5&offset=10
     """
     stmt = select(Spell).where(Spell.source_namespace == SRD_NAMESPACE)
 
@@ -83,7 +97,7 @@ async def list_spells(
     total, rows = await fetch_page(
         session,
         stmt,
-        ordering=[Spell.level.asc(), Spell.name.asc()],
+        ordering=ordering,
         params=params,
     )
     return paginate(
@@ -99,7 +113,10 @@ async def list_spells(
     response_model=SpellDetail,
     summary="Get spell",
     responses={
-        404: {"model": ErrorResponse, "description": "Spell not found"},
+        status.HTTP_404_NOT_FOUND: {
+            "model": ErrorResponse,
+            "description": "Spell not found",
+        },
     },
 )
 async def get_spell(
