@@ -7,7 +7,7 @@ from sqlalchemy import select
 
 from app.constants import SRD_NAMESPACE
 from app.db import DbSession
-from app.dependencies import Pagination, ordering_dep
+from app.dependencies import Pagination, SearchFilter, ordering_dep, search_dep
 from app.exceptions import get_or_404
 from app.models import Item
 from app.schemas.errors import ErrorResponse
@@ -27,6 +27,9 @@ _ITEM_ORDERING = ordering_dep(
 )
 ItemOrdering = Annotated[list[Any], Depends(_ITEM_ORDERING)]
 
+_ITEM_SEARCH = search_dep([Item.name, Item.item_category])
+ItemSearch = Annotated[SearchFilter, Depends(_ITEM_SEARCH)]
+
 
 @router.get(
     "",
@@ -44,10 +47,7 @@ async def list_items(
     session: DbSession,
     params: Pagination,
     ordering: ItemOrdering,
-    search: Annotated[
-        str | None,
-        Query(description="Case-insensitive substring match on item name."),
-    ] = None,
+    search: ItemSearch,
     item_category: Annotated[
         str | None,
         Query(
@@ -73,7 +73,7 @@ async def list_items(
         session: Database session, injected by dependency.
         params: Pagination parameters, injected by dependency.
         ordering: SQLAlchemy ordering expressions, injected by dependency.
-        search: Optional case-insensitive search term against item name.
+        search: Parsed search filter, injected by dependency.
         item_category: Optional exact match for the item_category field.
         rarity: Optional exact match for the rarity field. Set to 'none' to
             filter for items with no rarity (equipment).
@@ -90,8 +90,8 @@ async def list_items(
     """
     stmt = select(Item).where(Item.source_namespace == SRD_NAMESPACE)
 
-    if search:
-        stmt = stmt.where(Item.name.ilike(f"%{search}%"))
+    if search.where is not None:
+        stmt = stmt.where(search.where)
     if item_category:
         stmt = stmt.where(Item.item_category == item_category)
     if rarity:
@@ -103,7 +103,7 @@ async def list_items(
     total, rows = await fetch_page(
         session,
         stmt,
-        ordering=ordering,
+        ordering=[*search.order_priority, *ordering],
         params=params,
     )
     return paginate(
