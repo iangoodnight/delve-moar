@@ -6,6 +6,7 @@ single location, and registers them with FastAPI's OpenAPI schema generator.
 
 from app.schemas.base import AppSchema
 from app.schemas.errors import ErrorResponse
+from app.schemas.items import ItemDetail, ItemSummary
 from app.schemas.monsters import MonsterDetail, MonsterSummary
 from app.schemas.pagination import (
     MetadataEnvelope,
@@ -17,6 +18,8 @@ from app.schemas.spells import SpellDetail, SpellSummary
 __all__ = [
     "AppSchema",
     "ErrorResponse",
+    "ItemDetail",
+    "ItemSummary",
     "MetadataEnvelope",
     "MonsterDetail",
     "MonsterSummary",

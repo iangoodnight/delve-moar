@@ -4,7 +4,7 @@ from decimal import Decimal
 from typing import Annotated
 
 from fastapi import APIRouter, Query
-from sqlalchemy import func, select
+from sqlalchemy import select
 
 from app.constants import SRD_NAMESPACE
 from app.db import DbSession
@@ -14,7 +14,7 @@ from app.models import Monster
 from app.schemas.errors import ErrorResponse
 from app.schemas.monsters import MonsterDetail, MonsterSummary
 from app.schemas.pagination import PaginatedResultset
-from app.utils import paginate
+from app.utils import fetch_page, paginate
 
 router = APIRouter(prefix="/monsters", tags=["Monsters"])
 
@@ -81,20 +81,15 @@ async def list_monsters(
     if cr_max is not None:
         stmt = stmt.where(Monster.challenge_rating <= cr_max)
 
-    total = (
-        await session.scalar(select(func.count()).select_from(stmt.subquery()))
-    ) or 0
-
-    stmt = (
-        stmt.order_by(
+    total, rows = await fetch_page(
+        session,
+        stmt,
+        ordering=[
             Monster.challenge_rating.asc().nulls_last(),
             Monster.name.asc(),
-        )
-        .offset(params.offset)
-        .limit(params.limit)
+        ],
+        params=params,
     )
-    rows = list((await session.execute(stmt)).scalars())
-
     return paginate(
         data=[MonsterSummary.model_validate(row) for row in rows],
         total=total,
