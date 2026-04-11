@@ -8,10 +8,12 @@ class AppSchema(BaseModel):
     """Base config for all schemas in the app.
 
     Ensure JSON responses are camelCase and allow population by field name
-    (snake_case) for ease of use in Python code.
+    (snake_case) for ease of use in Python code. Also allow population from
+    attributes to support ORM models.
     """
 
     model_config = ConfigDict(
         alias_generator=to_camel,
         populate_by_name=True,
+        from_attributes=True,
     )
