@@ -1,6 +1,11 @@
 """Utility functions for the application."""
 
+from collections.abc import Sequence
 from decimal import Decimal
+from typing import Any
+
+from sqlalchemy import Select, func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.dependencies import PaginationParams
 from app.schemas.pagination import (
@@ -44,6 +49,45 @@ def cr_display(value: float | int) -> str:
     """
     d = Decimal(str(value)).quantize(Decimal("0.001"))
     return _CR_DISPLAY.get(d, str(int(value) if value == int(value) else value))
+
+
+async def fetch_page(
+    session: AsyncSession,
+    stmt: Select[Any],
+    ordering: Sequence[Any],
+    params: PaginationParams,
+) -> tuple[int, list[Any]]:
+    """Run a count query then a paged data query for a list endpoint.
+
+    Centralises the two-query pattern shared by every resource router: first
+    count all rows matching the filtered ``stmt``, then apply ordering,
+    offset, and limit before fetching the page.
+
+    Args:
+        session: Active async database session.
+        stmt: A filtered ``SELECT`` statement (no ordering or paging applied
+            yet).  Used as-is for the count, then extended for the data fetch.
+        ordering: SQLAlchemy ordering expressions passed to ``order_by``.
+        params: Pagination parameters (limit and offset) from the request.
+
+    Returns:
+        A ``(total, rows)`` tuple where ``total`` is the count across all
+        pages and ``rows`` is the list of ORM instances for this page.
+
+    Example:
+        total, rows = await fetch_page(
+            session, stmt,
+            ordering=[Monster.challenge_rating.asc().nulls_last(),
+                      Monster.name.asc()],
+            params=params,
+        )
+    """
+    total = (
+        await session.scalar(select(func.count()).select_from(stmt.subquery()))
+    ) or 0
+    paged = stmt.order_by(*ordering).offset(params.offset).limit(params.limit)
+    rows = list((await session.execute(paged)).scalars())
+    return total, rows
 
 
 def paginate[T](

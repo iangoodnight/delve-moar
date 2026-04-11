@@ -3,7 +3,7 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Query
-from sqlalchemy import func, select
+from sqlalchemy import select
 
 from app.constants import SRD_NAMESPACE
 from app.db import DbSession
@@ -13,7 +13,7 @@ from app.models import Spell
 from app.schemas.errors import ErrorResponse
 from app.schemas.pagination import PaginatedResultset
 from app.schemas.spells import SpellDetail, SpellSummary
-from app.utils import paginate
+from app.utils import fetch_page, paginate
 
 router = APIRouter(prefix="/spells", tags=["Spells"])
 
@@ -78,17 +78,12 @@ async def list_spells(
     if level_max is not None:
         stmt = stmt.where(Spell.level <= level_max)
 
-    total = (
-        await session.scalar(select(func.count()).select_from(stmt.subquery()))
-    ) or 0
-
-    stmt = (
-        stmt.order_by(Spell.level.asc(), Spell.name.asc())
-        .offset(params.offset)
-        .limit(params.limit)
+    total, rows = await fetch_page(
+        session,
+        stmt,
+        ordering=[Spell.level.asc(), Spell.name.asc()],
+        params=params,
     )
-    rows = list((await session.execute(stmt)).scalars())
-
     return paginate(
         data=[SpellSummary.model_validate(row) for row in rows],
         total=total,
