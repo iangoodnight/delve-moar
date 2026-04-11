@@ -2,7 +2,7 @@
 
 from typing import Annotated
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Request
 from sqlalchemy import select
 
 from app.constants import SRD_NAMESPACE
@@ -13,7 +13,7 @@ from app.models import Item
 from app.schemas.errors import ErrorResponse
 from app.schemas.items import ItemDetail, ItemSummary
 from app.schemas.pagination import PaginatedResultset
-from app.utils import fetch_page, paginate
+from app.utils import build_links, fetch_page, paginate
 
 router = APIRouter(prefix="/items", tags=["Items"])
 
@@ -27,6 +27,7 @@ router = APIRouter(prefix="/items", tags=["Items"])
     },
 )
 async def list_items(
+    request: Request,
     session: DbSession,
     params: Pagination,
     search: Annotated[
@@ -54,6 +55,7 @@ async def list_items(
     """Return a paginated list of items with optional filters.
 
     Args:
+        request: Current HTTP request, used to build pagination links.
         session: Database session, injected by dependency.
         params: Pagination parameters, injected by dependency.
         search: Optional case-insensitive search term against item name.
@@ -92,6 +94,7 @@ async def list_items(
         data=[ItemSummary.model_validate(row) for row in rows],
         total=total,
         params=params,
+        links=build_links(request, total, params.offset, params.limit),
     )
 
 

@@ -9,6 +9,7 @@ from app.schemas.errors import ErrorResponse
 from app.schemas.items import ItemDetail, ItemSummary
 from app.schemas.monsters import MonsterDetail, MonsterSummary
 from app.schemas.pagination import (
+    Links,
     MetadataEnvelope,
     PaginatedResultset,
     ResultsetMeta,
@@ -20,6 +21,7 @@ __all__ = [
     "ErrorResponse",
     "ItemDetail",
     "ItemSummary",
+    "Links",
     "MetadataEnvelope",
     "MonsterDetail",
     "MonsterSummary",

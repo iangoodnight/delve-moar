@@ -3,7 +3,7 @@
 from decimal import Decimal
 from typing import Annotated
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Request
 from sqlalchemy import select
 
 from app.constants import SRD_NAMESPACE
@@ -14,7 +14,7 @@ from app.models import Monster
 from app.schemas.errors import ErrorResponse
 from app.schemas.monsters import MonsterDetail, MonsterSummary
 from app.schemas.pagination import PaginatedResultset
-from app.utils import fetch_page, paginate
+from app.utils import build_links, fetch_page, paginate
 
 router = APIRouter(prefix="/monsters", tags=["Monsters"])
 
@@ -28,6 +28,7 @@ router = APIRouter(prefix="/monsters", tags=["Monsters"])
     },
 )
 async def list_monsters(
+    request: Request,
     session: DbSession,
     params: Pagination,
     search: Annotated[
@@ -53,6 +54,7 @@ async def list_monsters(
     """Return a paginated list of monsters with optional filters.
 
     Args:
+        request: Current HTTP request, used to build pagination links.
         session: Database session, injected by dependency.
         params: Pagination parameters, injected by dependency.
         search: Optional case-insensitive search term against monster name.
@@ -94,6 +96,7 @@ async def list_monsters(
         data=[MonsterSummary.model_validate(row) for row in rows],
         total=total,
         params=params,
+        links=build_links(request, total, params.offset, params.limit),
     )
 
 
