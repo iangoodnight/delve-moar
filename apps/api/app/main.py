@@ -37,6 +37,9 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc",
     lifespan=lifespan,
+    # oapi-codegen does not support OpenAPI 3.1 yet; pin to 3.0.3 until
+    # https://github.com/oapi-codegen/oapi-codegen/issues/373 is resolved.
+    openapi_version="3.0.3",
 )
 
 register_exception_handlers(app)
