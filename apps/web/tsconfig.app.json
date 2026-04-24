@@ -30,7 +30,6 @@
     "noUnusedParameters": true,
 
     /* Paths */
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
     }
