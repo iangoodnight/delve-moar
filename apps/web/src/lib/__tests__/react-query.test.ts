@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { queryConfig } from './react-query';
+import { queryConfig } from '../react-query';
 
 describe('queryConfig', () => {
   it('exposes the expected query defaults', () => {
