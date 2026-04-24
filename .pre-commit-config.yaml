@@ -4,18 +4,25 @@ repos:
     rev: v6.0.0
     hooks:
       - id: trailing-whitespace
+        stages: [pre-commit]
       - id: end-of-file-fixer
+        stages: [pre-commit]
       - id: check-yaml
+        stages: [pre-commit]
       - id: check-json
         exclude: (tsconfig.*\.json$)
+        stages: [pre-commit]
       - id: check-toml
+        stages: [pre-commit]
       - id: check-added-large-files
+        stages: [pre-commit]
 
   # ── Shell — lint (shellcheck-py manages its own binary) ───────────────────
   - repo: https://github.com/shellcheck-py/shellcheck-py
     rev: v0.11.0.1
     hooks:
       - id: shellcheck
+        stages: [pre-commit]
 
   # ── Shell — format (requires: brew install shfmt) ─────────────────────────
   - repo: local
@@ -26,6 +33,7 @@ repos:
         entry: shfmt
         args: [--indent, "2", --case-indent, --binary-next-line, --write]
         files: \.sh$
+        stages: [pre-commit]
 
   # ── Python — ruff handles both lint and format ────────────────────────────
   - repo: https://github.com/astral-sh/ruff-pre-commit
@@ -34,8 +42,10 @@ repos:
       - id: ruff
         args: [--fix]
         files: ^apps/api/
+        stages: [pre-commit]
       - id: ruff-format
         files: ^apps/api/
+        stages: [pre-commit]
 
   # ── Go — lint (requires golangci-lint in PATH) ────────────────────────────
   - repo: local
@@ -46,6 +56,7 @@ repos:
         entry: bash -c 'cd apps/cli && golangci-lint run ./...'
         files: ^apps/cli/.*\.go$
         pass_filenames: false
+        stages: [pre-commit]
 
   # ── TypeScript / web ──────────────────────────────────────────────────────
   - repo: local
@@ -56,6 +67,7 @@ repos:
         entry: pnpm --filter @delve-moar/web lint
         files: ^apps/web/src/.*\.(ts|tsx)$
         pass_filenames: false
+        stages: [pre-commit]
 
       - id: prettier-web
         name: prettier (web)
@@ -63,6 +75,7 @@ repos:
         entry: pnpm --filter @delve-moar/web format
         files: ^apps/web/.*\.(ts|tsx|css|json)$
         pass_filenames: false
+        stages: [pre-commit]
 
   # ── Commit message — commitlint ──────────────────────────────────────────
   - repo: local

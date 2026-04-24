@@ -16,22 +16,23 @@ import prettier from 'eslint-config-prettier';
 //
 // Layer hierarchy — each layer may only import from layers listed below it:
 //
-//   app, pages         ← route-level composition; orchestrate features
-//     features         ← isolated vertical slices (cross-feature: blocked)
-//       components     ← shared presentational components
-//         hooks        ← shared custom hooks
-//           lib        ← third-party library wrappers
-//           utils      ← pure utility functions
-//           config     ← environment / app configuration
-//           types      ← shared TypeScript types (no internal imports)
-//           assets     ← static files (no internal imports)
+//   app, pages         < route-level composition; orchestrate features
+//     features         < isolated vertical slices (cross-feature: blocked)
+//       components     < shared presentational components
+//         hooks        < shared custom hooks
+//           lib        < third-party library wrappers
+//           utils      < pure utility functions
+//           config     < environment / app configuration
+//           types      < shared TypeScript types (no internal imports)
+//           assets     < static files (no internal imports)
 //
-//   testing            ← test utilities; unrestricted (never imported by app)
+//   testing            < test utilities; unrestricted (never imported by app)
 // ---------------------------------------------------------------------------
 const BOUNDARY_ELEMENTS = [
   { type: 'app', pattern: 'src/app/**' },
   { type: 'pages', pattern: 'src/pages/**' },
-  // capture: ['featureName'] lets the cross-feature rule reference {{from.captured.featureName}}
+  // capture: ['featureName'] lets the cross-feature rule reference
+  // {{from.captured.featureName}}
   { type: 'features', pattern: 'src/features/*/**', capture: ['featureName'] },
   { type: 'components', pattern: 'src/components/**' },
   { type: 'hooks', pattern: 'src/hooks/**' },
@@ -74,7 +75,7 @@ export default tseslint.config(
       },
     },
     rules: {
-      // align with verbatimModuleSyntax — always use "import type" for type-only imports
+      // align with verbatimModuleSyntax - always use "import type"
       '@typescript-eslint/consistent-type-imports': [
         'error',
         { prefer: 'type-imports', fixStyle: 'inline-type-imports' },
@@ -126,11 +127,38 @@ export default tseslint.config(
     },
   },
 
+  // CODE STYLE
+  {
+    files: ['**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector:
+            'Program > VariableDeclaration > VariableDeclarator[init.type="ArrowFunctionExpression"]',
+          message:
+            'Prefer a function declaration at the module level. Use `function foo() {}` instead of `const foo = () => {}`.',
+        },
+      ],
+    },
+  },
+
   // ARCHITECTURAL BOUNDARIES
   {
     files: ['**/*.{ts,tsx}'],
     plugins: { boundaries },
-    settings: { 'boundaries/elements': BOUNDARY_ELEMENTS },
+    settings: {
+      'boundaries/elements': BOUNDARY_ELEMENTS,
+      // only classify files under src/** - anything else (workspace packages
+      // in packages/**, node_modules) is treated as external and exempt.
+      'boundaries/include': ['src/**'],
+      'import/resolver': {
+        typescript: {
+          project: './tsconfig.json',
+          alwaysTryTypes: true,
+        },
+      },
+    },
     rules: {
       'boundaries/no-unknown': 'error',
       'boundaries/dependencies': [
@@ -146,7 +174,6 @@ export default tseslint.config(
               })),
             },
             // features: shared layers + same-feature files only
-            // Cross-feature imports are blocked — lift shared code to components/hooks/lib
             {
               from: { type: 'features' },
               allow: [
@@ -183,7 +210,7 @@ export default tseslint.config(
               from: { type: 'config' },
               allow: [{ to: { type: 'types' } }],
             },
-            // testing: unrestricted access (test utilities; never imported by app code)
+            // testing: unrestricted access (never imported by app code)
             {
               from: { type: 'testing' },
               allow: ['app', 'pages', 'features', ...SHARED_LAYERS].map(
@@ -195,8 +222,6 @@ export default tseslint.config(
       ],
     },
   },
-  // test files are co-located with source — exempt them from boundary enforcement.
-  // they are never imported by app code so they can't create real coupling.
   {
     files: ['**/*.test.{ts,tsx}'],
     rules: {
@@ -209,18 +234,18 @@ export default tseslint.config(
   {
     plugins: { 'check-file': checkFile },
     rules: {
-      // All ts files must be kebab-case: app.tsx, use-auth.ts, user-card.tsx
-      // ignoreMiddleExtensions handles .test.tsx, .stories.tsx, etc. — only the
-      // base name (before the first dot) is checked
       'check-file/filename-naming-convention': [
         'error',
         { '**/*.{ts,tsx}': 'KEBAB_CASE' },
         { ignoreMiddleExtensions: true },
       ],
-      // All directories under src/ must also be kebab-case
+      // Folders must be kebab-case, with one exception: the `__tests__`
+      // convention for colocating a directory of test files alongside its
+      // siblings (e.g. button.tsx + button.module.css + __tests__/button.test.tsx).
+      // The extglob unions the KEBAB_CASE pattern with the literal __tests__.
       'check-file/folder-naming-convention': [
         'error',
-        { 'src/**/': 'KEBAB_CASE' },
+        { 'src/**/': '@(__tests__|+([a-z0-9])*(-+([a-z0-9])))' },
       ],
     },
   },

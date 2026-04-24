@@ -16,6 +16,11 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     setupFiles: ['./src/testing/setup.ts'],
+    // default VITE_APP_API_URL so modules that resolve env.ts at import time
+    // e.g. lib/api-client.ts) have a valid URL during tests.
+    env: {
+      VITE_APP_API_URL: 'http://localhost:8000',
+    },
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
