@@ -126,11 +126,35 @@ export default tseslint.config(
     },
   },
 
+  // CODE STYLE
+  {
+    files: ['**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector:
+            'Program > VariableDeclaration > VariableDeclarator[init.type="ArrowFunctionExpression"]',
+          message:
+            'Prefer a function declaration at the module level. Use `function foo() {}` instead of `const foo = () => {}`.',
+        },
+      ],
+    },
+  },
+
   // ARCHITECTURAL BOUNDARIES
   {
     files: ['**/*.{ts,tsx}'],
     plugins: { boundaries },
-    settings: { 'boundaries/elements': BOUNDARY_ELEMENTS },
+    settings: {
+      'boundaries/elements': BOUNDARY_ELEMENTS,
+      'import/resolver': {
+        typescript: {
+          project: './tsconfig.json',
+          alwaysTryTypes: true,
+        },
+      },
+    },
     rules: {
       'boundaries/no-unknown': 'error',
       'boundaries/dependencies': [
