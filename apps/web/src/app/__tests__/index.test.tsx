@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
-import { App } from './index';
+import { App } from '../index';
 
 // Smoke test for the composition root: App = AppProvider + AppRouter.
 // A broader behavioural matrix lives in router.test.tsx.

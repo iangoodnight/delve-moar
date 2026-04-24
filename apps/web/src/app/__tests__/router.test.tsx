@@ -1,8 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
-import { AppProvider } from './provider';
-import { AppRouter } from './router';
+import { AppProvider } from '../provider';
+import { AppRouter } from '../router';
 
 // Routes are lazy-loaded, so assertions use async findByRole to wait for
 // the dynamic import to resolve and the component to mount.

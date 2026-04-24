@@ -2,7 +2,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
-import { AppProvider } from './provider';
+import { AppProvider } from '../provider';
 
 // Probe component: useQueryClient() throws if no QueryClientProvider is in
 // the tree, so successfully rendering the span proves the context is wired.
