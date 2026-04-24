@@ -1,9 +1,8 @@
 import './index.css';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { BrowserRouter } from 'react-router-dom';
 
-import App from './app';
+import { App } from './app';
 
 const rootEl = document.getElementById('root');
 
@@ -15,8 +14,6 @@ if (rootEl === null) {
 
 createRoot(rootEl).render(
   <StrictMode>
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
+    <App />
   </StrictMode>,
 );
