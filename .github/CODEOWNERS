@@ -1,0 +1,39 @@
+# CODEOWNERS
+#
+# GitHub auto-requests review from these owners when a PR touches matching paths.
+# One owner per area today (Ian). When new maintainers join, add them next to the
+# area they own. Order matters: the last matching pattern wins, so more-specific
+# patterns go below more-general ones.
+#
+# Docs: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-security/customizing-your-repository/about-code-owners
+
+# Default: anything not matched below
+*                               @iangoodnight
+
+# Apps
+/apps/api/                      @iangoodnight
+/apps/web/                      @iangoodnight
+/apps/cli/                      @iangoodnight
+
+# Shared packages
+/packages/api-types/            @iangoodnight
+
+# Infrastructure and ops
+/infra/                         @iangoodnight
+/scripts/                       @iangoodnight
+/.github/                       @iangoodnight
+
+# Root tooling and contracts (anyone touching these is changing repo-wide rules)
+/Taskfile.yml                   @iangoodnight
+/tsconfig.base.json             @iangoodnight
+/turbo.json                     @iangoodnight
+/pnpm-workspace.yaml            @iangoodnight
+/.commitlintrc.json             @iangoodnight
+/.pre-commit-config.yaml        @iangoodnight
+
+# Documentation (durable, contributor-facing)
+/README.md                      @iangoodnight
+/CONTRIBUTING.md                @iangoodnight
+/SECURITY.md                    @iangoodnight
+/CHANGELOG.md                   @iangoodnight
+/docs/                          @iangoodnight
