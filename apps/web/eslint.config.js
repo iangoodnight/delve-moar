@@ -56,7 +56,7 @@ const SHARED_LAYERS = [
 
 export default tseslint.config(
   // IGNORED PATHS
-  { ignores: ['dist/**', 'coverage/**'] },
+  { ignores: ['dist/**', 'coverage/**', 'storybook-static/**'] },
 
   // TYPESCRIPT
   {
