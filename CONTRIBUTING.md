@@ -6,13 +6,8 @@ project is and how the apps fit together, see the [README](README.md).
 DelveMoar is a small project today, but the conventions here are written as if
 many people might land in the repo. Following them keeps the bar consistent.
 
-## Style
-
-When writing code, docs, commit messages, and PR descriptions:
-
-- Plain ASCII. No em-dashes, no unicode beyond standard punctuation.
-- Prefer commas, parens, or sentence breaks over em-dashes.
-- Keep the tone friendly to readers who are wary of LLM-generated artifacts.
+For deeper material (architecture, recipes, glossary), see
+[`docs/`](docs/README.md).
 
 ## Local setup
 

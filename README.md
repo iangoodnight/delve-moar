@@ -155,8 +155,25 @@ CI enforces that generated files are never out of sync with the schema
 
 ---
 
+## Documentation
+
+Deeper material lives under [`docs/`](docs/README.md):
+
+- [Architecture overview](docs/architecture/README.md), how the three apps fit together
+- [OpenAPI pipeline](docs/architecture/openapi-pipeline.md), the shared contract and codegen
+- [Web features layout](docs/architecture/web-features-layout.md), bulletproof-react boundaries
+- [Local development](docs/recipes/local-development.md), commands and gotchas
+- [Adding a new endpoint](docs/recipes/adding-a-new-endpoint.md), end-to-end walkthrough
+- [Glossary](docs/glossary.md), D&D and project terms
+
+---
+
 ## Contributing
 
+See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the full workflow. The short
+version:
+
 1. Branch from `main` using `feat/<issue-number>-<short-slug>`
-2. Commit messages reference the issue as `Closes #N`
+2. Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/) and reference the issue as `Closes #N`
 3. All CI checks must pass before merging
+4. Security issues: see [`SECURITY.md`](SECURITY.md), do not open a public issue
