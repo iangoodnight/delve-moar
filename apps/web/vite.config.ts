@@ -20,6 +20,7 @@ export default defineConfig({
     // e.g. lib/api-client.ts) have a valid URL during tests.
     env: {
       VITE_APP_API_URL: 'http://localhost:8000',
+      VITE_APP_FONT_SOURCE: 'local',
     },
     coverage: {
       provider: 'v8',

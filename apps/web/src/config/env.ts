@@ -3,6 +3,7 @@ import * as z from 'zod';
 function createEnv() {
   const EnvSchema = z.object({
     API_URL: z.url(),
+    FONT_SOURCE: z.enum(['local', 'google']).default('local'),
   });
 
   const envVars = Object.entries(import.meta.env).reduce<

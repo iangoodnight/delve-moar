@@ -29,4 +29,30 @@ describe('createEnv', () => {
     vi.stubEnv('VITE_APP_API_URL', 'bad');
     await expect(import('./env')).rejects.toThrow(/API_URL/);
   });
+
+  it('FONT_SOURCE defaults to "local" when not set', async () => {
+    vi.stubEnv('VITE_APP_API_URL', 'http://localhost:8000');
+    const { env } = await import('./env');
+    expect(env.FONT_SOURCE).toBe('local');
+  });
+
+  it('FONT_SOURCE accepts "local" explicitly', async () => {
+    vi.stubEnv('VITE_APP_API_URL', 'http://localhost:8000');
+    vi.stubEnv('VITE_APP_FONT_SOURCE', 'local');
+    const { env } = await import('./env');
+    expect(env.FONT_SOURCE).toBe('local');
+  });
+
+  it('FONT_SOURCE accepts "google" explicitly', async () => {
+    vi.stubEnv('VITE_APP_API_URL', 'http://localhost:8000');
+    vi.stubEnv('VITE_APP_FONT_SOURCE', 'google');
+    const { env } = await import('./env');
+    expect(env.FONT_SOURCE).toBe('google');
+  });
+
+  it('FONT_SOURCE rejects invalid values', async () => {
+    vi.stubEnv('VITE_APP_API_URL', 'http://localhost:8000');
+    vi.stubEnv('VITE_APP_FONT_SOURCE', 'bunny-cdn');
+    await expect(import('./env')).rejects.toThrow(/FONT_SOURCE/);
+  });
 });

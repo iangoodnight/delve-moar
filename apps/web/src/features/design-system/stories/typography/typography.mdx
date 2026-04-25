@@ -1,0 +1,116 @@
+import { Meta, Story } from '@storybook/addon-docs/blocks';
+
+import * as TypographyStories from './typography.stories';
+
+<Meta title="Design System/Typography/Overview" />
+
+# Typography
+
+The DelveMoar type system is built around four roles: **brand**, **heading**,
+**body**, and **mono**. Each role gets one open-source typeface, chosen both
+for how it carries the product voice and for how it performs against the
+accessibility bar we care about.
+
+<Story of={TypographyStories.Wordmark} />
+
+## The stack
+
+| Role    | Family                | License | Used for                                             |
+| ------- | --------------------- | ------- | ---------------------------------------------------- |
+| Brand   | Major Mono Display    | OFL 1.1 | Wordmark, logo, section dividers, UI flourishes      |
+| Heading | Space Grotesk         | OFL 1.1 | Page headings (h1–h4), prominent labels              |
+| Body    | Atkinson Hyperlegible | OFL 1.1 | All running prose and UI copy                        |
+| Mono    | JetBrains Mono        | OFL 1.1 | `<code>`, `<pre>`, named game entities called inline |
+
+### Why each one
+
+**Major Mono Display** reads simultaneously as ANSII terminal and inscriptional
+capital. Its uniform cap-height geometry anchors the `DelveMoar` wordmark —
+half CRT, half heraldry. It is not accessible for running text and must never
+appear outside the brand role.
+
+**Space Grotesk** descends from Space Mono. The shared geometry — circular
+bowls, monoline strokes — means moving from the wordmark to a heading feels
+like the same voice speaking normally. Variable weight 300–700 in a single
+file keeps the bundle lean.
+
+**Atkinson Hyperlegible** was commissioned by the Braille Institute for
+low-vision readers. It disambiguates the letterforms that blur together in
+most sans-serifs: `l / I / 1`, `O / 0`, `rn / m`. Readability is the hard
+constraint for body text; this font is the current state of the art.
+
+**JetBrains Mono** is terminal-native. Inline, it signals "this is a named
+game entity" — spell slugs, item names, stat callouts — using the same visual
+grammar as a code token. Ligatures are disabled by default in UI chrome but
+can be opted into for `<pre>` blocks.
+
+## Specimens
+
+### Brand
+
+<Story of={TypographyStories.BrandSpecimen} />
+
+### Heading scale
+
+Headings step down through four sizes, all in Space Grotesk. H1 anchors the
+page; H4 is the smallest allowed heading — below that we use heavy body weight
+inside a `<p>`.
+
+<Story of={TypographyStories.HeadingScale} />
+
+### Body
+
+All running text, including UI copy, uses Atkinson Hyperlegible at a 16px
+base. Line-height defaults to 1.6 for comfortable reading at paragraph length.
+
+<Story of={TypographyStories.BodySpecimen} />
+
+### Mono
+
+JetBrains Mono shows up inline whenever the UI names a specific game object —
+a spell, an item, a rule reference. In `<pre>` blocks it serves stat blocks
+and code examples.
+
+<Story of={TypographyStories.MonoSpecimen} />
+
+## Pairing in context
+
+Here is how the four roles combine in a typical surface — a spell detail card —
+so you can see the system working as a whole.
+
+<Story of={TypographyStories.Pairing} />
+
+## Tokens
+
+Components reference fonts by role through CSS custom properties, never by
+font name. The role tokens live on `:root`:
+
+```css
+--font-brand
+--font-heading
+--font-body
+--font-mono
+
+--line-height-body
+--line-height-heading
+--line-height-mono
+```
+
+These are mirrored into Radix Themes' own font hooks
+(`--default-font-family`, `--heading-font-family`, `--code-font-family`) so
+Radix components pick them up automatically.
+
+## Delivery
+
+Fonts ship two ways:
+
+- **Self-hosted (default).** Packaged via `@fontsource/*` and served from our
+  own origin. No third-party requests, works offline, deterministic caching.
+- **Google Fonts CDN (opt-in).** Toggled via `VITE_APP_FONT_SOURCE=google`.
+  Useful for bundle-size-sensitive builds. Not recommended for production.
+
+## License and attribution
+
+All four typefaces are licensed under the SIL Open Font License 1.1.
+Attribution is required when redistributing the font files but not at runtime.
+The full notice set is mirrored in `LICENSES.md`.

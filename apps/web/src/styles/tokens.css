@@ -1,0 +1,24 @@
+:root {
+  --font-brand: 'Major Mono Display', ui-monospace, monospace;
+  --font-heading:
+    'Space Grotesk Variable', 'Space Grotesk', system-ui, -apple-system,
+    sans-serif;
+  --font-body: 'Atkinson Hyperlegible', system-ui, -apple-system, sans-serif;
+  --font-mono:
+    'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, monospace;
+
+  --line-height-body: 1.6;
+  --line-height-heading: 1.2;
+  --line-height-mono: 1.5;
+
+  --default-font-family: var(--font-body);
+  --heading-font-family: var(--font-heading);
+  --code-font-family: var(--font-mono);
+  --strong-font-family: var(--font-body);
+  --em-font-family: var(--font-body);
+}
+
+body {
+  font-family: var(--font-body);
+  line-height: var(--line-height-body);
+}
