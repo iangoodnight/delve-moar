@@ -27,8 +27,8 @@ graph TB
     cli -- HTTP --> api
     api --> db
 
-    api -. openapi.json .-> types
-    api -. openapi.json .-> goclient
+    api ---> types["openapi.json"]
+    api ---> goclient["openapi.json"]
     web --> types
     cli --> goclient
 ```
