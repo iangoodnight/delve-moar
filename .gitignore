@@ -34,6 +34,7 @@ dist/
 .turbo/
 *.local
 .pnpm-store/
+storybook-static/
 
 # =============================================================================
 # Environment files
