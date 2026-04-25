@@ -29,6 +29,10 @@ Walkthroughs for common contributor tasks.
 - [Architecture Decision Records](decisions/README.md), the durable
   record of why the project is shaped the way it is
 
+### Roadmap
+
+- [Roadmap](roadmap.md), what is shipping by phase
+
 ### Reference
 
 - [Glossary](glossary.md), D&D terms and project terms
