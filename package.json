@@ -13,6 +13,11 @@
     "build": "turbo run build",
     "format": "turbo run format"
   },
+  "pnpm": {
+    "overrides": {
+      "postcss": "^8.5.10"
+    }
+  },
   "devDependencies": {
     "@commitlint/cli": "^20.5.0",
     "@commitlint/config-conventional": "^20.5.0",
