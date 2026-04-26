@@ -16,6 +16,7 @@ How the system fits together. Read this before making structural changes.
 - [Three-app overview](architecture/README.md), how the API, web, and CLI relate
 - [OpenAPI pipeline](architecture/openapi-pipeline.md), the shared contract and codegen flow
 - [Web features layout](architecture/web-features-layout.md), bulletproof-react boundaries enforced by ESLint
+- [Web accessibility strategy](architecture/web-accessibility.md), the four-layer a11y approach
 
 ### Recipes
 

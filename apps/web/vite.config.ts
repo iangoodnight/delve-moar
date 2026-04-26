@@ -14,6 +14,7 @@ export default defineConfig({
   },
 
   test: {
+    globals: true,
     environment: 'jsdom',
     setupFiles: ['./src/testing/setup.ts'],
     // default VITE_APP_API_URL so modules that resolve env.ts at import time

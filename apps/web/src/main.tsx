@@ -13,6 +13,13 @@ if (env.FONT_SOURCE === 'google') {
   await import('./styles/fonts.local.css');
 }
 
+if (import.meta.env.DEV) {
+  const { default: axe } = await import('@axe-core/react');
+  const { default: React } = await import('react');
+  const { default: ReactDOM } = await import('react-dom');
+  await axe(React, ReactDOM, 1000);
+}
+
 const rootEl = document.getElementById('root');
 
 if (rootEl === null) {
