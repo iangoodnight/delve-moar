@@ -14,6 +14,9 @@ For the per-PR convention and the manual release ritual, see the
 
 ### Added
 
+- web: `@axe-core/react` for development-time accessibility logging in the browser console (#106)
+- web: `vitest-axe` with `toHaveNoViolations` assertions in unit tests; first assertion in `home-page.test.tsx` (#106)
+
 ### Changed
 
 ### Deprecated
