@@ -66,6 +66,9 @@ importers:
         specifier: ^4.3.6
         version: 4.3.6
     devDependencies:
+      '@axe-core/react':
+        specifier: ^4.11.2
+        version: 4.11.2
       '@babel/core':
         specifier: ^7.29.0
         version: 7.29.0
@@ -198,6 +201,9 @@ packages:
 
   '@asamuzakjp/nwsapi@2.3.9':
     resolution: {integrity: sha512-n8GuYSrI9bF7FFZ/SjhwevlHc8xaVlb/7HmHelnc/PZXBD2ZR49NnN9sMMuDdEGPeeRQ5d0hqlSlEpgCX3Wl0Q==}
+
+  '@axe-core/react@4.11.2':
+    resolution: {integrity: sha512-+bQ5yO9FAU4hfZRJXi81Eiv5bd53BrsjAEFoE6QlMkqKOoIq4wC15a9d8kRHs4i5dgLqD8S9NW5qWkiFVsV3/g==}
 
   '@babel/code-frame@7.29.0':
     resolution: {integrity: sha512-9NhCeYjq9+3uxgdtp20LSiJXJvN0FeCtNGpJxuMFZ1Kv3cWUNb6DOhJwUvcVCzKGR66cw4njwM6hrJLqgOwbcw==}
@@ -2117,6 +2123,10 @@ packages:
     resolution: {integrity: sha512-byD6KPdvo72y/wj2T/4zGEvvlis+PsZsn/yPS3pEO+sFpcrqRpX/TJCxvVaEsNeMrfQbCr7w163YqoD9IYwHXw==}
     engines: {node: '>=4'}
 
+  axe-core@4.11.3:
+    resolution: {integrity: sha512-zBQouZixDTbo3jMGqHKyePxYxr1e5W8UdTmBQ7sNtaA9M2bE32daxxPLS/jojhKOHxQ7LWwPjfiwf/fhaJWzlg==}
+    engines: {node: '>=4'}
+
   axios-mock-adapter@2.1.0:
     resolution: {integrity: sha512-AZUe4OjECGCNNssH8SOdtneiQELsqTsat3SQQCWLPjN436/H+L9AjWfV7bF+Zg/YL9cgbhrz5671hoh+Tbn98w==}
     peerDependencies:
@@ -3624,6 +3634,9 @@ packages:
   remark-stringify@11.0.0:
     resolution: {integrity: sha512-1OSmLd3awB/t8qdoEOMazZkNsfVTeY4fTsgzcQFdXNq8ToTN4ZGwrMnlda4K6smTFKD+GRV6O48i6Z4iKgPPpw==}
 
+  requestidlecallback@0.3.0:
+    resolution: {integrity: sha512-TWHFkT7S9p7IxLC5A1hYmAYQx2Eb9w1skrXmQ+dS1URyvR8tenMLl4lHbqEOUnpEYxNKpkVMXUgknVpBZWXXfQ==}
+
   require-directory@2.1.1:
     resolution: {integrity: sha512-fGxEI7+wsG9xrvdjsrlmL22OMTTiHRwAMroiEeMgq8gzoLC/PQr7RsRDSTLUg/bZAZtF+TVIkHc6/4RIKrui+Q==}
     engines: {node: '>=0.10.0'}
@@ -4221,6 +4234,11 @@ snapshots:
       is-potential-custom-element-name: 1.0.1
 
   '@asamuzakjp/nwsapi@2.3.9': {}
+
+  '@axe-core/react@4.11.2':
+    dependencies:
+      axe-core: 4.11.3
+      requestidlecallback: 0.3.0
 
   '@babel/code-frame@7.29.0':
     dependencies:
@@ -6191,6 +6209,8 @@ snapshots:
 
   axe-core@4.11.2: {}
 
+  axe-core@4.11.3: {}
+
   axios-mock-adapter@2.1.0(axios@1.15.0):
     dependencies:
       axios: 1.15.0
@@ -7983,6 +8003,8 @@ snapshots:
       '@types/mdast': 4.0.4
       mdast-util-to-markdown: 2.1.2
       unified: 11.0.5
+
+  requestidlecallback@0.3.0: {}
 
   require-directory@2.1.1: {}
 
