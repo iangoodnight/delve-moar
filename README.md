@@ -62,6 +62,8 @@ delve-moar/
 ├── scripts/
 │   └── gen_types.sh  # OpenAPI codegen pipeline
 ├── docs/             # Architecture, recipes, ADRs, roadmap, glossary
+├── CHANGELOG.md      # Notable changes per release
+├── VERSION           # Top-level monorepo version
 └── Taskfile.yml      # Root task runner
 ```
 
@@ -80,6 +82,7 @@ delve-moar/
   end-to-end walkthrough
 - [Architecture Decision Records](docs/decisions/README.md), why the
   project is shaped the way it is
+- [Changelog](CHANGELOG.md), notable changes per release
 - [Glossary](docs/glossary.md), D&D and project terms
 
 ## Contributing

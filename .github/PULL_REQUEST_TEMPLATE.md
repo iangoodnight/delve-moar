@@ -22,6 +22,11 @@ Closes #
 - [ ] Added / changed routes or response shapes — ran `task gen:types` and committed generated files
 - [ ] Added / changed DB schema — migration included in this PR
 
+## Changelog
+
+- [ ] Added an entry under `[Unreleased]` in `CHANGELOG.md`
+- [ ] This PR does not warrant a changelog entry (chore, internal refactor, tooling, docs-only)
+
 ## Test plan
 
 - [ ] `task lint` passes locally

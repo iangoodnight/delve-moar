@@ -1,6 +1,6 @@
 # 0004. Versioning: per-app semver plus monorepo `0.x.y` at phase milestones
 
-- Status: proposed
+- Status: accepted
 - Date: 2026-04-25
 
 ## Context
@@ -42,15 +42,9 @@ We need a versioning model that:
   `CHANGELOG.md` at the repo root (PR 7 of the docs initiative) covers
   the monorepo `0.x.y` line.
 
-The exact location of the top-level `0.x.y` value is open. Three
-candidates:
-
-- Root `package.json` `version` field
-- A dedicated `VERSION` file at the root
-- Git tag only (no file in tree)
-
-This will be settled in the CHANGELOG PR. See the open question in
-`planning/open-questions.md`.
+The top-level `0.x.y` value lives in a dedicated [`VERSION`](../../VERSION)
+file at the repo root, single line, plain text. ADR
+[0006](0006-changelog-convention.md) records the reasoning.
 
 ## Considered alternatives
 
@@ -100,19 +94,12 @@ This will be settled in the CHANGELOG PR. See the open question in
   criteria for that flip will be decided in a future ADR.
 - Per-app changelogs require their own ADR if they ever appear.
 
-## Status note
-
-This ADR is `proposed` rather than `accepted` because PR 7 of the
-"Documentation and Contributor Experience" milestone (CHANGELOG) is
-where the versioning model is locked in alongside the changelog
-convention. When PR 7 lands, this ADR's status flips to `accepted`,
-and the open question about where the top-level `0.x.y` lives is
-resolved (or this ADR is superseded by a different model).
-
 ## Links
 
-- Open question: `planning/open-questions.md`, "Monorepo version
-  location"
 - [semver.org](https://semver.org/)
 - [calver.org](https://calver.org/) (the alternative considered)
-- Will be settled by: PR 7 of milestone #3 (CHANGELOG)
+- ADR [0006](0006-changelog-convention.md), the changelog convention
+  that implements this versioning model
+- [`VERSION`](../../VERSION), the top-level monorepo version file
+- [`CHANGELOG.md`](../../CHANGELOG.md), the file the per-PR convention
+  governs
