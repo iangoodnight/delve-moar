@@ -84,5 +84,6 @@ status updates as part of the lifecycle above).
 | [0001](0001-openapi-as-source-of-truth.md) | OpenAPI is the single source of truth for the API contract | accepted |
 | [0002](0002-web-features-layout.md) | Web architecture: bulletproof-react features layout with enforced boundaries | accepted |
 | [0003](0003-per-pr-session-model.md) | Per-PR session model with a local planning workspace | accepted |
-| [0004](0004-versioning-model.md) | Versioning: per-app semver plus monorepo `0.x.y` at phase milestones | proposed |
+| [0004](0004-versioning-model.md) | Versioning: per-app semver plus monorepo `0.x.y` at phase milestones | accepted |
 | [0005](0005-openapi-30-downgrade.md) | Serve OpenAPI 3.0.3 from a 3.1 source until oapi-codegen catches up | accepted |
+| [0006](0006-changelog-convention.md) | Changelog convention: Keep a Changelog, inline edits, manual release cuts | accepted |

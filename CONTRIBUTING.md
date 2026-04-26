@@ -97,6 +97,52 @@ If your PR changes the DB schema:
 - Add the Alembic migration in the same PR.
 - Mention any data backfill or downtime risk in the PR body.
 
+## Changelog
+
+DelveMoar keeps a single root [`CHANGELOG.md`](CHANGELOG.md) in the
+[Keep a Changelog](https://keepachangelog.com/en/1.1.0/) format. See
+[ADR 0006](docs/decisions/0006-changelog-convention.md) for the
+reasoning.
+
+### Per-PR
+
+If your PR makes a user-visible change, add a line under the
+appropriate sub-section of `[Unreleased]` (`Added`, `Changed`,
+`Deprecated`, `Removed`, `Fixed`, `Security`) on your branch, in the
+same PR as the change.
+
+Write entries in user-facing language, not as commit subjects.
+
+- Good: `Added monster detail page with statblock and attribution footer.`
+- Bad: `feat(web): add monster detail page`
+
+When in doubt: would a non-contributor reading the release notes know
+what changed? If yes, it deserves an entry.
+
+PRs that do not warrant an entry (internal refactors, tooling, CI,
+docs-only) can skip it. The PR template has a checkbox to confirm
+either case.
+
+### Cutting a release (manual)
+
+When a phase milestone closes, one contributor cuts the release in a
+single PR:
+
+1. Bump [`VERSION`](VERSION) to the new version (e.g. `0.0.0` to
+   `0.1.0`).
+2. In `CHANGELOG.md`, rename `[Unreleased]` to `## [X.Y.Z] - YYYY-MM-DD`.
+3. Insert a fresh empty `[Unreleased]` block at the top with the six
+   sub-sections.
+4. After the release PR merges, tag the merge commit `vX.Y.Z` and push
+   the tag: `git tag vX.Y.Z && git push origin vX.Y.Z`.
+5. Create a GitHub Release pointing at the tag, using the new
+   `[X.Y.Z]` section as the body.
+
+Per-app versions (`apps/api/pyproject.toml`, `apps/web/package.json`,
+the CLI's git tags) are not bumped by this ritual; they move with the
+app's own release cadence. Today no app has a release cadence
+independent of the monorepo, so per-app bumps are typically deferred.
+
 ## OpenAPI is the source of truth
 
 The web TypeScript types in `packages/api-types/` and the Go client in
