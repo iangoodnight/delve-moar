@@ -1,5 +1,8 @@
 import type { CSSProperties, ReactNode } from 'react';
 
+import { Column, Row } from '@/components/ui/layout';
+import { Label } from '@/components/ui/typography';
+
 interface SpecimenBlockProps {
   readonly label: string;
   readonly meta?: string;
@@ -12,47 +15,45 @@ export function SpecimenBlock({
   meta,
   children,
   style,
-}: SpecimenBlockProps) {
+}: Readonly<SpecimenBlockProps>) {
   return (
-    <section
+    <Column
+      asChild
+      gap="3"
+      py="4"
       style={{
-        padding: '1.25rem 0',
         borderBottom: '1px solid var(--gray-4)',
         ...style,
       }}
     >
-      <header
-        style={{
-          display: 'flex',
-          alignItems: 'baseline',
-          justifyContent: 'space-between',
-          marginBottom: '0.75rem',
-        }}
-      >
-        <span
-          style={{
-            fontFamily: 'var(--font-mono)',
-            fontSize: '0.7rem',
-            letterSpacing: '0.12em',
-            textTransform: 'uppercase',
-            color: 'var(--gray-11)',
-          }}
-        >
-          {label}
-        </span>
-        {meta ? (
-          <span
-            style={{
-              fontFamily: 'var(--font-mono)',
-              fontSize: '0.7rem',
-              color: 'var(--gray-10)',
-            }}
-          >
-            {meta}
-          </span>
-        ) : null}
-      </header>
-      <div>{children}</div>
-    </section>
+      <section>
+        <Row asChild align="baseline" justify="between">
+          <header>
+            <Label
+              as="span"
+              size="1"
+              color="gray"
+              style={{
+                letterSpacing: '0.12em',
+                textTransform: 'uppercase',
+              }}
+            >
+              {label}
+            </Label>
+            {meta ? (
+              <Label
+                as="span"
+                size="1"
+                color="gray"
+                style={{ letterSpacing: '0.04em' }}
+              >
+                {meta}
+              </Label>
+            ) : null}
+          </header>
+        </Row>
+        <div>{children}</div>
+      </section>
+    </Column>
   );
 }

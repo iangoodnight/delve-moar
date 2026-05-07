@@ -1,10 +1,11 @@
-import { Container, Heading, Text } from '@radix-ui/themes';
+import { Container } from '@/components/ui/layout';
+import { H1, Paragraph } from '@/components/ui/typography';
 
 export default function NotFound() {
   return (
     <Container>
-      <Heading>Not Found</Heading>
-      <Text>404 Not Found</Text>
+      <H1>Not Found</H1>
+      <Paragraph>404 Not Found</Paragraph>
     </Container>
   );
 }

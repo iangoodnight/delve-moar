@@ -87,3 +87,5 @@ status updates as part of the lifecycle above).
 | [0004](0004-versioning-model.md) | Versioning: per-app semver plus monorepo `0.x.y` at phase milestones | accepted |
 | [0005](0005-openapi-30-downgrade.md) | Serve OpenAPI 3.0.3 from a 3.1 source until oapi-codegen catches up | accepted |
 | [0006](0006-changelog-convention.md) | Changelog convention: Keep a Changelog, inline edits, manual release cuts | accepted |
+| [0007](0007-web-typography-system.md) | Web typography system: token layering, scoped Radix overrides, design-system contract | proposed |
+| [0008](0008-frontend-coverage-policy.md) | Front-end coverage policy under React Compiler | proposed |

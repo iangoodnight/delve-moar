@@ -9,8 +9,9 @@ describe('App', () => {
   it('mounts and renders the home route', async () => {
     window.history.pushState({}, '', '/');
     render(<App />);
+    // Brand mark is a link to "/", not an h1 (h1 is reserved for page topic).
     expect(
-      await screen.findByRole('heading', { level: 1, name: /delve moar/i }),
+      await screen.findByRole('link', { name: /delvemoar.*home/i }),
     ).toBeInTheDocument();
   });
 });

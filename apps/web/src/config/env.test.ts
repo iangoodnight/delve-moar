@@ -55,4 +55,17 @@ describe('createEnv', () => {
     vi.stubEnv('VITE_APP_FONT_SOURCE', 'bunny-cdn');
     await expect(import('./env')).rejects.toThrow(/FONT_SOURCE/);
   });
+
+  it('TITLE defaults to "DelveMoar" when not set', async () => {
+    vi.stubEnv('VITE_APP_API_URL', 'http://localhost:8000');
+    const { env } = await import('./env');
+    expect(env.TITLE).toBe('DelveMoar');
+  });
+
+  it('TITLE accepts custom value', async () => {
+    vi.stubEnv('VITE_APP_API_URL', 'http://localhost:8000');
+    vi.stubEnv('VITE_APP_TITLE', 'My App');
+    const { env } = await import('./env');
+    expect(env.TITLE).toBe('My App');
+  });
 });
