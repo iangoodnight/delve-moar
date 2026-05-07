@@ -25,6 +25,8 @@ import prettier from 'eslint-config-prettier';
 //           config     < environment / app configuration
 //           types      < shared TypeScript types (no internal imports)
 //           assets     < static files (no internal imports)
+//           styles     < CSS files (no internal imports)
+//           constants  < numeric / string constants (no internal imports)
 //
 //   testing            < test utilities; unrestricted (never imported by app)
 // ---------------------------------------------------------------------------
@@ -41,6 +43,8 @@ const BOUNDARY_ELEMENTS = [
   { type: 'config', pattern: 'src/config/**' },
   { type: 'types', pattern: 'src/types/**' },
   { type: 'assets', pattern: 'src/assets/**' },
+  { type: 'styles', pattern: 'src/styles/**' },
+  { type: 'constants', pattern: 'src/constants/**' },
   { type: 'testing', pattern: 'src/testing/**' },
 ];
 
@@ -52,6 +56,8 @@ const SHARED_LAYERS = [
   'config',
   'types',
   'assets',
+  'styles',
+  'constants',
 ];
 
 export default tseslint.config(
@@ -189,25 +195,38 @@ export default tseslint.config(
             // components: hooks and below
             {
               from: { type: 'components' },
-              allow: ['hooks', 'lib', 'utils', 'config', 'types', 'assets'].map(
-                (type) => ({ to: { type } }),
-              ),
+              allow: [
+                'hooks',
+                'lib',
+                'utils',
+                'config',
+                'types',
+                'assets',
+                'constants',
+              ].map((type) => ({ to: { type } })),
             },
             // hooks: lib and below
             {
               from: { type: 'hooks' },
-              allow: ['lib', 'utils', 'config', 'types'].map((type) => ({
-                to: { type },
-              })),
+              allow: ['lib', 'utils', 'config', 'types', 'constants'].map(
+                (type) => ({ to: { type } }),
+              ),
             },
-            // lib + utils: config and types
+            // lib + utils: config, types, constants
             {
               from: [{ type: 'lib' }, { type: 'utils' }],
-              allow: ['config', 'types'].map((type) => ({ to: { type } })),
+              allow: ['config', 'types', 'constants'].map((type) => ({
+                to: { type },
+              })),
             },
             // config: types only
             {
               from: { type: 'config' },
+              allow: [{ to: { type: 'types' } }],
+            },
+            // constants: types only (leaf node, no internal imports otherwise)
+            {
+              from: { type: 'constants' },
               allow: [{ to: { type: 'types' } }],
             },
             // testing: unrestricted access (never imported by app code)

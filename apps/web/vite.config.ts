@@ -28,6 +28,8 @@ export default defineConfig({
       reporter: ['text', 'json', 'html'],
       exclude: [
         'node_modules/',
+        // these are mostly wrappers around radix components, no testable logic
+        'src/components/ui/typography/*.tsx',
         'src/testing/',
         '**/*.d.ts',
         '**/*.config.*',
