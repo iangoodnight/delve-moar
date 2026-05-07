@@ -1,10 +1,12 @@
-import { Container, Heading, Text } from '@radix-ui/themes';
+import { Head } from '@/components/seo/head';
+import { Column } from '@/components/ui/layout';
+import { Hero } from '@/features/landing/components';
 
 export default function HomePage() {
   return (
-    <Container>
-      <Heading>Delve Moar</Heading>
-      <Text>Homebrew-first TTRPG utilities.</Text>
-    </Container>
+    <Column gap="4">
+      <Head title="Home" description="Homebrew-first TTRPG utilities." />
+      <Hero />
+    </Column>
   );
 }

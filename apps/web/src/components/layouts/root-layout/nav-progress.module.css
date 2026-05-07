@@ -1,0 +1,55 @@
+.nav-progress {
+  height: var(--space-1);
+  left: 0;
+  opacity: 0;
+  pointer-events: none;
+  position: fixed;
+  right: 0;
+  top: 0;
+  z-index: 9999;
+}
+
+.bar {
+  background: var(--accent-9);
+  border-radius: 0 0 var(--radius-6) 0;
+  height: 100%;
+  width: 0%;
+}
+
+.nav-progress[data-phase='loading'] {
+  opacity: 1;
+
+  .bar {
+    animation: nav-progress-loading 8s ease-out forwards;
+  }
+}
+
+.nav-progress[data-phase='completing'] {
+  opacity: 1;
+
+  .bar {
+    width: 100%;
+    opacity: 0;
+    transition:
+      opacity 200ms ease 150ms,
+      width 150ms ease-out;
+  }
+}
+
+@keyframes nav-progress-loading {
+  0% {
+    width: 0%;
+  }
+  40% {
+    width: 70%;
+  }
+  70% {
+    width: 85%;
+  }
+  90% {
+    width: 90%;
+  }
+  100% {
+    width: 92%;
+  }
+}

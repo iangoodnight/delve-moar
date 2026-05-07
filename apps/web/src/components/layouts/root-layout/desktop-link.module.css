@@ -1,0 +1,21 @@
+.desktop-link {
+  color: var(--gray-11);
+  font-family: var(--heading-font-family);
+  font-size: var(--font-size-2);
+  font-weight: var(--font-weight-bold);
+  padding: var(--space-3) var(--space-3);
+  text-decoration: none;
+  transition:
+    color,
+    box-shadow 250ms ease;
+
+  &:focus,
+  &:hover {
+    color: var(--gray-12);
+  }
+
+  &[aria-current='page'] {
+    color: var(--accent-12);
+    box-shadow: inset 0 calc(var(--space-1) * -1) 0 0 var(--accent-11);
+  }
+}

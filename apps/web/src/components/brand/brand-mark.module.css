@@ -1,0 +1,15 @@
+.brand-mark {
+  color: var(--gray-11);
+  letter-spacing: 0.04em;
+  font-family: var(--font-brand);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+
+  &:focus-within {
+    color: var(--accent-12);
+  }
+
+  span[data-highlight='true'] {
+    color: var(--accent-12);
+  }
+}
