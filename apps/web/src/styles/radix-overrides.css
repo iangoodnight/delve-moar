@@ -1,0 +1,35 @@
+.radix-themes {
+  /* font families */
+  --default-font-family: var(--font-body);
+  --heading-font-family: var(--font-heading);
+  --code-font-family: var(--font-mono);
+  --strong-font-family: var(--font-body);
+  --em-font-family: var(--font-body);
+  /* adjust for scaling */
+  --heading-size-h1: calc(48px * var(--scaling));
+  --heading-size-h2: calc(36px * var(--scaling));
+  --heading-size-h3: calc(28px * var(--scaling));
+  --heading-size-h4: calc(22px * var(--scaling));
+}
+
+.rt-Heading.h2 {
+  font-size: var(--heading-size-h2);
+  font-weight: 600;
+  line-height: var(--line-height-heading);
+}
+
+.rt-Heading.h3 {
+  font-size: var(--heading-size-h3);
+  font-weight: 500;
+  line-height: var(--line-height-heading);
+}
+
+.rt-Heading.h4 {
+  font-size: var(--heading-size-h4);
+  font-weight: 500;
+  line-height: var(--line-height-heading);
+}
+
+.rt-Text.paragraph {
+  line-height: var(--line-height-body);
+}

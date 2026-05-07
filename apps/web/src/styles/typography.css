@@ -1,0 +1,61 @@
+/* Element defaults and utility classes for content outside Radix wrappers. */
+blockquote,
+.blockquote {
+  color: var(--gray-11);
+  font-family: var(--heading-font-family);
+  font-style: italic;
+  line-height: var(--line-height-body);
+
+  cite,
+  .cite {
+    display: block;
+    margin-right: var(--space-2);
+    margin-top: var(--space-2);
+    text-align: right;
+  }
+}
+
+h1,
+.h1 {
+  color: var(--accent-12);
+  font-size: var(--heading-size-h1);
+  font-weight: 700;
+  line-height: var(--line-height-heading);
+}
+
+h2,
+.h2 {
+  color: var(--accent-12);
+  font-size: var(--heading-size-h2);
+  font-weight: 600;
+  line-height: var(--line-height-heading);
+}
+
+h3,
+.h3 {
+  color: var(--accent-12);
+  font-size: var(--heading-size-h3);
+  font-weight: 500;
+  line-height: var(--line-height-heading);
+}
+
+h4,
+.h4 {
+  color: var(--accent-12);
+  font-size: var(--heading-size-h4);
+  font-weight: 500;
+  line-height: var(--line-height-heading);
+}
+
+label,
+.label {
+  color: var(--accent-12);
+  font-family: var(--heading-font-family);
+  letter-spacing: 0.05em;
+  line-height: var(--line-height-heading);
+}
+
+p,
+.paragraph {
+  line-height: var(--line-height-body);
+}
