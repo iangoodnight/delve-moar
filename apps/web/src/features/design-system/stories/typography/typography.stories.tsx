@@ -1,5 +1,23 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
+import { BrandMark } from '@/components/brand';
+import { Column } from '@/components/ui/layout';
+import {
+  Blockquote,
+  Code,
+  Em,
+  H1,
+  H2,
+  H3,
+  H4,
+  Kbd,
+  Paragraph,
+  Quote,
+  Strong,
+  Text,
+} from '@/components/ui/typography';
+
+import { BookPage } from './specimens/book-page';
 import { PairingExample } from './specimens/pairing-example';
 import { SpecimenBlock } from './specimens/specimen-block';
 
@@ -16,47 +34,40 @@ type Story = StoryObj;
 
 export const Wordmark: Story = {
   render: () => (
-    <div
-      style={{
-        padding: '5rem 2rem',
-        textAlign: 'center',
-        background: 'var(--gray-1)',
-      }}
-    >
-      <h1
-        style={{
-          fontFamily: 'var(--font-brand)',
-          fontSize: 'clamp(3rem, 12vw, 7rem)',
-          letterSpacing: '0.04em',
-          margin: 0,
-          color: 'var(--gray-12)',
-        }}
-      >
-        DelveMoar
-      </h1>
-      <p
-        style={{
-          fontFamily: 'var(--font-body)',
-          fontSize: '1.125rem',
-          color: 'var(--gray-11)',
-          marginTop: '1.25rem',
-          marginBottom: 0,
-        }}
-      >
-        D&amp;D utility suite — homebrew-first DM tools.
-      </p>
-    </div>
+    <BookPage eyebrow="Identity" folio="i">
+      <Column align="center" gap="5" py="6">
+        <BrandMark asLink={false} />
+        <Text
+          as="div"
+          align="center"
+          style={{
+            fontFamily: 'var(--font-body)',
+            fontSize: '18px',
+            color: 'var(--gray-11)',
+            maxWidth: '40ch',
+          }}
+        >
+          A homebrew-first utility suite for dungeon masters who care more about
+          the table than the tooling.
+        </Text>
+      </Column>
+    </BookPage>
   ),
 };
 
 export const BrandSpecimen: Story = {
   render: () => (
-    <div style={{ padding: '2rem', maxWidth: '52rem' }}>
-      <SpecimenBlock label="Major Mono Display" meta="OFL 1.1 · single weight">
+    <BookPage eyebrow="Brand" folio="ii">
+      <H2>Major Mono Display</H2>
+      <Paragraph>
+        The wordmark voice. Used for the brand mark, section dividers, and small
+        flourishes only. Never set running text in this face.
+      </Paragraph>
+      <SpecimenBlock label="Specimen" meta="OFL 1.1 / single weight">
         <div
           style={{
             fontFamily: 'var(--font-brand)',
-            fontSize: '2.5rem',
+            fontSize: '40px',
             letterSpacing: '0.04em',
             lineHeight: 1.3,
           }}
@@ -69,175 +80,185 @@ export const BrandSpecimen: Story = {
           <br />
           nopqrstuvwxyz
           <br />
-          0123456789 — &amp; / : .
+          0123456789 &amp; / : .
         </div>
       </SpecimenBlock>
-      <SpecimenBlock
-        label="Brand voice — display only"
-        meta="never used for prose"
-      >
+      <SpecimenBlock label="Display only" meta="never used for prose">
         <div
           style={{
             fontFamily: 'var(--font-brand)',
-            fontSize: '1.5rem',
+            fontSize: '24px',
             letterSpacing: '0.05em',
           }}
         >
           ROLL FOR INITIATIVE
         </div>
       </SpecimenBlock>
-    </div>
+    </BookPage>
   ),
 };
 
 export const HeadingScale: Story = {
-  render: () => {
-    const steps = [
-      {
-        tag: 'h1' as const,
-        size: '3rem',
-        weight: 700,
-        label: 'H1',
-        meta: '48 / 700',
-      },
-      {
-        tag: 'h2' as const,
-        size: '2.25rem',
-        weight: 600,
-        label: 'H2',
-        meta: '36 / 600',
-      },
-      {
-        tag: 'h3' as const,
-        size: '1.75rem',
-        weight: 500,
-        label: 'H3',
-        meta: '28 / 500',
-      },
-      {
-        tag: 'h4' as const,
-        size: '1.375rem',
-        weight: 500,
-        label: 'H4',
-        meta: '22 / 500',
-      },
-    ];
-    return (
-      <div style={{ padding: '2rem', maxWidth: '52rem' }}>
-        {steps.map(({ tag: Tag, size, weight, label, meta }) => (
-          <SpecimenBlock key={label} label={label} meta={meta}>
-            <Tag
-              style={{
-                fontFamily: 'var(--font-heading)',
-                fontSize: size,
-                fontWeight: weight,
-                lineHeight: 'var(--line-height-heading)',
-                margin: 0,
-                color: 'var(--gray-12)',
-              }}
-            >
-              The Tarrasque rises from its slumber.
-            </Tag>
-          </SpecimenBlock>
-        ))}
-      </div>
-    );
-  },
+  render: () => (
+    <BookPage eyebrow="Heading scale" folio="iii">
+      <Paragraph>
+        Headings step down through four sizes, all in Space Grotesk. H1 anchors
+        the page; H4 is the smallest allowed heading level. Below that, use a
+        bold body run.
+      </Paragraph>
+      <SpecimenBlock label="H1" meta="48 / 700">
+        <H1>The Tarrasque rises from its slumber.</H1>
+      </SpecimenBlock>
+      <SpecimenBlock label="H2" meta="36 / 600">
+        <H2>The Tarrasque rises from its slumber.</H2>
+      </SpecimenBlock>
+      <SpecimenBlock label="H3" meta="28 / 500">
+        <H3>The Tarrasque rises from its slumber.</H3>
+      </SpecimenBlock>
+      <SpecimenBlock label="H4" meta="22 / 500">
+        <H4>The Tarrasque rises from its slumber.</H4>
+      </SpecimenBlock>
+    </BookPage>
+  ),
 };
 
 export const BodySpecimen: Story = {
   render: () => (
-    <div style={{ padding: '2rem', maxWidth: '38rem' }}>
-      <SpecimenBlock label="Atkinson Hyperlegible" meta="16 / 1.6 · OFL 1.1">
-        <p
-          style={{
-            fontFamily: 'var(--font-body)',
-            fontSize: '1rem',
-            lineHeight: 'var(--line-height-body)',
-            margin: 0,
-          }}
-        >
-          A wizard&apos;s most prized possession is rarely the spellbook itself
-          — it is the long, patient process of <em>copying</em> a new spell into
-          it: the inks measured in gold, the diagrams traced by candle, the
-          afternoons lost to a single stubborn glyph. The book is only the
-          residue.
-        </p>
+    <BookPage eyebrow="Body" folio="iv">
+      <H2>Atkinson Hyperlegible</H2>
+      <Paragraph>
+        A wizard&apos;s most prized possession is rarely the spellbook itself.
+        It is the long, patient process of <Em>copying</Em> a new spell into it:
+        the inks measured in gold, the diagrams traced by candle, the afternoons
+        lost to a single stubborn glyph. The book is only the residue.
+      </Paragraph>
+      <Paragraph>
+        Body text uses Atkinson Hyperlegible at a 16px base with{' '}
+        <Strong>1.6 line-height</Strong> for comfortable reading at paragraph
+        length. Every UI surface that carries running prose, from spell
+        descriptions to encounter notes, uses this combination.
+      </Paragraph>
+      <SpecimenBlock label="Letterforms" meta="why this typeface">
+        <Column gap="2">
+          <div
+            style={{
+              fontFamily: 'var(--font-body)',
+              fontSize: '24px',
+              letterSpacing: '0.05em',
+              color: 'var(--gray-12)',
+            }}
+          >
+            Il1 / O0 / rn m / Cc Gg
+          </div>
+          <Text size="2" color="gray">
+            Atkinson Hyperlegible disambiguates the letterforms most commonly
+            confused by low-vision readers and OCR.
+          </Text>
+        </Column>
       </SpecimenBlock>
-      <SpecimenBlock label="Distinguishable letterforms" meta="why this font">
-        <div
-          style={{
-            fontFamily: 'var(--font-body)',
-            fontSize: '1.5rem',
-            letterSpacing: '0.05em',
-            color: 'var(--gray-12)',
-          }}
-        >
-          Il1 · O0 · rn m · Cc Gg
-        </div>
-        <p
-          style={{
-            fontFamily: 'var(--font-body)',
-            fontSize: '0.875rem',
-            color: 'var(--gray-11)',
-            marginTop: '0.5rem',
-            marginBottom: 0,
-          }}
-        >
-          Atkinson Hyperlegible disambiguates the letterforms most commonly
-          confused by low-vision readers and OCR.
-        </p>
+    </BookPage>
+  ),
+};
+
+export const InlineElements: Story = {
+  render: () => (
+    <BookPage eyebrow="Inline emphasis" folio="v">
+      <H2>Inline elements</H2>
+      <Paragraph>
+        Use semantic inline elements to mark intent within prose. They each
+        carry a different signal and a different visual weight. Reach for
+        Radix&apos;s components rather than raw HTML so styling stays
+        centralized.
+      </Paragraph>
+      <SpecimenBlock label="Em" meta="emphasis / italic">
+        <Paragraph>
+          The lich knew, then, what the rest of the council had only{' '}
+          <Em>suspected</Em>: the wards on the lower vault had been undisturbed
+          for three centuries.
+        </Paragraph>
       </SpecimenBlock>
-    </div>
+      <SpecimenBlock label="Strong" meta="importance / bold">
+        <Paragraph>
+          Casting <Strong>fireball</Strong> at 4th level deals an additional 1d6
+          fire damage. <Strong>Always</Strong> double-check the radius before
+          targeting.
+        </Paragraph>
+      </SpecimenBlock>
+      <SpecimenBlock label="Code" meta="named entities, slugs, dice notation">
+        <Paragraph>
+          The party finds a <Code>flame-tongue</Code> longsword in the treasure
+          hoard. On a hit, roll <Code>2d6</Code> additional fire damage.
+        </Paragraph>
+      </SpecimenBlock>
+      <SpecimenBlock label="Kbd" meta="DCs, keys, callouts">
+        <Paragraph>
+          The trapped door requires a <Kbd>DC 15</Kbd> Dexterity check to
+          disarm. Press <Kbd>?</Kbd> in the app to open the keyboard shortcuts
+          panel.
+        </Paragraph>
+      </SpecimenBlock>
+      <SpecimenBlock label="Quote" meta="inline quotation">
+        <Paragraph>
+          Gygax once wrote that{' '}
+          <Quote>
+            the secret we should never let the gamemasters know is that they
+            don&apos;t need any rules
+          </Quote>
+          , which has aged well even as the rules have multiplied.
+        </Paragraph>
+      </SpecimenBlock>
+    </BookPage>
+  ),
+};
+
+export const BlockquoteSpecimen: Story = {
+  render: () => (
+    <BookPage eyebrow="Block quotation" folio="vi">
+      <H2>Blockquote</H2>
+      <Paragraph>
+        For quoted passages of more than a sentence, use Blockquote. It indents
+        and italicizes by default and reads as a deliberate aside in running
+        prose.
+      </Paragraph>
+      <SpecimenBlock label="Flavor text" meta="from a sourcebook">
+        <Blockquote>
+          The dungeon does not test you. It indexes you. Every door you do not
+          open is a paragraph the place writes about who you were when you stood
+          before it.
+        </Blockquote>
+      </SpecimenBlock>
+      <SpecimenBlock label="With attribution" meta="prose + cite">
+        <Blockquote>
+          A wizard is just a librarian with a grudge against the laws of
+          physics, and a librarian is just a wizard who has not yet decided
+          which laws to break.
+        </Blockquote>
+        <Text as="div" color="gray" size="2" mt="2">
+          attributed to Mordenkainen the Mage, apocryphal
+        </Text>
+      </SpecimenBlock>
+    </BookPage>
   ),
 };
 
 export const MonoSpecimen: Story = {
   render: () => (
-    <div style={{ padding: '2rem', maxWidth: '52rem' }}>
-      <SpecimenBlock label="JetBrains Mono" meta="variable 100–800 · OFL 1.1">
-        <p
-          style={{
-            fontFamily: 'var(--font-body)',
-            fontSize: '1rem',
-            lineHeight: 'var(--line-height-body)',
-            margin: '0 0 1rem',
-          }}
-        >
-          Inline, mono signals a named game entity — a spell like{' '}
-          <code
-            style={{
-              fontFamily: 'var(--font-mono)',
-              fontSize: '0.9em',
-              background: 'var(--gray-3)',
-              padding: '0.05em 0.35em',
-              borderRadius: '0.25em',
-            }}
-          >
-            mage-hand
-          </code>{' '}
-          or an item like{' '}
-          <code
-            style={{
-              fontFamily: 'var(--font-mono)',
-              fontSize: '0.9em',
-              background: 'var(--gray-3)',
-              padding: '0.05em 0.35em',
-              borderRadius: '0.25em',
-            }}
-          >
-            flame-tongue
-          </code>
-          . In a block, it serves stat lines and code.
-        </p>
+    <BookPage eyebrow="Mono" folio="vii">
+      <H2>JetBrains Mono</H2>
+      <Paragraph>
+        Inline, mono signals a named game entity. A spell like{' '}
+        <Code>mage-hand</Code> or an item like <Code>flame-tongue</Code>. In a
+        block, it serves stat lines and code.
+      </Paragraph>
+      <SpecimenBlock label="Stat block" meta="14px / 1.5">
         <pre
           style={{
             fontFamily: 'var(--font-mono)',
-            fontSize: '0.875rem',
+            fontSize: '14px',
             lineHeight: 'var(--line-height-mono)',
             background: 'var(--gray-3)',
-            padding: '0.875rem 1rem',
-            borderRadius: '0.5rem',
+            padding: '14px 16px',
+            borderRadius: '8px',
             margin: 0,
           }}
         >
@@ -246,20 +267,21 @@ INT  3 (-4)   WIS  9 (-1)   CHA 11 (+0)
 challenge_rating: 30  (155,000 XP)`}
         </pre>
       </SpecimenBlock>
-    </div>
+    </BookPage>
   ),
 };
 
 export const Pairing: Story = {
   render: () => (
-    <div
-      style={{
-        padding: '3rem 2rem',
-        background: 'var(--gray-2)',
-        minHeight: '100vh',
-      }}
-    >
-      <PairingExample />
-    </div>
+    <BookPage eyebrow="In context" folio="viii">
+      <H2>Pairing</H2>
+      <Paragraph>
+        Here is how the four roles combine on a typical surface, a spell detail
+        card, so you can see the system working as a whole.
+      </Paragraph>
+      <Column align="center" py="4">
+        <PairingExample />
+      </Column>
+    </BookPage>
   ),
 };
