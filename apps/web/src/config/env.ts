@@ -4,6 +4,7 @@ function createEnv() {
   const EnvSchema = z.object({
     API_URL: z.url(),
     FONT_SOURCE: z.enum(['local', 'google']).default('local'),
+    TITLE: z.string().default('DelveMoar'),
   });
 
   const envVars = Object.entries(import.meta.env).reduce<
