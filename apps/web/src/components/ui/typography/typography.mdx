@@ -1,0 +1,113 @@
+import { Meta, Story } from '@storybook/addon-docs/blocks';
+
+import * as TypographyStories from './typography.stories';
+
+<Meta title="Components/Typography/Overview" />
+
+# Typography components
+
+Thin wrappers around [Radix Themes typography](https://www.radix-ui.com/themes/docs/components/text). The wrappers exist either to lock a component to a project design-scale value (so you can't accidentally pick a heading that's off the scale) or to give a Radix building block a more semantic name in our codebase.
+
+For anything not covered by a wrapper, reach for the raw Radix component. Both the wrappers and the raw components share the same prop surface, so dropping down to Radix is a one-line swap.
+
+## Re-exports
+
+These come straight from Radix Themes. Prop surface and accessibility behavior are upstream:
+
+| Component    | Radix docs                                                         | Use for                              |
+| ------------ | ------------------------------------------------------------------ | ------------------------------------ |
+| `Heading`    | [docs](https://www.radix-ui.com/themes/docs/components/heading)    | section headings                     |
+| `Text`       | [docs](https://www.radix-ui.com/themes/docs/components/text)       | inline runs, custom blocks           |
+| `Em`         | [docs](https://www.radix-ui.com/themes/docs/components/em)         | emphasis (italic by default)         |
+| `Strong`     | [docs](https://www.radix-ui.com/themes/docs/components/strong)     | importance (bold by default)         |
+| `Code`       | [docs](https://www.radix-ui.com/themes/docs/components/code)       | named entities, slugs, dice notation |
+| `Kbd`        | [docs](https://www.radix-ui.com/themes/docs/components/kbd)        | DCs, key bindings, callouts          |
+| `Quote`      | [docs](https://www.radix-ui.com/themes/docs/components/quote)      | inline quotation                     |
+| `Blockquote` | [docs](https://www.radix-ui.com/themes/docs/components/blockquote) | multi-sentence quotation             |
+| `Link`       | [docs](https://www.radix-ui.com/themes/docs/components/link)       | inline anchors                       |
+
+## Convenience wrappers
+
+These don't exist in Radix; we add them to encode project-specific defaults:
+
+| Wrapper     | Wraps             | Purpose                                                                          |
+| ----------- | ----------------- | -------------------------------------------------------------------------------- |
+| `H1`        | `Heading as="h1"` | Locked to 48px / 700 / 1.2 line-height                                           |
+| `H2`        | `Heading as="h2"` | Locked to 36px / 600 / 1.2 line-height                                           |
+| `H3`        | `Heading as="h3"` | Locked to 28px / 500 / 1.2 line-height                                           |
+| `H4`        | `Heading as="h4"` | Locked to 22px / 500 / 1.2 line-height. Smallest allowed semantic heading level. |
+| `Paragraph` | `Text as="p"`     | Locked to size 3 (16px) with 1.6 body line-height. Use for any block of prose.   |
+| `Label`     | `Text as="label"` | Defaults to `size="4"`, `weight="medium"`. Renders a semantic `<label>`.         |
+
+For the locked heading wrappers, the visual style is enforced via global CSS in `src/styles/typography.css` (compound `.rt-Heading.h1` etc. selectors), so passing `size="9"` to `<H1>` will not change its rendered size. If you need an off-scale heading, use raw `Heading` directly.
+
+`Label` defaults to a semantic `<label>` element; for presentational use cases (callouts, eyebrow text, in-card labels) pass `as="span"` (or any other element).
+
+## Common props
+
+Every component in this module accepts the same Radix prop surface:
+
+- **`size`** — `'1'`–`'9'`. Maps to a px font-size from the Radix scale. Locked wrappers ignore this.
+- **`weight`** — `'light'` | `'regular'` | `'medium'` | `'bold'`. Locked wrappers ignore this.
+- **`color`** — any Radix accent color (`'gray'`, `'indigo'`, `'red'`, etc.) or `undefined` to inherit.
+- **`align`** — `'left'` | `'center'` | `'right'`.
+- **`trim`** — `'normal'` | `'start'` | `'end'` | `'both'`. Trims the leading/trailing line-box.
+- **`truncate`** — boolean. Single-line ellipsis.
+- **`wrap`** — `'wrap'` | `'nowrap'` | `'pretty'` | `'balance'`.
+- **`className`** — merged with the wrapper's own utility class.
+- **`style`** — passed through to the underlying element. Avoid in app code (CSP); fine in stories.
+
+The full prop list lives in the Radix docs linked in the table above.
+
+## Common combinations
+
+### Page heading + intro
+
+```tsx
+<H1>Encounter prep</H1>
+<Paragraph>
+  A short summary of what the section covers and why a DM should
+  read it.
+</Paragraph>
+```
+
+### Inline named entities
+
+```tsx
+<Paragraph>
+  Casting <Code>fireball</Code> at 4th level deals an additional
+  <Code>1d6</Code> fire damage. <Strong>Always</Strong> double-check the radius.
+</Paragraph>
+```
+
+### Form label
+
+```tsx
+<Label htmlFor="dc">Difficulty class</Label>
+<TextField.Root id="dc" />
+```
+
+### Presentational label (eyebrow, badge, in-card meta)
+
+```tsx
+<Label as="span" size="1" color="gray">
+  SRD 5.1 / Spell
+</Label>
+```
+
+### Block quotation with attribution
+
+```tsx
+<Blockquote>
+  The dungeon does not test you. It indexes you.
+</Blockquote>
+<Text as="div" size="2" color="gray" mt="2">
+  attributed to Mordenkainen
+</Text>
+```
+
+## Live showcase
+
+Adjust the controls panel to preview each component at different sizes, weights, and colors.
+
+<Story of={TypographyStories.Showcase} />
