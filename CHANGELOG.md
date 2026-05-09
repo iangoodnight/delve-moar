@@ -16,6 +16,7 @@ For the per-PR convention and the manual release ritual, see the
 
 - web: `@axe-core/react` for development-time accessibility logging in the browser console (#106)
 - web: `vitest-axe` with `toHaveNoViolations` assertions in unit tests; first assertion in `home-page.test.tsx` (#106)
+- web: Monster list page at `/monsters` with search, type / CR filters, and infinite scroll. URL-driven filter state for deep-linkable views.
 
 ### Changed
 
