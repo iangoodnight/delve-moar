@@ -2,7 +2,9 @@
 
 import tomllib
 from pathlib import Path
+from typing import Annotated
 
+from pydantic import BeforeValidator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Resolve paths relative to this file so settings work regardless of the
@@ -30,6 +32,37 @@ def _read_version() -> str:
     return "dev"
 
 
+def _parse_csv_list(value: str | list[str]) -> list[str]:
+    """Coerce a CSV env-var value into a list of trimmed, non-empty strings.
+
+    Pydantic-settings reads env vars as strings, but some settings are more
+    ergonomic as lists. Lists require JSON syntax by default, which is awkward
+    in shells. Accepting CSV makes
+    ``CORS_ALLOWED_ORIGINS="http://a.com, http://b.com"``
+    just work. When the default (already a list flows through), return it
+    unchanged.
+
+    Args:
+        value: A string from an environment variable, or a default list.
+
+    Returns:
+        A list of strings, split and trimmed if the input was a string.
+
+    Examples:
+        >>> _parse_csv_list("a, b, c")
+        ['a', 'b', 'c']
+        >>> _parse_csv_list("  a  ,  b  ,  c  ")
+        ['a', 'b', 'c']
+        >>> _parse_csv_list("a,b,,c,")
+        ['a', 'b', 'c']
+        >>> _parse_csv_list(["a", "b", "c"])
+        ['a', 'b', 'c']
+    """
+    if isinstance(value, list):
+        return value
+    return [item.strip() for item in value.split(",") if item.strip()]
+
+
 class Settings(BaseSettings):
     """API configuration -- values are read from environment or .env file."""
 
@@ -41,6 +74,10 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
+    cors_allowed_origins: Annotated[
+        list[str],
+        BeforeValidator(_parse_csv_list),
+    ] = ["http://localhost:5173"]
     database_url: str = "postgresql+asyncpg://UNSET:UNSET@localhost:5432/UNSET"
     env: str = "development"
     version: str = _read_version()
