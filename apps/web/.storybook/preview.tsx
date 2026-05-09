@@ -3,6 +3,7 @@ import '../src/styles/index.css';
 import '../src/styles/fonts.local.css';
 import { Theme, ThemePanel } from '@radix-ui/themes';
 import type { Preview } from '@storybook/react-vite';
+import { MemoryRouter } from 'react-router-dom';
 
 const preview: Preview = {
   parameters: {
@@ -20,10 +21,12 @@ const preview: Preview = {
   },
   decorators: [
     (Story) => (
-      <Theme accentColor="teal" radius="medium">
-        <ThemePanel defaultOpen={false} />
-        <Story />
-      </Theme>
+      <MemoryRouter>
+        <Theme accentColor="teal" radius="medium">
+          <ThemePanel defaultOpen={false} />
+          <Story />
+        </Theme>
+      </MemoryRouter>
     ),
   ],
 };
