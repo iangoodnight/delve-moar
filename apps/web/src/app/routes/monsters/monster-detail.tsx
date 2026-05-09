@@ -7,18 +7,19 @@ import { Code, H1, Paragraph } from '@/components/ui/typography';
 import { paths } from '@/config/paths';
 
 export default function MonsterDetail() {
-  const { id } = useParams<{ id: string }>();
-  const safeId = id ?? '';
+  const { slug } = useParams<{ slug: string }>();
+  const safeSlug = slug ?? '';
 
   return (
     <Column gap="4">
       <Head
-        title={`Monster ${safeId}`}
-        description={`Detail page for monster ${safeId}.`}
+        title={`Monster ${safeSlug}`}
+        description={`Detail page for monster ${safeSlug}.`}
       />
-      <H1>Monster {safeId}</H1>
+      <H1>Monster {safeSlug}</H1>
       <Paragraph>
-        Stub detail page. The route matched on <Code>/monsters/{safeId}</Code>.
+        Stub detail page. The route matched on <Code>/monsters/{safeSlug}</Code>
+        .
       </Paragraph>
       <RouterLink to={paths.monsters.path}>Back to Monsters</RouterLink>
     </Column>
