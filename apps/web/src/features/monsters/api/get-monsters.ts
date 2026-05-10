@@ -19,11 +19,11 @@ export interface MonsterFilters {
 
 const LIMIT = 20;
 
-async function getMonsters(
+function getMonsters(
   filters: MonsterFilters,
   offset = 0,
 ): Promise<MonsterListResponse> {
-  const { data } = await apiClient.get<MonsterListResponse>('/v1/monsters', {
+  return apiClient.get<MonsterListResponse>('/v1/monsters', {
     params: {
       ...(filters.search && { search: filters.search }),
       ...(filters.type && { type: filters.type }),
@@ -33,7 +33,6 @@ async function getMonsters(
       offset,
     },
   });
-  return data;
 }
 
 export function getMonstersInfiniteQueryOptions(filters: MonsterFilters) {

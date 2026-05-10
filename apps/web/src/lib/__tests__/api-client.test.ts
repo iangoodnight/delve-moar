@@ -1,5 +1,5 @@
 import MockAdapter from 'axios-mock-adapter';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, expectTypeOf, it } from 'vitest';
 
 import { apiClient, ApiError } from '../api-client';
 
@@ -10,11 +10,20 @@ describe('apiClient', () => {
     mock.reset();
   });
 
-  it('passes through 2xx responses untouched', async () => {
+  it('unwraps response.data on 2xx', async () => {
     mock.onGet('/health').reply(200, { status: 'ok', version: '0.0.0' });
-    const response = await apiClient.get('/health');
-    expect(response.status).toBe(200);
-    expect(response.data).toEqual({ status: 'ok', version: '0.0.0' });
+    const body = await apiClient.get<{ status: string; version: string }>(
+      '/health',
+    );
+    expect(body).toEqual({ status: 'ok', version: '0.0.0' });
+  });
+
+  it('types unwrapped get<T> as Promise<T>, not Promise<AxiosResponse<T>>', () => {
+    // Regression net for the axios.d.ts augmentation. If axios's original
+    // overload wins again, this assertion fails at compile time. Uses
+    // `declare` so the type is checked without firing an HTTP request.
+    type Resolved = Awaited<ReturnType<typeof apiClient.get<{ x: number }>>>;
+    expectTypeOf<Resolved>().toEqualTypeOf<{ x: number }>();
   });
 
   it('uses env.API_URL as baseURL', () => {
