@@ -85,11 +85,12 @@ export const srdMonsterContentSchema = z.looseObject({
   damage_vulnerabilities: z.array(z.string()),
   condition_immunities: z.array(referenceSchema),
 
-  // Senses, languages, CR, XP
+  // Senses, languages, CR, XP, proficiency bonus
   senses: sensesSchema,
   languages: z.string(),
   challenge_rating: z.number(),
   xp: z.number(),
+  proficiency_bonus: z.number().optional(),
 
   // Actions / abilities (always arrays, may be empty)
   actions: z.array(actionEntrySchema),

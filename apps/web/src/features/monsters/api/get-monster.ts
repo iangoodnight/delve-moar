@@ -5,17 +5,25 @@ import { apiClient } from '@/lib/api-client';
 import type { QueryConfig } from '@/lib/react-query';
 
 import {
+  type SrdContentSource,
+  srdContentSourceSchema,
+} from './srd-content-source.schema';
+import {
   type SrdMonsterContent,
   srdMonsterContentSchema,
 } from './srd-monster-content.schema';
 
 export type MonsterDetailResponse = components['schemas']['MonsterDetail'];
 
-// MonsterDetailResponse with `content` parsed and typed against the SRD schema.
-// The wire shape is opaque (`{ [key: string]: unknown }`); we narrow it at the
-// API boundary so downstream renderers see a typed value.
-export interface Monster extends Omit<MonsterDetailResponse, 'content'> {
+// MonsterDetailResponse with `content` and `contentSource` parsed and typed
+// against the SRD schemas. The wire shapes are opaque (`{ [k]: unknown }`);
+// we narrow them at the API boundary so renderers see typed values.
+export interface Monster extends Omit<
+  MonsterDetailResponse,
+  'content' | 'contentSource'
+> {
   content: SrdMonsterContent;
+  contentSource: SrdContentSource;
 }
 
 async function getMonster(slug: string): Promise<Monster> {
@@ -25,6 +33,7 @@ async function getMonster(slug: string): Promise<Monster> {
   return {
     ...response,
     content: srdMonsterContentSchema.parse(response.content),
+    contentSource: srdContentSourceSchema.parse(response.contentSource),
   };
 }
 

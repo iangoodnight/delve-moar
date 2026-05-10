@@ -1,0 +1,63 @@
+/* shared "card" surface used by ability-cell and the traits dl. */
+.stat-card {
+  background-color: var(--accent-2);
+  border: 1px solid var(--accent-8);
+  border-radius: var(--radius-3);
+  box-shadow: var(--shadow-2);
+}
+
+/* shared figcaption treatment for all stat-block figures. */
+.ability-scores,
+.combat-block,
+.traits-block {
+  figcaption {
+    color: var(--accent-12);
+    font-family: var(--font-heading);
+    font-size: var(--font-size-5);
+    font-weight: var(--font-weight-bold);
+  }
+}
+
+.identity {
+  font-style: oblique;
+  text-transform: capitalize;
+}
+
+.ability-grid {
+  text-align: center;
+}
+
+.ability-cell {
+  composes: stat-card;
+  padding: var(--space-2);
+}
+
+.ability-label {
+  color: var(--accent-12);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--letter-spacing-wide);
+}
+
+.actions-block {
+  p {
+    text-indent: var(--space-4) hanging;
+  }
+}
+
+.traits-card {
+  composes: stat-card;
+  padding: var(--space-4);
+}
+
+.traits-block {
+  dt {
+    color: var(--accent-12);
+    font-weight: var(--font-weight-bold);
+    font-size: var(--font-size-2);
+    letter-spacing: var(--letter-spacing-medium);
+  }
+
+  dd {
+    font-size: var(--font-size-3);
+  }
+}

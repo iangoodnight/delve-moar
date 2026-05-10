@@ -39,7 +39,14 @@ const minimalResponse = {
   monsterType: 'humanoid',
   challengeRating: '0',
   content: minimalContent,
-  contentSource: { type: 'srd' },
+  contentSource: {
+    type: 'srd',
+    license: 'CC BY 4.0',
+    license_url: 'https://creativecommons.org/licenses/by/4.0/',
+    attribution: 'Wizards of the Coast LLC',
+    data_provider: '5e-bits/5e-database',
+    data_provider_url: 'https://github.com/5e-bits/5e-database',
+  },
 };
 
 describe('getMonsterQueryOptions', () => {

@@ -1,27 +1,43 @@
 import { useParams } from 'react-router-dom';
 
 import { Head } from '@/components/seo/head';
-import { Column } from '@/components/ui/layout';
+import { Box, Column } from '@/components/ui/layout';
 import { RouterLink } from '@/components/ui/navigation';
-import { Code, H1, Paragraph } from '@/components/ui/typography';
+import { Paragraph } from '@/components/ui/typography';
 import { paths } from '@/config/paths';
+import { useMonster } from '@/features/monsters/api';
+import {
+  MonsterAttribution,
+  MonsterStatBlock,
+} from '@/features/monsters/components';
 
 export default function MonsterDetail() {
   const { slug } = useParams<{ slug: string }>();
   const safeSlug = slug ?? '';
 
+  const { data: monster, isLoading, isError } = useMonster({ slug: safeSlug });
+
   return (
-    <Column gap="4">
+    <Column mb="8">
       <Head
-        title={`Monster ${safeSlug}`}
-        description={`Detail page for monster ${safeSlug}.`}
+        title={monster?.name ?? `Monster ${safeSlug}`}
+        description={
+          monster?.name
+            ? `Stat block for ${monster.name}.`
+            : `Detail page for monster ${safeSlug}.`
+        }
       />
-      <H1>Monster {safeSlug}</H1>
-      <Paragraph>
-        Stub detail page. The route matched on <Code>/monsters/{safeSlug}</Code>
-        .
-      </Paragraph>
-      <RouterLink to={paths.monsters.path}>Back to Monsters</RouterLink>
+      {isLoading && <Paragraph>Loading...</Paragraph>}
+      {isError && <Paragraph>Could not load monster.</Paragraph>}
+      {monster && (
+        <>
+          <MonsterStatBlock monster={monster} />
+          <MonsterAttribution contentSource={monster.contentSource} />
+        </>
+      )}
+      <Box py="4">
+        <RouterLink to={paths.monsters.path}>Back to Monsters</RouterLink>
+      </Box>
     </Column>
   );
 }
