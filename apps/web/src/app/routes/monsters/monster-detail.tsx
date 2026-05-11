@@ -1,24 +1,33 @@
 import { useParams } from 'react-router-dom';
 
 import { Head } from '@/components/seo/head';
+import { Callout } from '@/components/ui/callout';
 import { Box, Column } from '@/components/ui/layout';
 import { RouterLink } from '@/components/ui/navigation';
-import { Paragraph } from '@/components/ui/typography';
 import { paths } from '@/config/paths';
 import { useMonster } from '@/features/monsters/api';
 import {
   MonsterAttribution,
+  MonsterDetailSkeleton,
   MonsterStatBlock,
 } from '@/features/monsters/components';
+import { ApiError } from '@/lib/api-client';
 
 export default function MonsterDetail() {
   const { slug } = useParams<{ slug: string }>();
   const safeSlug = slug ?? '';
 
-  const { data: monster, isLoading, isError } = useMonster({ slug: safeSlug });
+  const {
+    data: monster,
+    error,
+    isLoading,
+    isError,
+  } = useMonster({ slug: safeSlug });
+
+  const isNotFound = error instanceof ApiError && error.status === 404;
 
   return (
-    <Column mb="8">
+    <Column aria-busy={isLoading} mb="8">
       <Head
         title={monster?.name ?? `Monster ${safeSlug}`}
         description={
@@ -27,8 +36,17 @@ export default function MonsterDetail() {
             : `Detail page for monster ${safeSlug}.`
         }
       />
-      {isLoading && <Paragraph>Loading...</Paragraph>}
-      {isError && <Paragraph>Could not load monster.</Paragraph>}
+      {isLoading && <MonsterDetailSkeleton />}
+      {isError && isNotFound && (
+        <Callout.Root color="amber" role="alert">
+          <Callout.Text>Monster not found.</Callout.Text>
+        </Callout.Root>
+      )}
+      {isError && !isNotFound && (
+        <Callout.Root color="red" role="alert">
+          <Callout.Text>Could not load monster. {error.message}</Callout.Text>
+        </Callout.Root>
+      )}
       {monster && (
         <>
           <MonsterStatBlock monster={monster} />

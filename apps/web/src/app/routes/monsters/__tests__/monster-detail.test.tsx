@@ -115,4 +115,49 @@ describe('MonsterDetail route', () => {
 
     expect(await axe(container)).toHaveNoViolations();
   });
+
+  it('renders the loading skeleton (aria-busy) on first load', () => {
+    // Resolve never — keeps the query in pending state long enough to assert
+    // the skeleton container is visible.
+    mock
+      .onGet(`/v1/monsters/${adultRedDragonMonster.slug}`)
+      .reply(() => new Promise(() => undefined));
+
+    const { container } = renderDetail();
+
+    expect(container.querySelector('[aria-busy="true"]')).toBeInTheDocument();
+  });
+
+  it('renders "Monster not found." on 404', async () => {
+    mock.onGet(`/v1/monsters/${adultRedDragonMonster.slug}`).reply(404, {
+      status: 404,
+      developerMessage: `Monster not found: ${adultRedDragonMonster.slug}`,
+      userMessage: 'That monster could not be found.',
+      errorCode: 'monster_not_found',
+      moreInfo: '',
+    });
+
+    renderDetail();
+
+    expect(await screen.findByText(/monster not found/i)).toBeInTheDocument();
+    expect(
+      screen.queryByRole('heading', { level: 1, name: /adult red dragon/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('renders a generic error callout on non-404 failures', async () => {
+    mock.onGet(`/v1/monsters/${adultRedDragonMonster.slug}`).reply(500, {
+      status: 500,
+      developerMessage: 'Database is down',
+      userMessage: 'Something went wrong on our end.',
+      errorCode: 'internal_error',
+      moreInfo: '',
+    });
+
+    renderDetail();
+
+    expect(
+      await screen.findByText(/could not load monster/i),
+    ).toBeInTheDocument();
+  });
 });
