@@ -7,6 +7,11 @@
   --font-mono:
     'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, monospace;
 
+  --letter-spacing-tight: -0.05em;
+  --letter-spacing-normal: 0;
+  --letter-spacing-medium: 0.03em;
+  --letter-spacing-wide: 0.05em;
+
   --line-height-body: 1.6;
   --line-height-heading: 1.2;
   --line-height-mono: 1.5;

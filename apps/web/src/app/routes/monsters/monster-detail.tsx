@@ -1,27 +1,61 @@
 import { useParams } from 'react-router-dom';
 
 import { Head } from '@/components/seo/head';
-import { Column } from '@/components/ui/layout';
+import { Callout } from '@/components/ui/callout';
+import { Box, Column } from '@/components/ui/layout';
 import { RouterLink } from '@/components/ui/navigation';
-import { Code, H1, Paragraph } from '@/components/ui/typography';
 import { paths } from '@/config/paths';
+import { useMonster } from '@/features/monsters/api';
+import {
+  MonsterAttribution,
+  MonsterDetailSkeleton,
+  MonsterStatBlock,
+} from '@/features/monsters/components';
+import { ApiError } from '@/lib/api-client';
 
 export default function MonsterDetail() {
   const { slug } = useParams<{ slug: string }>();
   const safeSlug = slug ?? '';
 
+  const {
+    data: monster,
+    error,
+    isLoading,
+    isError,
+  } = useMonster({ slug: safeSlug });
+
+  const isNotFound = error instanceof ApiError && error.status === 404;
+
   return (
-    <Column gap="4">
+    <Column aria-busy={isLoading} mb="8">
       <Head
-        title={`Monster ${safeSlug}`}
-        description={`Detail page for monster ${safeSlug}.`}
+        title={monster?.name ?? `Monster ${safeSlug}`}
+        description={
+          monster?.name
+            ? `Stat block for ${monster.name}.`
+            : `Detail page for monster ${safeSlug}.`
+        }
       />
-      <H1>Monster {safeSlug}</H1>
-      <Paragraph>
-        Stub detail page. The route matched on <Code>/monsters/{safeSlug}</Code>
-        .
-      </Paragraph>
-      <RouterLink to={paths.monsters.path}>Back to Monsters</RouterLink>
+      {isLoading && <MonsterDetailSkeleton />}
+      {isError && isNotFound && (
+        <Callout.Root color="amber" role="alert">
+          <Callout.Text>Monster not found.</Callout.Text>
+        </Callout.Root>
+      )}
+      {isError && !isNotFound && (
+        <Callout.Root color="red" role="alert">
+          <Callout.Text>Could not load monster. {error.message}</Callout.Text>
+        </Callout.Root>
+      )}
+      {monster && (
+        <>
+          <MonsterStatBlock monster={monster} />
+          <MonsterAttribution contentSource={monster.contentSource} />
+        </>
+      )}
+      <Box py="4">
+        <RouterLink to={paths.monsters.path}>Back to Monsters</RouterLink>
+      </Box>
     </Column>
   );
 }

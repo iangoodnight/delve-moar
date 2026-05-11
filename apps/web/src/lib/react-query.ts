@@ -12,8 +12,10 @@ export type ApiFnReturnType<
   FnType extends (...args: never[]) => Promise<unknown>,
 > = Awaited<ReturnType<FnType>>;
 
-export type QueryConfig<T extends (...args: never[]) => Promise<unknown>> =
-  Omit<ReturnType<T>, 'queryKey' | 'queryFn'>;
+export type QueryConfig<T extends (...args: never[]) => unknown> = Omit<
+  ReturnType<T>,
+  'queryKey' | 'queryFn'
+>;
 
 export type MutationConfig<
   MutationFnType extends (...args: never[]) => Promise<unknown>,

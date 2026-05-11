@@ -105,7 +105,10 @@ export const apiClient = axios.create({
 
 apiClient.interceptors.request.use(onRequest);
 apiClient.interceptors.response.use(
-  (response) => response,
+  // axios.d.ts augments AxiosInstance.get<T> etc. to return Promise<T>
+  // (the unwrapped body). The T contract is established at call sites.
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+  (response) => response.data,
   (error: unknown) => {
     if (axios.isAxiosError(error)) {
       return Promise.reject(toApiError(error));
