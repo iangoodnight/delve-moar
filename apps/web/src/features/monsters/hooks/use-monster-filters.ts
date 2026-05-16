@@ -67,6 +67,11 @@ export function useMonsterFilters() {
           const next = new URLSearchParams(prev);
           if (crMin !== undefined) {
             next.set('cr_min', String(crMin));
+            // Keep cr_max >= cr_min: bump the other bound if it would invert.
+            const currentMax = readNumber(prev.get('cr_max'));
+            if (currentMax !== undefined && currentMax < crMin) {
+              next.set('cr_max', String(crMin));
+            }
           } else {
             next.delete('cr_min');
           }
@@ -85,6 +90,11 @@ export function useMonsterFilters() {
           const next = new URLSearchParams(prev);
           if (crMax !== undefined) {
             next.set('cr_max', String(crMax));
+            // Keep cr_min <= cr_max: bump the other bound if it would invert.
+            const currentMin = readNumber(prev.get('cr_min'));
+            if (currentMin !== undefined && currentMin > crMax) {
+              next.set('cr_min', String(crMax));
+            }
           } else {
             next.delete('cr_max');
           }
