@@ -45,9 +45,9 @@
 .traits-block {
   dt {
     color: var(--accent-12);
-    font-weight: var(--font-weight-bold);
-    font-size: var(--font-size-2);
     letter-spacing: var(--letter-spacing-medium);
+    font-size: var(--font-size-2);
+    font-weight: var(--font-weight-bold);
   }
 
   dd {
