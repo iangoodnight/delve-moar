@@ -3,11 +3,11 @@ import { queryOptions, useQuery } from '@tanstack/react-query';
 
 import { apiClient } from '@/lib/api-client';
 import type { QueryConfig } from '@/lib/react-query';
-
 import {
   type SrdContentSource,
   srdContentSourceSchema,
-} from './srd-content-source.schema';
+} from '@/lib/srd-content-source.schema';
+
 import {
   type SrdMonsterContent,
   srdMonsterContentSchema,
