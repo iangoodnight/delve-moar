@@ -11,8 +11,8 @@ export const paths = {
   },
   itemDetail: {
     displayName: 'Item Detail',
-    path: '/items/:id',
-    getHref: (id: string) => `/items/${id}`,
+    path: '/items/:slug',
+    getHref: (slug: string) => `/items/${slug}`,
   },
   monsters: {
     displayName: 'Monsters',

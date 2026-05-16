@@ -7,18 +7,18 @@ import { Code, H1, Paragraph } from '@/components/ui/typography';
 import { paths } from '@/config/paths';
 
 export default function ItemDetail() {
-  const { id } = useParams<{ id: string }>();
-  const safeId = id ?? '';
+  const { slug } = useParams<{ slug: string }>();
+  const safeSlug = slug ?? '';
 
   return (
     <Column gap="4">
       <Head
-        title={`Item ${safeId}`}
-        description={`Detail page for item ${safeId}.`}
+        title={`Item ${safeSlug}`}
+        description={`Detail page for item ${safeSlug}.`}
       />
-      <H1>Item {safeId}</H1>
+      <H1>Item {safeSlug}</H1>
       <Paragraph>
-        Stub detail page. The route matched on <Code>/items/{safeId}</Code>.
+        Stub detail page. The route matched on <Code>/items/{safeSlug}</Code>.
       </Paragraph>
       <RouterLink to={paths.items.path}>Back to Items</RouterLink>
     </Column>
