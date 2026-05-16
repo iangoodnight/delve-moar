@@ -1,3 +1,10 @@
+.card {
+  background-color: var(--accent-2);
+  border: 1px solid var(--accent-8);
+  border-radius: var(--radius-3);
+  box-shadow: var(--shadow-2);
+}
+
 .text-transform-capitalize {
   text-transform: capitalize;
 }
