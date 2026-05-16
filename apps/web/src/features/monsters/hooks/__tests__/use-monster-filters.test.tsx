@@ -132,4 +132,40 @@ describe('useMonsterFilters — setters', () => {
     });
     expect(result.current.filters.crMax).toBeUndefined();
   });
+
+  it('setCrMin bumps cr_max up when the new min would exceed it', () => {
+    const { result } = renderHook(() => useMonsterFilters(), {
+      wrapper: makeWrapper('/monsters?cr_min=2&cr_max=5'),
+    });
+
+    act(() => {
+      result.current.setCrMin(10);
+    });
+    expect(result.current.filters.crMin).toBe(10);
+    expect(result.current.filters.crMax).toBe(10);
+  });
+
+  it('setCrMax bumps cr_min down when the new max would be below it', () => {
+    const { result } = renderHook(() => useMonsterFilters(), {
+      wrapper: makeWrapper('/monsters?cr_min=8&cr_max=15'),
+    });
+
+    act(() => {
+      result.current.setCrMax(3);
+    });
+    expect(result.current.filters.crMax).toBe(3);
+    expect(result.current.filters.crMin).toBe(3);
+  });
+
+  it('setCrMin leaves cr_max alone when the new min is at or below it', () => {
+    const { result } = renderHook(() => useMonsterFilters(), {
+      wrapper: makeWrapper('/monsters?cr_min=2&cr_max=10'),
+    });
+
+    act(() => {
+      result.current.setCrMin(5);
+    });
+    expect(result.current.filters.crMin).toBe(5);
+    expect(result.current.filters.crMax).toBe(10);
+  });
 });

@@ -1,0 +1,40 @@
+.desc-paragraph {
+  text-indent: var(--space-4) hanging;
+  text-wrap: revert;
+}
+
+.desc-paragraph + .desc-paragraph {
+  margin-top: var(--space-3);
+}
+
+.higher-level {
+  text-indent: var(--space-4) hanging;
+  text-wrap: revert;
+}
+
+.higher-level + .higher-level {
+  margin-top: var(--space-3);
+}
+
+.spell-data {
+  composes: card from global;
+  padding: var(--space-4);
+
+  dt {
+    color: var(--accent-12);
+    letter-spacing: var(--letter-spacing-medium);
+    font-size: var(--font-size-2);
+    font-weight: var(--font-weight-bold);
+  }
+
+  dd {
+    font-size: var(--font-size-3);
+  }
+}
+
+.spell-data-caption {
+  color: var(--accent-12);
+  font-family: var(--font-heading);
+  font-size: var(--font-size-5);
+  font-weight: var(--font-weight-bold);
+}

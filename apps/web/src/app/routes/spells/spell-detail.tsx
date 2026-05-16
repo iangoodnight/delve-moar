@@ -1,26 +1,61 @@
 import { useParams } from 'react-router-dom';
 
 import { Head } from '@/components/seo/head';
-import { Column } from '@/components/ui/layout';
+import { SrdAttribution } from '@/components/srd';
+import { Callout } from '@/components/ui/callout';
+import { Box, Column } from '@/components/ui/layout';
 import { RouterLink } from '@/components/ui/navigation';
-import { Code, H1, Paragraph } from '@/components/ui/typography';
 import { paths } from '@/config/paths';
+import { useSpell } from '@/features/spells/api';
+import {
+  SpellDetailBlock,
+  SpellDetailSkeleton,
+} from '@/features/spells/components';
+import { ApiError } from '@/lib/api-client';
 
 export default function SpellDetail() {
-  const { id } = useParams<{ id: string }>();
-  const safeId = id ?? '';
+  const { slug } = useParams<{ slug: string }>();
+  const safeSlug = slug ?? '';
+
+  const {
+    data: spell,
+    error,
+    isLoading,
+    isError,
+  } = useSpell({ slug: safeSlug });
+
+  const isNotFound = error instanceof ApiError && error.status === 404;
 
   return (
-    <Column gap="4">
+    <Column aria-busy={isLoading} mb="8">
       <Head
-        title={`Spell ${safeId}`}
-        description={`Detail page for spell ${safeId}.`}
+        title={spell?.name ?? `Spell ${safeSlug}`}
+        description={
+          spell?.name
+            ? `Details for ${spell.name}.`
+            : `Detail page for spell ${safeSlug}.`
+        }
       />
-      <H1>Spell {safeId}</H1>
-      <Paragraph>
-        Stub detail page. The route matched on <Code>/spells/{safeId}</Code>.
-      </Paragraph>
-      <RouterLink to={paths.spells.path}>Back to Spells</RouterLink>
+      {isLoading && <SpellDetailSkeleton />}
+      {isError && isNotFound && (
+        <Callout.Root color="amber" role="alert">
+          <Callout.Text>Spell not found.</Callout.Text>
+        </Callout.Root>
+      )}
+      {isError && !isNotFound && (
+        <Callout.Root color="red" role="alert">
+          <Callout.Text>Could not load spell. {error.message}</Callout.Text>
+        </Callout.Root>
+      )}
+      {spell && (
+        <>
+          <SpellDetailBlock spell={spell} />
+          <SrdAttribution contentSource={spell.contentSource} />
+        </>
+      )}
+      <Box py="4">
+        <RouterLink to={paths.spells.path}>Back to Spells</RouterLink>
+      </Box>
     </Column>
   );
 }

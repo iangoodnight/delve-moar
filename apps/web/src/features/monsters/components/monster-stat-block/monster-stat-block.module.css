@@ -1,11 +1,3 @@
-/* shared "card" surface used by ability-cell and the traits dl. */
-.stat-card {
-  background-color: var(--accent-2);
-  border: 1px solid var(--accent-8);
-  border-radius: var(--radius-3);
-  box-shadow: var(--shadow-2);
-}
-
 /* shared figcaption treatment for all stat-block figures. */
 .ability-scores,
 .combat-block,
@@ -28,7 +20,7 @@
 }
 
 .ability-cell {
-  composes: stat-card;
+  composes: card from global;
   padding: var(--space-2);
 }
 
@@ -41,20 +33,21 @@
 .actions-block {
   p {
     text-indent: var(--space-4) hanging;
+    text-wrap: revert;
   }
 }
 
 .traits-card {
-  composes: stat-card;
+  composes: card from global;
   padding: var(--space-4);
 }
 
 .traits-block {
   dt {
     color: var(--accent-12);
-    font-weight: var(--font-weight-bold);
-    font-size: var(--font-size-2);
     letter-spacing: var(--letter-spacing-medium);
+    font-size: var(--font-size-2);
+    font-weight: var(--font-weight-bold);
   }
 
   dd {

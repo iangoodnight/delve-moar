@@ -1,8 +1,7 @@
 // Zod schema for the SRD `contentSource` JSON blob.
 //
-// The same shape ships with monsters, spells, and items (the seed pipeline
-// uses one constant); this schema is feature-local for now and would lift to
-// a shared layer when items/spells need it in #48 / #49.
+// Monsters, spells, and items all ship the same shape from the seed pipeline.
+// Lives in lib so any feature can import it without crossing boundaries.
 import * as z from 'zod';
 
 export const srdContentSourceSchema = z.looseObject({

@@ -18,6 +18,8 @@ For the per-PR convention and the manual release ritual, see the
 - web: `vitest-axe` with `toHaveNoViolations` assertions in unit tests; first assertion in `home-page.test.tsx` (#106)
 - web: Monster list page at `/monsters` with search, type / CR filters, and infinite scroll. URL-driven filter state for deep-linkable views.
 - web: Monster detail page at `/monsters/:slug` with the full SRD stat block (identity, combat, ability scores, traits, actions, special abilities, optional reactions and legendary actions), a content-source-driven attribution footer, a layout-mirroring loading skeleton, and 404 / generic error states.
+- web: Spell list page at `/spells` with search, school / level filters, and infinite scroll. URL-driven filter state for deep-linkable views. (#48)
+- web: Spell detail page at `/spells/:slug` rendering casting time, range, components (V/S/M with material parenthetical), duration (with concentration prefix when applicable), optional ritual flag and caster classes, multi-paragraph description, optional "At Higher Levels" section, attribution footer, layout-mirroring loading skeleton, and 404 / generic error states. (#48)
 
 ### Changed
 
@@ -26,5 +28,8 @@ For the per-PR convention and the manual release ritual, see the
 ### Removed
 
 ### Fixed
+
+- web: Monster CR min / max filter inputs now clamp to a valid range; setting one bound past the other auto-bumps the other to match, rather than yielding an empty resultset with no explanation. (#48)
+- web: Monster action paragraphs no longer carry the hanging indent below the `sm` breakpoint, recovering reading width on narrow viewports. (#48)
 
 ### Security

@@ -16,7 +16,7 @@ export function ActionsBlock({ title, entries }: ActionsBlockProps) {
       <Column gap="2">
         <H2>{title}</H2>
         {entries.map((entry) => (
-          <Paragraph key={entry.name} ml="4">
+          <Paragraph key={entry.name} ml={{ initial: '0', sm: '4' }}>
             <Strong>
               <em>{entry.name}.</em>
             </Strong>{' '}

@@ -1,11 +1,11 @@
 import { Text } from '@/components/ui/typography';
-import type { SrdContentSource } from '@/features/monsters/api';
+import type { SrdContentSource } from '@/lib/srd-content-source.schema';
 
-interface MonsterAttributionProps {
+interface SrdAttributionProps {
   readonly contentSource: SrdContentSource;
 }
 
-export function MonsterAttribution({ contentSource }: MonsterAttributionProps) {
+export function SrdAttribution({ contentSource }: SrdAttributionProps) {
   return (
     <Text as="p" color="gray" size="1">
       Content from {contentSource.attribution},{' '}
