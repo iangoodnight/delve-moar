@@ -1,13 +1,13 @@
 import { useParams } from 'react-router-dom';
 
 import { Head } from '@/components/seo/head';
+import { SrdAttribution } from '@/components/srd';
 import { Callout } from '@/components/ui/callout';
 import { Box, Column } from '@/components/ui/layout';
 import { RouterLink } from '@/components/ui/navigation';
 import { paths } from '@/config/paths';
 import { useMonster } from '@/features/monsters/api';
 import {
-  MonsterAttribution,
   MonsterDetailSkeleton,
   MonsterStatBlock,
 } from '@/features/monsters/components';
@@ -50,7 +50,7 @@ export default function MonsterDetail() {
       {monster && (
         <>
           <MonsterStatBlock monster={monster} />
-          <MonsterAttribution contentSource={monster.contentSource} />
+          <SrdAttribution contentSource={monster.contentSource} />
         </>
       )}
       <Box py="4">

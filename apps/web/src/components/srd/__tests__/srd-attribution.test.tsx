@@ -3,19 +3,28 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { axe } from 'vitest-axe';
 
-import { adultRedDragonMonster } from '@/features/monsters/__tests__/adult-red-dragon-fixture';
+import type { SrdContentSource } from '@/lib/srd-content-source.schema';
 
-import { MonsterAttribution } from '../monster-attribution';
+import { SrdAttribution } from '../srd-attribution';
+
+const CONTENT_SOURCE: SrdContentSource = {
+  type: 'srd',
+  license: 'CC BY 4.0',
+  license_url: 'https://creativecommons.org/licenses/by/4.0/',
+  attribution: 'Wizards of the Coast LLC',
+  data_provider: '5e-bits/5e-database',
+  data_provider_url: 'https://github.com/5e-bits/5e-database',
+};
 
 function renderAttribution() {
   return render(
     <Theme>
-      <MonsterAttribution contentSource={adultRedDragonMonster.contentSource} />
+      <SrdAttribution contentSource={CONTENT_SOURCE} />
     </Theme>,
   );
 }
 
-describe('MonsterAttribution', () => {
+describe('SrdAttribution', () => {
   it('renders the license link from contentSource.license / license_url', () => {
     renderAttribution();
     const licenseLink = screen.getByRole('link', { name: 'CC BY 4.0' });
