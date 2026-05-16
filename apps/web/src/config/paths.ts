@@ -31,7 +31,7 @@ export const paths = {
   },
   spellDetail: {
     displayName: 'Spell Detail',
-    path: '/spells/:id',
-    getHref: (id: string) => `/spells/${id}`,
+    path: '/spells/:slug',
+    getHref: (slug: string) => `/spells/${slug}`,
   },
 };

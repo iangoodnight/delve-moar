@@ -5,6 +5,10 @@
   box-shadow: var(--shadow-2);
 }
 
+.text-oblique {
+  font-style: oblique;
+}
+
 .text-transform-capitalize {
   text-transform: capitalize;
 }

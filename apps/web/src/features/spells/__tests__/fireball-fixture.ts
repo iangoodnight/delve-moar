@@ -1,0 +1,42 @@
+// Test fixture: Fireball (3rd-level evocation), shaped like the SRD seed
+// payload. Covers all required detail fields: components with material,
+// concentration false, higher_level, and two caster classes.
+import type { Spell } from '@/features/spells/api';
+
+export const fireballSpell: Spell = {
+  slug: 'fireball',
+  name: 'Fireball',
+  level: '3rd',
+  school: 'evocation',
+  content: {
+    name: 'Fireball',
+    level: 3,
+    school: { index: 'evocation', name: 'Evocation' },
+    casting_time: '1 action',
+    range: '150 feet',
+    components: ['V', 'S', 'M'],
+    material: 'A tiny ball of bat guano and sulfur',
+    duration: 'Instantaneous',
+    concentration: false,
+    ritual: false,
+    desc: [
+      'A bright streak flashes from your pointing finger to a point you choose within range and then blossoms with a low roar into an explosion of flame.',
+      "The fire spreads around corners. It ignites flammable objects in the area that aren't being worn or carried.",
+    ],
+    higher_level: [
+      'When you cast this spell using a spell slot of 4th level or higher, the damage increases by 1d6 for each slot level above 3rd.',
+    ],
+    classes: [
+      { index: 'sorcerer', name: 'Sorcerer' },
+      { index: 'wizard', name: 'Wizard' },
+    ],
+  },
+  contentSource: {
+    type: 'srd',
+    license: 'CC BY 4.0',
+    license_url: 'https://creativecommons.org/licenses/by/4.0/',
+    attribution: 'Wizards of the Coast LLC',
+    data_provider: '5e-bits/5e-database',
+    data_provider_url: 'https://github.com/5e-bits/5e-database',
+  },
+};
