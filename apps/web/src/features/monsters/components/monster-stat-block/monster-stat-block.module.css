@@ -33,6 +33,7 @@
 .actions-block {
   p {
     text-indent: var(--space-4) hanging;
+    text-wrap: revert;
   }
 }
 
