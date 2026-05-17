@@ -1,26 +1,56 @@
 import { useParams } from 'react-router-dom';
 
 import { Head } from '@/components/seo/head';
-import { Column } from '@/components/ui/layout';
+import { SrdAttribution } from '@/components/srd';
+import { Callout } from '@/components/ui/callout';
+import { Box, Column } from '@/components/ui/layout';
 import { RouterLink } from '@/components/ui/navigation';
-import { Code, H1, Paragraph } from '@/components/ui/typography';
 import { paths } from '@/config/paths';
+import { useItem } from '@/features/items/api';
+import {
+  ItemDetailBlock,
+  ItemDetailSkeleton,
+} from '@/features/items/components';
+import { ApiError } from '@/lib/api-client';
 
 export default function ItemDetail() {
-  const { id } = useParams<{ id: string }>();
-  const safeId = id ?? '';
+  const { slug } = useParams<{ slug: string }>();
+  const safeSlug = slug ?? '';
+
+  const { data: item, error, isLoading, isError } = useItem({ slug: safeSlug });
+
+  const isNotFound = error instanceof ApiError && error.status === 404;
 
   return (
-    <Column gap="4">
+    <Column aria-busy={isLoading} mb="8">
       <Head
-        title={`Item ${safeId}`}
-        description={`Detail page for item ${safeId}.`}
+        title={item?.name ?? `Item ${safeSlug}`}
+        description={
+          item?.name
+            ? `Details for ${item.name}.`
+            : `Detail page for item ${safeSlug}.`
+        }
       />
-      <H1>Item {safeId}</H1>
-      <Paragraph>
-        Stub detail page. The route matched on <Code>/items/{safeId}</Code>.
-      </Paragraph>
-      <RouterLink to={paths.items.path}>Back to Items</RouterLink>
+      {isLoading && <ItemDetailSkeleton />}
+      {isError && isNotFound && (
+        <Callout.Root color="amber" role="alert">
+          <Callout.Text>Item not found.</Callout.Text>
+        </Callout.Root>
+      )}
+      {isError && !isNotFound && (
+        <Callout.Root color="red" role="alert">
+          <Callout.Text>Could not load item. {error.message}</Callout.Text>
+        </Callout.Root>
+      )}
+      {item && (
+        <>
+          <ItemDetailBlock item={item} />
+          <SrdAttribution contentSource={item.contentSource} />
+        </>
+      )}
+      <Box py="4">
+        <RouterLink to={paths.items.path}>Back to Items</RouterLink>
+      </Box>
     </Column>
   );
 }
