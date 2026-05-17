@@ -41,6 +41,24 @@ task db:migrate  # apply pending Alembic migrations
 
 A full task list: `task --list`.
 
+## Branch model
+
+DelveMoar uses two long-lived branches:
+
+- **`dev`** is the integration branch and the repo default. All PRs target
+  `dev`. CI runs on every PR; merges happen once review is approved and CI
+  is green.
+- **`main`** is the release branch. It receives merges from `dev` only at
+  release moments, via a `dev` → `main` Release PR. Tags (`v0.1.0`, etc.)
+  live on `main`, and the production CD workflow watches for those tags
+  (see [Cutting a release](#cutting-a-release-manual)).
+
+This split keeps `main` deployable at every commit while `dev` carries
+day-to-day integration. The decision is recorded in
+[ADR 0009](docs/decisions/0009-branch-model.md). Future automation of the
+release ritual is tracked in
+[#102](https://github.com/iangoodnight/delve-moar/issues/102).
+
 ## Branching
 
 Each piece of work starts as a GitHub issue. Branches are named:
@@ -50,7 +68,7 @@ Each piece of work starts as a GitHub issue. Branches are named:
 ```
 
 Where `<type>` matches the conventional commit type (`feat`, `fix`, `chore`,
-`docs`, `refactor`). Examples:
+`docs`, `refactor`). Branch off `dev` (the default branch). Examples:
 
 - `feat/46-monster-list-page`
 - `fix/103-spell-search-pagination`
@@ -77,11 +95,11 @@ Common scopes: `web`, `api`, `cli`, `data`, `infra`, `repo`, `deps`.
 The subject is imperative, lowercase, no trailing period. The body explains
 **why** more than what. If the PR closes an issue, put `Closes #N` in the
 footer of the PR description (not the commit body), so GitHub auto-closes on
-merge to `main`.
+merge to `dev` (the default branch).
 
 ## Pull requests
 
-1. Push your branch and open a PR against `main`.
+1. Push your branch and open a PR against `dev` (the default base).
 2. The PR template fills in automatically. Walk every checkbox honestly.
 3. CODEOWNERS auto-requests reviewers for the paths you touched.
 4. CI runs lint, tests, and the type-generation diff check on every push.
@@ -125,18 +143,34 @@ either case.
 
 ### Cutting a release (manual)
 
-When a phase milestone closes, one contributor cuts the release in a
-single PR:
+When a phase milestone closes, one contributor cuts the release. The
+release lives at the `dev` → `main` boundary: `main` is the deployable
+branch, so the version-bump + changelog dating happens on `dev`, and
+the tag goes on `main` after the release PR merges.
 
-1. Bump [`VERSION`](VERSION) to the new version (e.g. `0.0.0` to
-   `0.1.0`).
-2. In `CHANGELOG.md`, rename `[Unreleased]` to `## [X.Y.Z] - YYYY-MM-DD`.
-3. Insert a fresh empty `[Unreleased]` block at the top with the six
-   sub-sections.
-4. After the release PR merges, tag the merge commit `vX.Y.Z` and push
-   the tag: `git tag vX.Y.Z && git push origin vX.Y.Z`.
-5. Create a GitHub Release pointing at the tag, using the new
-   `[X.Y.Z]` section as the body.
+1. **On `dev`, in a single PR:**
+   1. Bump [`VERSION`](VERSION) to the new version (e.g. `0.0.0` to
+      `0.1.0`).
+   2. In `CHANGELOG.md`, rename `[Unreleased]` to `## [X.Y.Z] - YYYY-MM-DD`.
+   3. Insert a fresh empty `[Unreleased]` block at the top with the six
+      sub-sections.
+   4. Merge the version-bump PR into `dev`.
+2. **Open a `dev` → `main` Release PR** titled `Release vX.Y.Z`. The
+   body is the new `[X.Y.Z]` section of the changelog.
+3. **Merge the Release PR** (linear / fast-forward merge keeps `main`
+   clean).
+4. **Tag the merge commit on `main`:**
+   ```bash
+   git checkout main && git pull
+   git tag vX.Y.Z && git push origin vX.Y.Z
+   ```
+5. **Create a GitHub Release** pointing at the tag, using the new
+   `[X.Y.Z]` section as the body. The production CD workflow (tracked
+   in [#126](https://github.com/iangoodnight/delve-moar/issues/126))
+   fires on the tag and deploys.
+
+Future automation of this ritual is tracked in
+[#102](https://github.com/iangoodnight/delve-moar/issues/102).
 
 Per-app versions (`apps/api/pyproject.toml`, `apps/web/package.json`,
 the CLI's git tags) are not bumped by this ritual; they move with the
