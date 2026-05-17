@@ -90,4 +90,22 @@ describe('srdItemContentSchema', () => {
       srdItemContentSchema.parse({ ...minimalItem, weight: 'heavy' }),
     ).toThrow();
   });
+
+  it('accepts a melee weapon range with `long` omitted', () => {
+    const parsed = srdItemContentSchema.parse({
+      ...minimalItem,
+      range: { normal: 5 },
+    });
+    expect(parsed.range?.normal).toBe(5);
+    expect(parsed.range?.long).toBeUndefined();
+  });
+
+  it('accepts a ranged weapon range with `long` set', () => {
+    const parsed = srdItemContentSchema.parse({
+      ...minimalItem,
+      range: { normal: 80, long: 320 },
+    });
+    expect(parsed.range?.normal).toBe(80);
+    expect(parsed.range?.long).toBe(320);
+  });
 });

@@ -26,7 +26,9 @@ const damageSchema = z.looseObject({
 
 const rangeSchema = z.looseObject({
   normal: z.number(),
-  long: z.number().nullable(),
+  // Melee weapons omit `long` entirely; ranged / thrown weapons set it to a
+  // number. Accept both undefined and null defensively.
+  long: z.number().nullable().optional(),
 });
 
 const armorClassSchema = z.looseObject({
