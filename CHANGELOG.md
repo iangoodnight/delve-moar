@@ -14,6 +14,24 @@ For the per-PR convention and the manual release ritual, see the
 
 ### Added
 
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+
+## [0.1.0] - 2026-05-18
+
+Phase 1a: SRD catalog, read-only. Anyone can browse the full 5e SRD through
+the web app. The full stack (seed → API → codegen → web) is proven on real
+content. The site is publicly hostable with noindex while the product matures.
+
+### Added
+
 - infra: production deploy pipeline -- Vercel (web SPA) + Fly.io (API) + Fly Postgres, with Terraform IaC under `infra/terraform/fly/` and a CD workflow that builds the API image, runs migrations, and deploys on GitHub Release publish (#126)
 - web,api: belt-and-suspenders noindex -- `robots.txt` (Disallow: /), `<meta name="robots" content="noindex, nofollow">` in `index.html`, and `X-Robots-Tag: noindex, nofollow` middleware on the API (#126)
 - docs: `docs/deploy.md` deployment runbook covering release ritual, rollback steps, and first-time infrastructure provisioning (#126)
@@ -34,13 +52,7 @@ For the per-PR convention and the manual release ritual, see the
 - api: Detail endpoint JSON responses now use camelCase for all nested `content` and `contentSource` fields (e.g. `licenseUrl`, `weaponCategory`, `armorClass.dexBonus`, `castingTime`, `passivePerception`). Top-level response fields were already camelCase; this extends the convention through to the nested payload. **Breaking change** for any direct API consumer: snake_case key access (`license_url`, `weapon_category`, etc.) no longer works. (#124)
 - web: FE no longer performs Zod boundary parsing on detail responses; the API contract is the single source of truth via OpenAPI codegen. The four `srd-{content-source,item,monster,spell}-content.schema.ts` files are removed; consumers import TS types from `@delve-moar/api-types` directly. (#124)
 
-### Deprecated
-
-### Removed
-
 ### Fixed
 
 - web: Monster CR min / max filter inputs now clamp to a valid range; setting one bound past the other auto-bumps the other to match, rather than yielding an empty resultset with no explanation. (#48)
 - web: Monster action paragraphs no longer carry the hanging indent below the `sm` breakpoint, recovering reading width on narrow viewports. (#48)
-
-### Security
