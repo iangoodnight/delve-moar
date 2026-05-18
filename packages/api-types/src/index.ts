@@ -254,6 +254,20 @@ export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
         /**
+         * ArmorClass
+         * @description Armor's base AC plus Dex-bonus rules.
+         */
+        ArmorClass: {
+            /** Base */
+            base: number;
+            /** Dexbonus */
+            dexBonus: boolean;
+            /** Maxbonus */
+            maxBonus?: number | null;
+        } & {
+            [key: string]: unknown;
+        };
+        /**
          * ContentSource
          * @description SRD content source attribution.
          *
@@ -278,6 +292,31 @@ export interface components {
             dataProvider: string;
             /** Dataproviderurl */
             dataProviderUrl: string;
+        } & {
+            [key: string]: unknown;
+        };
+        /**
+         * Cost
+         * @description Item cost as a quantity + currency unit (gp, sp, cp, pp, ep).
+         */
+        Cost: {
+            /** Quantity */
+            quantity: number;
+            /** Unit */
+            unit: string;
+        } & {
+            [key: string]: unknown;
+        };
+        /**
+         * Damage
+         * @description Weapon damage roll (dice + optional flat bonus + damage type).
+         */
+        Damage: {
+            /** Damagedice */
+            damageDice: string;
+            /** Damagebonus */
+            damageBonus?: number | null;
+            damageType: components["schemas"]["Reference"];
         } & {
             [key: string]: unknown;
         };
@@ -331,10 +370,7 @@ export interface components {
             itemCategory: string | null;
             /** Rarity */
             rarity: string | null;
-            /** Content */
-            content: {
-                [key: string]: unknown;
-            };
+            content: components["schemas"]["SrdItemContent"];
             contentSource: components["schemas"]["ContentSource"];
         };
         /**
@@ -446,6 +482,32 @@ export interface components {
             data: components["schemas"]["SpellSummary"][];
         };
         /**
+         * Range
+         * @description Weapon range in feet. `long` is omitted on melee weapons.
+         */
+        Range: {
+            /** Normal */
+            normal: number;
+            /** Long */
+            long?: number | null;
+        } & {
+            [key: string]: unknown;
+        };
+        /**
+         * Reference
+         * @description An SRD reference link (weapon property, damage type, ...).
+         */
+        Reference: {
+            /** Index */
+            index: string;
+            /** Name */
+            name: string;
+            /** Url */
+            url?: string | null;
+        } & {
+            [key: string]: unknown;
+        };
+        /**
          * ResultsetMeta
          * @description Metadata about a paginated resultset.
          */
@@ -495,6 +557,39 @@ export interface components {
             level: string;
             /** School */
             school: string | null;
+        };
+        /**
+         * SrdItemContent
+         * @description SRD item content payload.
+         */
+        SrdItemContent: {
+            /** Name */
+            name: string;
+            /** Desc */
+            desc?: string[] | null;
+            cost?: components["schemas"]["Cost"];
+            /** Weight */
+            weight?: number | null;
+            /** Weaponcategory */
+            weaponCategory?: string | null;
+            /** Weaponrange */
+            weaponRange?: string | null;
+            damage?: components["schemas"]["Damage"];
+            twoHandedDamage?: components["schemas"]["Damage"];
+            /** Properties */
+            properties?: components["schemas"]["Reference"][] | null;
+            range?: components["schemas"]["Range"];
+            /** Armorcategory */
+            armorCategory?: string | null;
+            armorClass?: components["schemas"]["ArmorClass"];
+            /** Strminimum */
+            strMinimum?: number | null;
+            /** Stealthdisadvantage */
+            stealthDisadvantage?: boolean | null;
+            /** Requiresattunement */
+            requiresAttunement?: string | null;
+        } & {
+            [key: string]: unknown;
         };
         /** ValidationError */
         ValidationError: {

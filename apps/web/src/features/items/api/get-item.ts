@@ -4,23 +4,16 @@ import { queryOptions, useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import type { QueryConfig } from '@/lib/react-query';
 
-import {
-  type SrdItemContent,
-  srdItemContentSchema,
-} from './srd-item-content.schema';
-
 export type ItemDetailResponse = components['schemas']['ItemDetail'];
 
-export interface Item extends Omit<ItemDetailResponse, 'content'> {
-  content: SrdItemContent;
-}
+// Item is the codegenned ItemDetail shape verbatim. The API validates the
+// payload at the boundary via Pydantic; the FE no longer parses with Zod.
+// `Item` stays as an alias rather than `= ItemDetailResponse` for callers
+// who imported the named type before the boundary parse went away.
+export type Item = ItemDetailResponse;
 
-async function getItem(slug: string): Promise<Item> {
-  const response = await apiClient.get<ItemDetailResponse>(`/v1/items/${slug}`);
-  return {
-    ...response,
-    content: srdItemContentSchema.parse(response.content),
-  };
+function getItem(slug: string): Promise<Item> {
+  return apiClient.get<Item>(`/v1/items/${slug}`);
 }
 
 export function getItemQueryOptions(slug: string) {

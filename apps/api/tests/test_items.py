@@ -35,7 +35,11 @@ def _make_item(**overrides: Any) -> SimpleNamespace:
         "name": "Longsword",
         "item_category": "Weapon",
         "rarity": None,
-        "content": {"index": "longsword", "name": "Longsword", "cost": "15 gp"},
+        "content": {
+            "index": "longsword",
+            "name": "Longsword",
+            "cost": {"quantity": 15, "unit": "gp"},
+        },
         "content_source": SRD_CONTENT_SOURCE_FIXTURE,
     }
     defaults.update(overrides)
@@ -98,13 +102,14 @@ class TestItemDetailSchema:
     """Unit tests for ItemDetail Pydantic schema."""
 
     def test_exposes_content_blob(self) -> None:
-        """ItemDetail includes the raw content dict."""
+        """ItemDetail validates content into the typed SrdItemContent model."""
         item = ItemDetail.model_validate(_make_item())
-        assert item.content == {
-            "index": "longsword",
-            "name": "Longsword",
-            "cost": "15 gp",
-        }
+        assert item.content.name == "Longsword"
+        assert item.content.cost is not None
+        assert item.content.cost.quantity == 15
+        assert item.content.cost.unit == "gp"
+        # Unknown SRD fields (e.g. `index`) pass through via extra='allow'.
+        assert getattr(item.content, "index", None) == "longsword"
 
     def test_exposes_content_source(self) -> None:
         """ItemDetail includes content_source attribution metadata."""

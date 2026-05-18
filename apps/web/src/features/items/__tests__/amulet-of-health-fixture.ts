@@ -1,6 +1,7 @@
-// Test fixture: Amulet of Health, shaped like the SRD seed payload. A
-// magic item with rarity and attunement; covers the magic-side detail
-// fields (rarity badge, requires_attunement, description paragraphs).
+// Test fixture: Amulet of Health, shaped like the SRD API response
+// (camelCase). A magic item with rarity and attunement; covers the
+// magic-side detail fields (rarity badge, requiresAttunement, description
+// paragraphs).
 import type { Item } from '@/features/items/api';
 
 export const amuletOfHealthItem: Item = {
@@ -13,7 +14,7 @@ export const amuletOfHealthItem: Item = {
     desc: [
       'Your Constitution score is 19 while you wear this amulet. It has no effect on you if your Constitution score is already 19 or higher without it.',
     ],
-    requires_attunement: 'requires attunement',
+    requiresAttunement: 'requires attunement',
   },
   contentSource: {
     type: 'srd',

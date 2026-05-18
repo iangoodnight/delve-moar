@@ -112,10 +112,10 @@ describe('ItemDetailBlock — armor edge cases', () => {
         name: 'Chain Mail',
         cost: { quantity: 75, unit: 'gp' },
         weight: 55,
-        armor_category: 'Heavy',
-        armor_class: { base: 16, dex_bonus: false, max_bonus: null },
-        str_minimum: 13,
-        stealth_disadvantage: true,
+        armorCategory: 'Heavy',
+        armorClass: { base: 16, dexBonus: false, maxBonus: null },
+        strMinimum: 13,
+        stealthDisadvantage: true,
       },
     };
     render(
@@ -136,8 +136,8 @@ describe('ItemDetailBlock — armor edge cases', () => {
       itemCategory: 'armor',
       content: {
         name: 'Half Plate',
-        armor_category: 'Medium',
-        armor_class: { base: 15, dex_bonus: true, max_bonus: 2 },
+        armorCategory: 'Medium',
+        armorClass: { base: 15, dexBonus: true, maxBonus: 2 },
       },
     };
     render(
