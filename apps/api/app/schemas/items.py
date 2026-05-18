@@ -3,6 +3,7 @@
 from typing import Any
 
 from app.schemas.base import AppSchema
+from app.schemas.content_source import ContentSource
 
 
 class ItemSummary(AppSchema):
@@ -34,4 +35,4 @@ class ItemDetail(ItemSummary):
     """
 
     content: dict[str, Any]
-    content_source: dict[str, Any]
+    content_source: ContentSource

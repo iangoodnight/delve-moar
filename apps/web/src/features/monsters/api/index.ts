@@ -11,4 +11,3 @@ export type {
   SrdMonsterSenses,
   SrdMonsterSpeed,
 } from './srd-monster-content.schema';
-export type { SrdContentSource } from '@/lib/srd-content-source.schema';

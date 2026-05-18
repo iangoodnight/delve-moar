@@ -3,10 +3,6 @@ import { queryOptions, useQuery } from '@tanstack/react-query';
 
 import { apiClient } from '@/lib/api-client';
 import type { QueryConfig } from '@/lib/react-query';
-import {
-  type SrdContentSource,
-  srdContentSourceSchema,
-} from '@/lib/srd-content-source.schema';
 
 import {
   type SrdMonsterContent,
@@ -15,15 +11,11 @@ import {
 
 export type MonsterDetailResponse = components['schemas']['MonsterDetail'];
 
-// MonsterDetailResponse with `content` and `contentSource` parsed and typed
-// against the SRD schemas. The wire shapes are opaque (`{ [k]: unknown }`);
-// we narrow them at the API boundary so renderers see typed values.
-export interface Monster extends Omit<
-  MonsterDetailResponse,
-  'content' | 'contentSource'
-> {
+// MonsterDetailResponse with `content` narrowed via Zod. `contentSource`
+// is already typed by the API contract (Pydantic ContentSource → OpenAPI →
+// codegen) so it's consumed straight from the wire shape.
+export interface Monster extends Omit<MonsterDetailResponse, 'content'> {
   content: SrdMonsterContent;
-  contentSource: SrdContentSource;
 }
 
 async function getMonster(slug: string): Promise<Monster> {
@@ -33,7 +25,6 @@ async function getMonster(slug: string): Promise<Monster> {
   return {
     ...response,
     content: srdMonsterContentSchema.parse(response.content),
-    contentSource: srdContentSourceSchema.parse(response.contentSource),
   };
 }
 

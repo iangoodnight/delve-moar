@@ -3,10 +3,6 @@ import { queryOptions, useQuery } from '@tanstack/react-query';
 
 import { apiClient } from '@/lib/api-client';
 import type { QueryConfig } from '@/lib/react-query';
-import {
-  type SrdContentSource,
-  srdContentSourceSchema,
-} from '@/lib/srd-content-source.schema';
 
 import {
   type SrdItemContent,
@@ -15,12 +11,8 @@ import {
 
 export type ItemDetailResponse = components['schemas']['ItemDetail'];
 
-export interface Item extends Omit<
-  ItemDetailResponse,
-  'content' | 'contentSource'
-> {
+export interface Item extends Omit<ItemDetailResponse, 'content'> {
   content: SrdItemContent;
-  contentSource: SrdContentSource;
 }
 
 async function getItem(slug: string): Promise<Item> {
@@ -28,7 +20,6 @@ async function getItem(slug: string): Promise<Item> {
   return {
     ...response,
     content: srdItemContentSchema.parse(response.content),
-    contentSource: srdContentSourceSchema.parse(response.contentSource),
   };
 }
 

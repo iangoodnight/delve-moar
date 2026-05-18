@@ -3,10 +3,6 @@ import { queryOptions, useQuery } from '@tanstack/react-query';
 
 import { apiClient } from '@/lib/api-client';
 import type { QueryConfig } from '@/lib/react-query';
-import {
-  type SrdContentSource,
-  srdContentSourceSchema,
-} from '@/lib/srd-content-source.schema';
 
 import {
   type SrdSpellContent,
@@ -15,12 +11,8 @@ import {
 
 export type SpellDetailResponse = components['schemas']['SpellDetail'];
 
-export interface Spell extends Omit<
-  SpellDetailResponse,
-  'content' | 'contentSource'
-> {
+export interface Spell extends Omit<SpellDetailResponse, 'content'> {
   content: SrdSpellContent;
-  contentSource: SrdContentSource;
 }
 
 async function getSpell(slug: string): Promise<Spell> {
@@ -30,7 +22,6 @@ async function getSpell(slug: string): Promise<Spell> {
   return {
     ...response,
     content: srdSpellContentSchema.parse(response.content),
-    contentSource: srdContentSourceSchema.parse(response.contentSource),
   };
 }
 

@@ -16,6 +16,7 @@ from httpx import ASGITransport, AsyncClient
 from app.db import get_session
 from app.main import app
 from app.schemas.items import ItemDetail, ItemSummary
+from tests.conftest import SRD_CONTENT_SOURCE_FIXTURE
 
 # ---------------------------------------------------------------------------
 # Shared helpers
@@ -35,7 +36,7 @@ def _make_item(**overrides: Any) -> SimpleNamespace:
         "item_category": "Weapon",
         "rarity": None,
         "content": {"index": "longsword", "name": "Longsword", "cost": "15 gp"},
-        "content_source": {"type": "srd", "license": "CC BY 4.0"},
+        "content_source": SRD_CONTENT_SOURCE_FIXTURE,
     }
     defaults.update(overrides)
     return SimpleNamespace(**defaults)
@@ -108,7 +109,7 @@ class TestItemDetailSchema:
     def test_exposes_content_source(self) -> None:
         """ItemDetail includes content_source attribution metadata."""
         item = ItemDetail.model_validate(_make_item())
-        assert item.content_source == {"type": "srd", "license": "CC BY 4.0"}
+        assert item.content_source.model_dump() == SRD_CONTENT_SOURCE_FIXTURE
 
     def test_content_source_serializes_to_camel_case(self) -> None:
         """content_source appears as contentSource in JSON output."""

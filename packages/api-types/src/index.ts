@@ -254,6 +254,34 @@ export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
         /**
+         * ContentSource
+         * @description SRD content source attribution.
+         *
+         *     Attributes:
+         *         type: Identifier for the kind of source (e.g. "srd").
+         *         license: Human-readable license name (e.g. "CC BY 4.0").
+         *         license_url: URL to the license text.
+         *         attribution: Required attribution string per the license.
+         *         data_provider: Origin of the seed data (e.g. "5e-bits/5e-database").
+         *         data_provider_url: URL to the data provider's source repo.
+         */
+        ContentSource: {
+            /** Type */
+            type: string;
+            /** License */
+            license: string;
+            /** Licenseurl */
+            licenseUrl: string;
+            /** Attribution */
+            attribution: string;
+            /** Dataprovider */
+            dataProvider: string;
+            /** Dataproviderurl */
+            dataProviderUrl: string;
+        } & {
+            [key: string]: unknown;
+        };
+        /**
          * ErrorResponse
          * @description Standard error response schema.
          */
@@ -307,10 +335,7 @@ export interface components {
             content: {
                 [key: string]: unknown;
             };
-            /** Contentsource */
-            contentSource: {
-                [key: string]: unknown;
-            };
+            contentSource: components["schemas"]["ContentSource"];
         };
         /**
          * ItemSummary
@@ -379,10 +404,7 @@ export interface components {
             content: {
                 [key: string]: unknown;
             };
-            /** Contentsource */
-            contentSource: {
-                [key: string]: unknown;
-            };
+            contentSource: components["schemas"]["ContentSource"];
         };
         /**
          * MonsterSummary
@@ -452,10 +474,7 @@ export interface components {
             content: {
                 [key: string]: unknown;
             };
-            /** Contentsource */
-            contentSource: {
-                [key: string]: unknown;
-            };
+            contentSource: components["schemas"]["ContentSource"];
         };
         /**
          * SpellSummary

@@ -1,6 +1,7 @@
 """Shared pytest fixtures."""
 
 from collections.abc import AsyncGenerator
+from typing import Any
 
 import pytest
 from fastapi import FastAPI
@@ -9,6 +10,19 @@ from httpx import ASGITransport, AsyncClient
 from app.exceptions import AppError, register_exception_handlers
 from app.main import app
 from app.routers import health
+
+# Full SRD content_source shape, mirroring the seed pipeline's
+# SRD_CONTENT_SOURCE constant in scripts/seed_srd.py. Used as a default
+# in _make_X fixture helpers across the resource test modules so the
+# Pydantic ContentSource model validates without missing-field errors.
+SRD_CONTENT_SOURCE_FIXTURE: dict[str, Any] = {
+    "type": "srd",
+    "license": "CC BY 4.0",
+    "license_url": "https://creativecommons.org/licenses/by/4.0/",
+    "attribution": "Wizards of the Coast LLC — Systems Reference Document 5.1",
+    "data_provider": "5e-bits/5e-database",
+    "data_provider_url": "https://github.com/5e-bits/5e-database",
+}
 
 
 @pytest.fixture

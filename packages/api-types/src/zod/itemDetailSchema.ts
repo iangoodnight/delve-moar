@@ -3,6 +3,7 @@
 * Do not edit manually.
 */
 
+import { contentSourceSchema } from "./contentSourceSchema.ts";
 import { z } from "zod/v4";
 
 /**
@@ -16,7 +17,7 @@ export const itemDetailSchema = z.object({
 "content": z.object({
 
     }).catchall(z.any()),
-"contentSource": z.object({
-
-    }).catchall(z.any())
+get "contentSource"(){
+                return contentSourceSchema.describe("SRD content source attribution.\n\nAttributes:\n    type: Identifier for the kind of source (e.g. \"srd\").\n    license: Human-readable license name (e.g. \"CC BY 4.0\").\n    license_url: URL to the license text.\n    attribution: Required attribution string per the license.\n    data_provider: Origin of the seed data (e.g. \"5e-bits/5e-database\").\n    data_provider_url: URL to the data provider's source repo.")
+              }
     }).describe("Full item details, used in detail endpoints.\n\nAttributes:\n    content: The full item data as ingested from the source, with all\n        original fields and structure preserved.\n    content_source: Metadata about the source of the item data, such as\n        the original URL or source file name.")

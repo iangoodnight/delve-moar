@@ -6,6 +6,7 @@ from pydantic import field_validator
 
 from app.display import cr_display
 from app.schemas.base import AppSchema
+from app.schemas.content_source import ContentSource
 
 
 class MonsterSummary(AppSchema):
@@ -44,4 +45,4 @@ class MonsterDetail(MonsterSummary):
     """
 
     content: dict[str, Any]
-    content_source: dict[str, Any]
+    content_source: ContentSource

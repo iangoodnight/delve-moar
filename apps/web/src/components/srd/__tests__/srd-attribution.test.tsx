@@ -1,19 +1,20 @@
+import type { components } from '@delve-moar/api-types';
 import { Theme } from '@radix-ui/themes';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { axe } from 'vitest-axe';
 
-import type { SrdContentSource } from '@/lib/srd-content-source.schema';
-
 import { SrdAttribution } from '../srd-attribution';
 
-const CONTENT_SOURCE: SrdContentSource = {
+type ContentSource = components['schemas']['ContentSource'];
+
+const CONTENT_SOURCE: ContentSource = {
   type: 'srd',
   license: 'CC BY 4.0',
-  license_url: 'https://creativecommons.org/licenses/by/4.0/',
+  licenseUrl: 'https://creativecommons.org/licenses/by/4.0/',
   attribution: 'Wizards of the Coast LLC',
-  data_provider: '5e-bits/5e-database',
-  data_provider_url: 'https://github.com/5e-bits/5e-database',
+  dataProvider: '5e-bits/5e-database',
+  dataProviderUrl: 'https://github.com/5e-bits/5e-database',
 };
 
 function renderAttribution() {
@@ -25,7 +26,7 @@ function renderAttribution() {
 }
 
 describe('SrdAttribution', () => {
-  it('renders the license link from contentSource.license / license_url', () => {
+  it('renders the license link from contentSource.license / licenseUrl', () => {
     renderAttribution();
     const licenseLink = screen.getByRole('link', { name: 'CC BY 4.0' });
     expect(licenseLink).toHaveAttribute(
@@ -34,7 +35,7 @@ describe('SrdAttribution', () => {
     );
   });
 
-  it('renders the data provider link from contentSource.data_provider / data_provider_url', () => {
+  it('renders the data provider link from contentSource.dataProvider / dataProviderUrl', () => {
     renderAttribution();
     const dataLink = screen.getByRole('link', { name: '5e-bits/5e-database' });
     expect(dataLink).toHaveAttribute(

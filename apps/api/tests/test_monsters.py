@@ -17,6 +17,7 @@ from httpx import ASGITransport, AsyncClient
 from app.db import get_session
 from app.main import app
 from app.schemas.monsters import MonsterDetail, MonsterSummary
+from tests.conftest import SRD_CONTENT_SOURCE_FIXTURE
 
 # ---------------------------------------------------------------------------
 # Shared helpers
@@ -36,7 +37,7 @@ def _make_monster(**overrides: Any) -> SimpleNamespace:
         "monster_type": "humanoid",
         "challenge_rating": Decimal("0.25"),
         "content": {"index": "goblin", "name": "Goblin", "size": "Small"},
-        "content_source": {"type": "srd", "license": "CC BY 4.0"},
+        "content_source": SRD_CONTENT_SOURCE_FIXTURE,
     }
     defaults.update(overrides)
     return SimpleNamespace(**defaults)
@@ -132,7 +133,7 @@ class TestMonsterDetailSchema:
     def test_exposes_content_source(self) -> None:
         """MonsterDetail includes content_source attribution metadata."""
         m = MonsterDetail.model_validate(_make_monster())
-        assert m.content_source == {"type": "srd", "license": "CC BY 4.0"}
+        assert m.content_source.model_dump() == SRD_CONTENT_SOURCE_FIXTURE
 
     def test_content_source_serializes_to_camel_case(self) -> None:
         """content_source appears as contentSource in JSON output."""

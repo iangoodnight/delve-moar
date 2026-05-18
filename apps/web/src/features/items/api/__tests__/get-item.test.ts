@@ -18,10 +18,10 @@ const minimalResponse = {
   contentSource: {
     type: 'srd',
     license: 'CC BY 4.0',
-    license_url: 'https://creativecommons.org/licenses/by/4.0/',
+    licenseUrl: 'https://creativecommons.org/licenses/by/4.0/',
     attribution: 'Wizards of the Coast LLC',
-    data_provider: '5e-bits/5e-database',
-    data_provider_url: 'https://github.com/5e-bits/5e-database',
+    dataProvider: '5e-bits/5e-database',
+    dataProviderUrl: 'https://github.com/5e-bits/5e-database',
   },
 };
 
