@@ -9,7 +9,7 @@ const minimalContent = {
   name: 'Light',
   level: 0,
   school: { index: 'evocation', name: 'Evocation' },
-  casting_time: '1 action',
+  castingTime: '1 action',
   range: 'Touch',
   components: ['V', 'M'],
   duration: '1 hour',
@@ -47,7 +47,7 @@ describe('getSpellQueryOptions', () => {
     expect(opts.queryKey).toEqual(['spells', 'detail', 'fireball']);
   });
 
-  it('parses content at the API boundary into a typed Spell', async () => {
+  it('fetches the spell from the API and returns the typed response', async () => {
     mock.onGet('/v1/spells/light').reply(200, minimalResponse);
     const opts = getSpellQueryOptions('light');
     if (!opts.queryFn) throw new Error('queryFn must be defined');
@@ -61,23 +61,5 @@ describe('getSpellQueryOptions', () => {
     expect(spell.content.name).toBe('Light');
     expect(spell.content.level).toBe(0);
     expect(spell.content.components).toEqual(['V', 'M']);
-  });
-
-  it('rejects when content fails schema validation', async () => {
-    mock.onGet('/v1/spells/broken').reply(200, {
-      ...minimalResponse,
-      slug: 'broken',
-      content: { ...minimalContent, concentration: 'yes' }, // wrong type
-    });
-    const opts = getSpellQueryOptions('broken');
-    if (!opts.queryFn) throw new Error('queryFn must be defined');
-    await expect(
-      opts.queryFn({
-        queryKey: opts.queryKey,
-        signal: new AbortController().signal,
-        meta: undefined,
-        client: undefined as never,
-      }),
-    ).rejects.toThrow();
   });
 });

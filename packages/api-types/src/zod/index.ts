@@ -33,4 +33,5 @@ export { spellSummarySchema } from "./spellSummarySchema.ts";
 export { srdItemContentSchema } from "./srdItemContentSchema.ts";
 export { srdMonsterContentSchema } from "./srdMonsterContentSchema.ts";
 export { srdReferenceSchema } from "./srdReferenceSchema.ts";
+export { srdSpellContentSchema } from "./srdSpellContentSchema.ts";
 export { validationErrorSchema } from "./validationErrorSchema.ts";

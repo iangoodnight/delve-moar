@@ -17,7 +17,10 @@ from pydantic import ValidationError
 from app.db import get_session
 from app.main import app
 from app.schemas.spells import SpellDetail, SpellSummary
-from tests.conftest import SRD_CONTENT_SOURCE_FIXTURE
+from tests.conftest import (
+    MINIMAL_SPELL_CONTENT_FIXTURE,
+    SRD_CONTENT_SOURCE_FIXTURE,
+)
 
 # ---------------------------------------------------------------------------
 # Shared helpers
@@ -36,7 +39,7 @@ def _make_spell(**overrides: Any) -> SimpleNamespace:
         "name": "Fireball",
         "level": 3,
         "school": "evocation",
-        "content": {"index": "fireball", "name": "Fireball", "level": 3},
+        "content": {**MINIMAL_SPELL_CONTENT_FIXTURE, "index": "fireball"},
         "content_source": SRD_CONTENT_SOURCE_FIXTURE,
     }
     defaults.update(overrides)
@@ -130,13 +133,12 @@ class TestSpellDetailSchema:
     """Unit tests for SpellDetail Pydantic schema."""
 
     def test_exposes_content_blob(self) -> None:
-        """SpellDetail includes the raw content dict."""
+        """SpellDetail validates content into the typed model."""
         m = SpellDetail.model_validate(_make_spell())
-        assert m.content == {
-            "index": "fireball",
-            "name": "Fireball",
-            "level": 3,
-        }
+        assert m.content.name == "Fireball"
+        assert m.content.level == 3
+        # Unknown SRD fields (e.g. `index`) pass through via extra='allow'.
+        assert getattr(m.content, "index", None) == "fireball"
 
     def test_exposes_content_source(self) -> None:
         """SpellDetail includes content_source attribution metadata."""

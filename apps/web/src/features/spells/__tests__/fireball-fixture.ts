@@ -1,6 +1,6 @@
-// Test fixture: Fireball (3rd-level evocation), shaped like the SRD seed
-// payload. Covers all required detail fields: components with material,
-// concentration false, higher_level, and two caster classes.
+// Test fixture: Fireball (3rd-level evocation), shaped like the SRD API
+// response (camelCase). Covers all required detail fields: components
+// with material, concentration false, higherLevel, and two caster classes.
 import type { Spell } from '@/features/spells/api';
 
 export const fireballSpell: Spell = {
@@ -12,7 +12,7 @@ export const fireballSpell: Spell = {
     name: 'Fireball',
     level: 3,
     school: { index: 'evocation', name: 'Evocation' },
-    casting_time: '1 action',
+    castingTime: '1 action',
     range: '150 feet',
     components: ['V', 'S', 'M'],
     material: 'A tiny ball of bat guano and sulfur',
@@ -23,7 +23,7 @@ export const fireballSpell: Spell = {
       'A bright streak flashes from your pointing finger to a point you choose within range and then blossoms with a low roar into an explosion of flame.',
       "The fire spreads around corners. It ignites flammable objects in the area that aren't being worn or carried.",
     ],
-    higher_level: [
+    higherLevel: [
       'When you cast this spell using a spell slot of 4th level or higher, the damage increases by 1d6 for each slot level above 3rd.',
     ],
     classes: [

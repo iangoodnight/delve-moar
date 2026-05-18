@@ -51,15 +51,15 @@ get "senses"(){
 "xp": z.int(),
 "proficiencyBonus": z.int().nullish(),
 get "actions"(){
-                return z.array(actionEntrySchema.describe("An action-shaped entry (actions, special_abilities, legendary, reactions).\n\nWe render `name` + `desc`; everything else (damage, dc, usage,\nattack_bonus, ...) flows through via extra='allow'."))
+                return z.array(actionEntrySchema.describe("An action-shaped entry (actions, special_abilities, reactions, etc.).\n\nWe render `name` + `desc`; everything else (damage, dc, usage,\nattack_bonus, ...) flows through via extra='allow'."))
               },
 get "specialAbilities"(){
-                return z.array(actionEntrySchema.describe("An action-shaped entry (actions, special_abilities, legendary, reactions).\n\nWe render `name` + `desc`; everything else (damage, dc, usage,\nattack_bonus, ...) flows through via extra='allow'."))
+                return z.array(actionEntrySchema.describe("An action-shaped entry (actions, special_abilities, reactions, etc.).\n\nWe render `name` + `desc`; everything else (damage, dc, usage,\nattack_bonus, ...) flows through via extra='allow'."))
               },
 get "reactions"(){
-                return z.array(actionEntrySchema.describe("An action-shaped entry (actions, special_abilities, legendary, reactions).\n\nWe render `name` + `desc`; everything else (damage, dc, usage,\nattack_bonus, ...) flows through via extra='allow'.")).nullish()
+                return z.array(actionEntrySchema.describe("An action-shaped entry (actions, special_abilities, reactions, etc.).\n\nWe render `name` + `desc`; everything else (damage, dc, usage,\nattack_bonus, ...) flows through via extra='allow'.")).nullish()
               },
 get "legendaryActions"(){
-                return z.array(actionEntrySchema.describe("An action-shaped entry (actions, special_abilities, legendary, reactions).\n\nWe render `name` + `desc`; everything else (damage, dc, usage,\nattack_bonus, ...) flows through via extra='allow'.")).nullish()
+                return z.array(actionEntrySchema.describe("An action-shaped entry (actions, special_abilities, reactions, etc.).\n\nWe render `name` + `desc`; everything else (damage, dc, usage,\nattack_bonus, ...) flows through via extra='allow'.")).nullish()
               }
     }).catchall(z.any()).describe("SRD monster content payload.")

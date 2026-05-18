@@ -47,7 +47,7 @@ export function SpellDetailBlock({ spell }: SpellDetailBlockProps) {
           >
             <DataList.Item>
               <DataList.Label>Casting Time</DataList.Label>
-              <DataList.Value>{content.casting_time}</DataList.Value>
+              <DataList.Value>{content.castingTime}</DataList.Value>
             </DataList.Item>
             <DataList.Item>
               <DataList.Label>Range</DataList.Label>
@@ -98,12 +98,12 @@ export function SpellDetailBlock({ spell }: SpellDetailBlockProps) {
         </Column>
       </Section>
 
-      {content.higher_level && content.higher_level.length > 0 && (
+      {content.higherLevel && content.higherLevel.length > 0 && (
         <Section size="1">
           <Column gap="2">
             <H2>At Higher Levels</H2>
             <Column gap="2">
-              {content.higher_level.map((paragraph, index) => (
+              {content.higherLevel.map((paragraph, index) => (
                 <Paragraph
                   className={styles['higher-level']}
                   key={index}

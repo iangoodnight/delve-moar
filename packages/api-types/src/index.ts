@@ -255,7 +255,7 @@ export interface components {
     schemas: {
         /**
          * ActionEntry
-         * @description An action-shaped entry (actions, special_abilities, legendary, reactions).
+         * @description An action-shaped entry (actions, special_abilities, reactions, etc.).
          *
          *     We render `name` + `desc`; everything else (damage, dc, usage,
          *     attack_bonus, ...) flows through via extra='allow'.
@@ -593,10 +593,7 @@ export interface components {
             level: string;
             /** School */
             school: string | null;
-            /** Content */
-            content: {
-                [key: string]: unknown;
-            };
+            content: components["schemas"]["SrdSpellContent"];
             contentSource: components["schemas"]["ContentSource"];
         };
         /**
@@ -727,6 +724,39 @@ export interface components {
             name: string;
             /** Url */
             url?: string | null;
+        } & {
+            [key: string]: unknown;
+        };
+        /**
+         * SrdSpellContent
+         * @description SRD spell content payload.
+         */
+        SrdSpellContent: {
+            /** Name */
+            name: string;
+            /** Level */
+            level: number;
+            school: components["schemas"]["SrdReference"];
+            /** Castingtime */
+            castingTime: string;
+            /** Range */
+            range: string;
+            /** Components */
+            components: string[];
+            /** Material */
+            material?: string | null;
+            /** Duration */
+            duration: string;
+            /** Concentration */
+            concentration: boolean;
+            /** Ritual */
+            ritual?: boolean | null;
+            /** Desc */
+            desc: string[];
+            /** Higherlevel */
+            higherLevel?: string[] | null;
+            /** Classes */
+            classes?: components["schemas"]["SrdReference"][] | null;
         } & {
             [key: string]: unknown;
         };

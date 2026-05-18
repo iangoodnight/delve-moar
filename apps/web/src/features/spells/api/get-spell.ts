@@ -4,25 +4,15 @@ import { queryOptions, useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import type { QueryConfig } from '@/lib/react-query';
 
-import {
-  type SrdSpellContent,
-  srdSpellContentSchema,
-} from './srd-spell-content.schema';
-
 export type SpellDetailResponse = components['schemas']['SpellDetail'];
 
-export interface Spell extends Omit<SpellDetailResponse, 'content'> {
-  content: SrdSpellContent;
-}
+// Spell is the codegenned SpellDetail shape verbatim. The API validates
+// the payload at the boundary via Pydantic; the FE no longer parses
+// with Zod.
+export type Spell = SpellDetailResponse;
 
-async function getSpell(slug: string): Promise<Spell> {
-  const response = await apiClient.get<SpellDetailResponse>(
-    `/v1/spells/${slug}`,
-  );
-  return {
-    ...response,
-    content: srdSpellContentSchema.parse(response.content),
-  };
+function getSpell(slug: string): Promise<Spell> {
+  return apiClient.get<Spell>(`/v1/spells/${slug}`);
 }
 
 export function getSpellQueryOptions(slug: string) {

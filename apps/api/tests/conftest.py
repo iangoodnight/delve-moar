@@ -25,6 +25,21 @@ SRD_CONTENT_SOURCE_FIXTURE: dict[str, Any] = {
 }
 
 
+# Minimal valid SrdSpellContent payload. All required fields are present
+# with reasonable defaults; tests spread + override per scenario.
+MINIMAL_SPELL_CONTENT_FIXTURE: dict[str, Any] = {
+    "name": "Fireball",
+    "level": 3,
+    "school": {"index": "evocation", "name": "Evocation"},
+    "casting_time": "1 action",
+    "range": "150 feet",
+    "components": ["V", "S", "M"],
+    "duration": "Instantaneous",
+    "concentration": False,
+    "desc": ["A bright streak flashes from your pointing finger."],
+}
+
+
 # Minimal valid SrdMonsterContent payload. All required fields are present
 # with defaults; tests can spread + override per scenario. Mirrors the
 # shape produced by the seed pipeline for the smallest possible monster.
