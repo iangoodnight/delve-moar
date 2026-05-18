@@ -1,10 +1,10 @@
 """FastAPI application factory and lifespan configuration."""
 
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Awaitable, Callable
 from contextlib import asynccontextmanager
 from typing import Any
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
@@ -44,7 +44,9 @@ app = FastAPI(
 
 
 @app.middleware("http")
-async def _add_x_robots_tag(request: Request, call_next):
+async def _add_x_robots_tag(
+    request: Request, call_next: Callable[[Request], Awaitable[Response]]
+) -> Response:
     response = await call_next(request)
     response.headers["X-Robots-Tag"] = "noindex, nofollow"
     return response
