@@ -22,6 +22,7 @@ For the per-PR convention and the manual release ritual, see the
 - web: Spell detail page at `/spells/:slug` rendering casting time, range, components (V/S/M with material parenthetical), duration (with concentration prefix when applicable), optional ritual flag and caster classes, multi-paragraph description, optional "At Higher Levels" section, attribution footer, layout-mirroring loading skeleton, and 404 / generic error states. (#48)
 - web: Item list page at `/items` with search, category, and rarity filters, and infinite scroll. The rarity filter automatically clears (and disables) when a mundane-only category is picked, so the list does not silently render empty. (#49)
 - web: Item detail page at `/items/:slug` rendering both mundane equipment (cost, weight, weapon / armor stats, properties) and magic items (rarity badge, attunement, description paragraphs). Properties block uses the same `figure` + responsive 3-column grid pattern as the monster combat block. Same attribution footer, loading skeleton, and 404 / generic error treatment as the spell page. (#49)
+- web: DelveMoar branded favicon set replacing the Vite default. Theme-aware SVG (light / dark variants via `prefers-color-scheme` CSS embedded in the asset), maskable Android icons for PWA install, Apple touch icon, multi-size ICO + 96×96 PNG fallback, web app manifest with `DelveMoar` / `DM` identity, and `prefers-color-scheme`-aware `theme-color` meta tags. (#123)
 
 ### Changed
 
