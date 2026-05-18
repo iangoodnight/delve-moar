@@ -23,8 +23,13 @@ For the per-PR convention and the manual release ritual, see the
 - web: Item list page at `/items` with search, category, and rarity filters, and infinite scroll. The rarity filter automatically clears (and disables) when a mundane-only category is picked, so the list does not silently render empty. (#49)
 - web: Item detail page at `/items/:slug` rendering both mundane equipment (cost, weight, weapon / armor stats, properties) and magic items (rarity badge, attunement, description paragraphs). Properties block uses the same `figure` + responsive 3-column grid pattern as the monster combat block. Same attribution footer, loading skeleton, and 404 / generic error treatment as the spell page. (#49)
 - web: DelveMoar branded favicon set replacing the Vite default. Theme-aware SVG (light / dark variants via `prefers-color-scheme` CSS embedded in the asset), maskable Android icons for PWA install, Apple touch icon, multi-size ICO + 96×96 PNG fallback, web app manifest with `DelveMoar` / `DM` identity, and `prefers-color-scheme`-aware `theme-color` meta tags. (#123)
+- api: Pydantic content schemas for monster, spell, and item content payloads, replacing the previous untyped `dict[str, Any]` fields on the detail response models. All content fields are validated at the API boundary with strict types on declared fields and `extra='allow'` for forward-compatible passthrough of unmodeled SRD additions. (#124)
+- api,web: OpenAPI → Zod codegen pipeline. Kubb (`@kubb/cli` + `@kubb/plugin-zod`) generates Zod schemas alongside the existing openapi-typescript TS types, output to `packages/api-types/src/zod/`. Available to FE consumers as `@delve-moar/api-types/zod`. (#124)
 
 ### Changed
+
+- api: Detail endpoint JSON responses now use camelCase for all nested `content` and `contentSource` fields (e.g. `licenseUrl`, `weaponCategory`, `armorClass.dexBonus`, `castingTime`, `passivePerception`). Top-level response fields were already camelCase; this extends the convention through to the nested payload. **Breaking change** for any direct API consumer: snake_case key access (`license_url`, `weapon_category`, etc.) no longer works. (#124)
+- web: FE no longer performs Zod boundary parsing on detail responses; the API contract is the single source of truth via OpenAPI codegen. The four `srd-{content-source,item,monster,spell}-content.schema.ts` files are removed; consumers import TS types from `@delve-moar/api-types` directly. (#124)
 
 ### Deprecated
 
