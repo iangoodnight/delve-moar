@@ -165,9 +165,11 @@ the tag goes on `main` after the release PR merges.
    git tag vX.Y.Z && git push origin vX.Y.Z
    ```
 5. **Create a GitHub Release** pointing at the tag, using the new
-   `[X.Y.Z]` section as the body. The production CD workflow (tracked
-   in [#126](https://github.com/iangoodnight/delve-moar/issues/126))
-   fires on the tag and deploys.
+   `[X.Y.Z]` section as the body. The production CD workflow
+   fires on the tag and deploys the API to Fly.io; Vercel deploys the
+   web automatically on the `main` push. See
+   [`docs/deploy.md`](docs/deploy.md) for the full deploy and rollback
+   runbook.
 
 Future automation of this ritual is tracked in
 [#102](https://github.com/iangoodnight/delve-moar/issues/102).
