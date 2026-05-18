@@ -37,16 +37,17 @@ def _coerce_database_url(value: str) -> str:
     """Rewrite fly postgres attach URLs to the asyncpg dialect.
 
     ``fly postgres attach`` sets DATABASE_URL as ``postgres://...?sslmode=disable``.
-    SQLAlchemy + asyncpg requires ``postgresql+asyncpg://...`` and does not
-    accept ``sslmode`` as a query parameter (asyncpg handles SSL separately).
+    SQLAlchemy + asyncpg requires ``postgresql+asyncpg://...``. asyncpg also
+    spells the SSL parameter ``ssl`` rather than ``sslmode``, so rename the
+    query key. Without this, stripping sslmode lets asyncpg default to SSL
+    negotiation, which fails on Fly's internal `.flycast` network.
     """
     if value.startswith("postgres://"):
         value = "postgresql+asyncpg://" + value[len("postgres://") :]
     parsed = urlparse(value)
     if "sslmode" in parsed.query:
-        params = {
-            k: v[0] for k, v in parse_qs(parsed.query).items() if k != "sslmode"
-        }
+        params = {k: v[0] for k, v in parse_qs(parsed.query).items()}
+        params["ssl"] = params.pop("sslmode")
         value = urlunparse(parsed._replace(query=urlencode(params)))
     return value
 
