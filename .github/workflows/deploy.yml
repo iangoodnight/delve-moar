@@ -1,0 +1,56 @@
+name: Deploy
+
+on:
+  release:
+    types: [published]
+
+# Prevent concurrent deploys; a new release cancels an in-progress one.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: true
+
+jobs:
+  # ── API: build, migrate, deploy ──────────────────────────────────────────
+  deploy-api:
+    name: Deploy API to Fly.io
+    runs-on: ubuntu-latest
+    environment: production
+
+    env:
+      IMAGE: registry.fly.io/delvemoar-api:${{ github.sha }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Authenticate with Fly registry
+        run: flyctl auth docker
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+      - name: Build API image
+        working-directory: apps/api
+        run: docker build --tag "$IMAGE" .
+
+      - name: Push image to Fly registry
+        run: docker push "$IMAGE"
+
+      - name: Run database migrations
+        # Runs alembic in an ephemeral machine using the new image, so
+        # migrations execute against production before traffic swaps over.
+        # The job exits non-zero on migration failure, aborting the deploy.
+        run: |
+          flyctl machine run "$IMAGE" \
+            --app delvemoar-api \
+            --restart no \
+            --rm \
+            -- uv run alembic upgrade head
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+      - name: Deploy to Fly.io
+        working-directory: apps/api
+        run: flyctl deploy --config fly.toml --image "$IMAGE" --ha=false
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}

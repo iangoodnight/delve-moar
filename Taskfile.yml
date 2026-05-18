@@ -142,8 +142,19 @@ tasks:
 
   # ── Developer setup ────────────────────────────────────────────────────────
 
-  setup:
-    desc: Install all developer tooling (run once after cloning)
+  setup:brew:
+    desc: Install all required tools via Homebrew (contributors + maintainers)
+    cmd: brew bundle
+
+  setup:dev:
+    desc: Set up a contributor environment — git hooks, oapi-codegen, pnpm install
+    preconditions:
+      - sh: command -v pre-commit
+        msg: "pre-commit not found. Run 'task setup:brew' or install manually."
+      - sh: command -v go
+        msg: "go not found. Run 'task setup:brew' or install manually."
+      - sh: command -v pnpm
+        msg: "pnpm not found. Run 'task setup:brew' or install manually."
     cmds:
       - pre-commit install
       - pre-commit install --hook-type pre-push
@@ -151,7 +162,65 @@ tasks:
       - go install github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen@v2.6.0
       - pnpm install
 
-  hooks:install:
-    desc: Install pre-commit git hooks — alias for setup
+  setup:maintainer:
+    desc: Full maintainer setup — contributor tools + Fly.io and Terraform initialised
+    preconditions:
+      - sh: command -v fly
+        msg: "flyctl not found. Run 'task setup:brew' or install manually."
+      - sh: command -v terraform
+        msg: "terraform not found. Run 'task setup:brew' or install manually."
     cmds:
-      - task: setup
+      - task: setup:dev
+      - task: tf:init
+
+  setup:
+    desc: "Alias for setup:dev (see also: setup:maintainer for infra tools)"
+    cmds:
+      - task: setup:dev
+
+  hooks:install:
+    desc: "Alias for setup:dev"
+    cmds:
+      - task: setup:dev
+
+  # ── Infrastructure (Fly.io) ────────────────────────────────────────────────
+
+  fly:logs:
+    desc: Stream live logs from the production API
+    cmd: fly logs -a delvemoar-api
+
+  fly:ssh:
+    desc: Open an interactive SSH session on a production API machine
+    cmd: fly ssh console -a delvemoar-api
+
+  fly:deploy:
+    desc: "Manual API deploy: build current HEAD, push, and deploy to Fly.io"
+    vars:
+      SHA:
+        sh: git rev-parse HEAD
+    cmds:
+      - docker build -t registry.fly.io/delvemoar-api:{{.SHA}} apps/api
+      - flyctl auth docker
+      - docker push registry.fly.io/delvemoar-api:{{.SHA}}
+      - flyctl deploy --config apps/api/fly.toml --image registry.fly.io/delvemoar-api:{{.SHA}} --ha=false
+
+  fly:migrate:
+    desc: Run Alembic upgrade head on the production database via fly ssh
+    cmd: fly ssh console -a delvemoar-api -C "uv run alembic upgrade head"
+
+  # ── Infrastructure (Terraform) ────────────────────────────────────────────
+
+  tf:init:
+    desc: Initialise the Fly Terraform workspace (run once, or after provider changes)
+    dir: infra/terraform/fly
+    cmd: terraform init
+
+  tf:plan:
+    desc: Preview Fly infrastructure changes
+    dir: infra/terraform/fly
+    cmd: terraform plan
+
+  tf:apply:
+    desc: Apply Fly infrastructure changes
+    dir: infra/terraform/fly
+    cmd: terraform apply

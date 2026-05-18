@@ -3,8 +3,9 @@
 A homebrew-first TTRPG utility suite for game masters: catalog,
 encounter builder, and character tools, all self-hosted and SRD-powered.
 
-> **Status**: Phase 1a (SRD catalog, read-only) in progress. See the
-> [roadmap](docs/roadmap.md) for what is shipping and what comes next.
+> **Status**: Phase 1a (SRD catalog, read-only) complete — v0.1.0. Phase 1b
+> (homebrew authoring) is next. See the [roadmap](docs/roadmap.md) for what
+> comes next.
 
 ## What this is
 
@@ -23,7 +24,8 @@ produces both the web's TypeScript types and the CLI's Go HTTP client.
 git clone git@github.com:iangoodnight/delve-moar.git
 cd delve-moar
 cp .env.example .env
-task setup      # install hooks, pnpm deps, oapi-codegen
+brew bundle         # install required tools (macOS)
+task setup:dev      # git hooks, oapi-codegen, pnpm install
 task dev        # docker compose: postgres, api, web
 ```
 

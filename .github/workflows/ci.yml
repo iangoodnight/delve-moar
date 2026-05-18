@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
   pull_request:
-    branches: [main]
+    branches: [main, dev]
 
 jobs:
   # ── Python API ─────────────────────────────────────────────────────────────
@@ -166,6 +166,7 @@ jobs:
         run: |
           git diff --exit-code \
             packages/api-types/src/index.ts \
+            packages/api-types/src/zod \
             apps/cli/internal/apiclient/client.gen.go \
           || {
             echo ""

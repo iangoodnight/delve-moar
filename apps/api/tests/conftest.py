@@ -1,6 +1,7 @@
 """Shared pytest fixtures."""
 
 from collections.abc import AsyncGenerator
+from typing import Any
 
 import pytest
 from fastapi import FastAPI
@@ -9,6 +10,66 @@ from httpx import ASGITransport, AsyncClient
 from app.exceptions import AppError, register_exception_handlers
 from app.main import app
 from app.routers import health
+
+# Full SRD content_source shape, mirroring the seed pipeline's
+# SRD_CONTENT_SOURCE constant in scripts/seed_srd.py. Used as a default
+# in _make_X fixture helpers across the resource test modules so the
+# Pydantic ContentSource model validates without missing-field errors.
+SRD_CONTENT_SOURCE_FIXTURE: dict[str, Any] = {
+    "type": "srd",
+    "license": "CC BY 4.0",
+    "license_url": "https://creativecommons.org/licenses/by/4.0/",
+    "attribution": "Wizards of the Coast LLC — Systems Reference Document 5.1",
+    "data_provider": "5e-bits/5e-database",
+    "data_provider_url": "https://github.com/5e-bits/5e-database",
+}
+
+
+# Minimal valid SrdSpellContent payload. All required fields are present
+# with reasonable defaults; tests spread + override per scenario.
+MINIMAL_SPELL_CONTENT_FIXTURE: dict[str, Any] = {
+    "name": "Fireball",
+    "level": 3,
+    "school": {"index": "evocation", "name": "Evocation"},
+    "casting_time": "1 action",
+    "range": "150 feet",
+    "components": ["V", "S", "M"],
+    "duration": "Instantaneous",
+    "concentration": False,
+    "desc": ["A bright streak flashes from your pointing finger."],
+}
+
+
+# Minimal valid SrdMonsterContent payload. All required fields are present
+# with defaults; tests can spread + override per scenario. Mirrors the
+# shape produced by the seed pipeline for the smallest possible monster.
+MINIMAL_MONSTER_CONTENT_FIXTURE: dict[str, Any] = {
+    "name": "Goblin",
+    "size": "Small",
+    "type": "humanoid",
+    "alignment": "neutral evil",
+    "armor_class": [{"type": "natural", "value": 12}],
+    "hit_points": 7,
+    "hit_dice": "2d6",
+    "speed": {"walk": "30 ft."},
+    "strength": 8,
+    "dexterity": 14,
+    "constitution": 10,
+    "intelligence": 10,
+    "wisdom": 8,
+    "charisma": 8,
+    "proficiencies": [],
+    "damage_immunities": [],
+    "damage_resistances": [],
+    "damage_vulnerabilities": [],
+    "condition_immunities": [],
+    "senses": {"passive_perception": 9},
+    "languages": "Common, Goblin",
+    "challenge_rating": 0.25,
+    "xp": 50,
+    "actions": [],
+    "special_abilities": [],
+}
 
 
 @pytest.fixture

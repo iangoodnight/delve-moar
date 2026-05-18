@@ -52,33 +52,33 @@ export function TraitsBlock({ monster }: TraitsBlockProps) {
         {skills.length > 0 && (
           <TraitRow term="Skills">{formatProficiencyList(skills)}</TraitRow>
         )}
-        {content.damage_vulnerabilities.length > 0 && (
+        {content.damageVulnerabilities.length > 0 && (
           <TraitRow
             className="text-transform-capitalize"
             term="Damage Vulnerabilities"
           >
-            {content.damage_vulnerabilities.join(', ')}
+            {content.damageVulnerabilities.join(', ')}
           </TraitRow>
         )}
-        {content.damage_resistances.length > 0 && (
+        {content.damageResistances.length > 0 && (
           <TraitRow
             className="text-transform-capitalize"
             term="Damage Resistances"
           >
-            {content.damage_resistances.join(', ')}
+            {content.damageResistances.join(', ')}
           </TraitRow>
         )}
-        {content.damage_immunities.length > 0 && (
+        {content.damageImmunities.length > 0 && (
           <TraitRow
             className="text-transform-capitalize"
             term="Damage Immunities"
           >
-            {content.damage_immunities.join(', ')}
+            {content.damageImmunities.join(', ')}
           </TraitRow>
         )}
-        {content.condition_immunities.length > 0 && (
+        {content.conditionImmunities.length > 0 && (
           <TraitRow term="Condition Immunities">
-            {formatReferenceList(content.condition_immunities)}
+            {formatReferenceList(content.conditionImmunities)}
           </TraitRow>
         )}
         <TraitRow term="Senses">{formatSenses(content.senses)}</TraitRow>
@@ -86,11 +86,12 @@ export function TraitsBlock({ monster }: TraitsBlockProps) {
         <TraitRow term="Challenge">
           {challengeRating} ({formatXp(content.xp)} XP)
         </TraitRow>
-        {content.proficiency_bonus !== undefined && (
-          <TraitRow term="Proficiency Bonus">
-            {formatSignedNumber(content.proficiency_bonus)}
-          </TraitRow>
-        )}
+        {content.proficiencyBonus !== undefined &&
+          content.proficiencyBonus !== null && (
+            <TraitRow term="Proficiency Bonus">
+              {formatSignedNumber(content.proficiencyBonus)}
+            </TraitRow>
+          )}
       </DataList.Root>
     </figure>
   );

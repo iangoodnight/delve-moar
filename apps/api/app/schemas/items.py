@@ -1,8 +1,8 @@
 """Item schemas for list and detail endpoints."""
 
-from typing import Any
-
 from app.schemas.base import AppSchema
+from app.schemas.content_source import ContentSource
+from app.schemas.item_content import SrdItemContent
 
 
 class ItemSummary(AppSchema):
@@ -33,5 +33,5 @@ class ItemDetail(ItemSummary):
             the original URL or source file name.
     """
 
-    content: dict[str, Any]
-    content_source: dict[str, Any]
+    content: SrdItemContent
+    content_source: ContentSource

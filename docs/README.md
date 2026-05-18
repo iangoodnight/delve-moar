@@ -24,6 +24,7 @@ Walkthroughs for common contributor tasks.
 
 - [Local development](recipes/local-development.md), commands and gotchas (reference style)
 - [Adding a new endpoint](recipes/adding-a-new-endpoint.md), end-to-end walkthrough (tutorial style)
+- [Deployment runbook](deploy.md), release ritual, rollback, and first-time infrastructure setup
 
 ### Decisions
 

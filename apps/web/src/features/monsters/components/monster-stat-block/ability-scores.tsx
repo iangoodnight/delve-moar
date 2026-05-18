@@ -1,9 +1,12 @@
+import type { components } from '@delve-moar/api-types';
+
 import { Box, Grid } from '@/components/ui/layout';
 import { Text } from '@/components/ui/typography';
-import type { SrdMonsterContent } from '@/features/monsters/api';
 
 import { formatModifier } from './format';
 import styles from './monster-stat-block.module.css';
+
+type SrdMonsterContent = components['schemas']['SrdMonsterContent'];
 
 interface AbilityScoresProps {
   readonly content: Pick<

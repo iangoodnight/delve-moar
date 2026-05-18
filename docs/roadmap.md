@@ -30,10 +30,10 @@ What is true at the end of Phase 0: a contributor can clone the repo,
 run `task dev`, and have the full stack running locally. CI catches
 schema drift between the API and its two clients before review.
 
-## Phase 1a: SRD Catalog, read-only (current)
+## Phase 1a: SRD Catalog, read-only (done — v0.1.0)
 
 Monsters, spells, and items seeded from the 5e SRD. Browse and search
-via web and CLI. No auth required.
+via web. No auth required.
 
 Scope:
 
@@ -42,21 +42,18 @@ Scope:
   [White House API standards](https://github.com/WhiteHouse/api-standards).
 - Web pages: monster list with infinite scroll and search, monster
   detail with statblock, spell list and detail, item list and detail.
-- CLI commands that hit the same endpoints through the generated Go
-  client.
-- Web design system foundations (typography, tokens, Storybook 10).
+- Production deploy: Vercel (web) + Fly.io (API + Postgres), CD on
+  GitHub Release, noindex while product matures.
 
 Milestone: [Phase 1a - SRD Catalog (read-only)](https://github.com/iangoodnight/delve-moar/milestone/2).
 
 What is true at the end of Phase 1a: anyone can browse the full 5e SRD
-through the web app or the CLI. The full stack (seed to API to codegen
-to web and CLI) is proven on real content. No accounts, no edits, no
-campaign scoping.
+through the web app. The full stack (seed to API to codegen to web) is
+proven on real content. The site is publicly hostable (Vercel + Fly.io)
+with noindex / nofollow while the product matures. No accounts, no
+edits, no campaign scoping.
 
-The choice to ship read-only first is deliberate. Auth is easy to
-underscope, and we want a working product before we take it on.
-
-## Phase 1b: Homebrew authoring (next, partially defined)
+## Phase 1b: Homebrew authoring (current, partially defined)
 
 The point at which the homebrew-first thesis starts to land in the
 product.

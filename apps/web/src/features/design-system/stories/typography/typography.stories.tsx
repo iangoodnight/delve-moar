@@ -264,7 +264,7 @@ export const MonoSpecimen: Story = {
         >
           {`STR 30 (+10)   DEX 11 (+0)   CON 30 (+10)
 INT  3 (-4)   WIS  9 (-1)   CHA 11 (+0)
-challenge_rating: 30  (155,000 XP)`}
+challengeRating: 30  (155,000 XP)`}
         </pre>
       </SpecimenBlock>
     </BookPage>

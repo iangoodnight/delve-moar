@@ -6,6 +6,7 @@ set -euo pipefail
 #
 # Spins up the FastAPI dev server, fetches /openapi.json, and generates:
 #   • TypeScript types  → packages/api-types/src/index.ts    (openapi-typescript)
+#   • Zod schemas       → packages/api-types/src/zod/        (kubb)
 #   • Go HTTP client    → apps/cli/internal/apiclient/client.gen.go (oapi-codegen)
 #
 # Prerequisites:
@@ -60,6 +61,29 @@ echo "→ Generating TypeScript types → packages/api-types/src/index.ts"
 pnpm dlx openapi-typescript "${API_URL}/openapi.json" \
   --output "${REPO_ROOT}/packages/api-types/src/index.ts"
 echo "✓ TypeScript types generated."
+
+# ── 3a. Generate Zod schemas via Kubb ─────────────────────────────────────
+# Kubb config reads ${API_URL}/openapi.json directly and writes Zod schemas
+# under packages/api-types/src/zod/. See packages/api-types/kubb.config.ts.
+echo "→ Generating Zod schemas → packages/api-types/src/zod/"
+pnpm --filter @delve-moar/api-types gen:zod
+echo "✓ Zod schemas generated."
+
+# ── 3b. Normalize Kubb output ────────────────────────────────────────────
+# Kubb emits files without trailing newlines and sometimes with trailing
+# whitespace on blank lines. The pre-commit 'end-of-file-fixer' and
+# 'trailing-whitespace' hooks fix this on commit, but CI skips those hooks.
+# Running the same normalization here keeps the drift check green.
+echo "→ Normalizing Kubb Zod output..."
+python3 - "${REPO_ROOT}/packages/api-types/src/zod" <<'PYEOF'
+import pathlib, sys
+for p in pathlib.Path(sys.argv[1]).rglob("*.ts"):
+    text = p.read_text()
+    normalized = "\n".join(line.rstrip(" \t") for line in text.splitlines()) + "\n"
+    if normalized != text:
+        p.write_text(normalized)
+PYEOF
+echo "✓ Kubb output normalized."
 
 # ── 4. Generate Go HTTP client for apps/cli ───────────────────────────────
 echo "→ Generating Go API client → apps/cli/internal/apiclient/client.gen.go"

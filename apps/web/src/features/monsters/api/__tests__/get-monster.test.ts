@@ -10,9 +10,9 @@ const minimalContent = {
   size: 'Medium',
   type: 'humanoid',
   alignment: 'neutral',
-  armor_class: [{ type: 'natural', value: 12 }],
-  hit_points: 10,
-  hit_dice: '1d8',
+  armorClass: [{ type: 'natural', value: 12 }],
+  hitPoints: 10,
+  hitDice: '1d8',
   speed: { walk: '30 ft.' },
   strength: 10,
   dexterity: 10,
@@ -21,16 +21,16 @@ const minimalContent = {
   wisdom: 10,
   charisma: 10,
   proficiencies: [],
-  damage_immunities: [],
-  damage_resistances: [],
-  damage_vulnerabilities: [],
-  condition_immunities: [],
-  senses: { passive_perception: 10 },
+  damageImmunities: [],
+  damageResistances: [],
+  damageVulnerabilities: [],
+  conditionImmunities: [],
+  senses: { passivePerception: 10 },
   languages: 'Common',
-  challenge_rating: 0,
+  challengeRating: 0,
   xp: 0,
   actions: [],
-  special_abilities: [],
+  specialAbilities: [],
 };
 
 const minimalResponse = {
@@ -42,10 +42,10 @@ const minimalResponse = {
   contentSource: {
     type: 'srd',
     license: 'CC BY 4.0',
-    license_url: 'https://creativecommons.org/licenses/by/4.0/',
+    licenseUrl: 'https://creativecommons.org/licenses/by/4.0/',
     attribution: 'Wizards of the Coast LLC',
-    data_provider: '5e-bits/5e-database',
-    data_provider_url: 'https://github.com/5e-bits/5e-database',
+    dataProvider: '5e-bits/5e-database',
+    dataProviderUrl: 'https://github.com/5e-bits/5e-database',
   },
 };
 
@@ -61,7 +61,7 @@ describe('getMonsterQueryOptions', () => {
     expect(opts.queryKey).toEqual(['monsters', 'detail', 'adult-red-dragon']);
   });
 
-  it('parses content at the API boundary into a typed Monster', async () => {
+  it('fetches the monster from the API and returns the typed response', async () => {
     mock.onGet('/v1/monsters/test-monster').reply(200, minimalResponse);
     const opts = getMonsterQueryOptions('test-monster');
     if (!opts.queryFn) throw new Error('queryFn must be defined');
@@ -73,24 +73,6 @@ describe('getMonsterQueryOptions', () => {
     });
     expect(monster.slug).toBe('test-monster');
     expect(monster.content.name).toBe('Test Monster');
-    expect(monster.content.armor_class[0]?.value).toBe(12);
-  });
-
-  it('rejects when content fails schema validation', async () => {
-    mock.onGet('/v1/monsters/broken').reply(200, {
-      ...minimalResponse,
-      slug: 'broken',
-      content: { ...minimalContent, hit_points: 'ten' }, // wrong type
-    });
-    const opts = getMonsterQueryOptions('broken');
-    if (!opts.queryFn) throw new Error('queryFn must be defined');
-    await expect(
-      opts.queryFn({
-        queryKey: opts.queryKey,
-        signal: new AbortController().signal,
-        meta: undefined,
-        client: undefined as never,
-      }),
-    ).rejects.toThrow();
+    expect(monster.content.armorClass[0]?.value).toBe(12);
   });
 });

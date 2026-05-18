@@ -87,7 +87,7 @@ describe('SpellDetailBlock', () => {
   it('does not render At Higher Levels when absent', () => {
     const noHigherLevel = {
       ...fireballSpell,
-      content: { ...fireballSpell.content, higher_level: undefined },
+      content: { ...fireballSpell.content, higherLevel: null },
     };
     render(
       <Theme>
