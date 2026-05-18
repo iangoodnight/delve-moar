@@ -3,9 +3,10 @@
 import tomllib
 from pathlib import Path
 from typing import Annotated
+from urllib.parse import parse_qs, urlencode, urlparse, urlunparse
 
 from pydantic import AfterValidator, BeforeValidator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 # Resolve paths relative to this file so settings work regardless of the
 # current working directory (seed scripts, test runners, container, etc.).
@@ -33,13 +34,20 @@ def _read_version() -> str:
 
 
 def _coerce_database_url(value: str) -> str:
-    """Rewrite bare postgres:// URLs to the asyncpg dialect.
+    """Rewrite fly postgres attach URLs to the asyncpg dialect.
 
-    ``fly postgres attach`` sets DATABASE_URL as ``postgres://...``.
-    SQLAlchemy + asyncpg requires ``postgresql+asyncpg://...``.
+    ``fly postgres attach`` sets DATABASE_URL as ``postgres://...?sslmode=disable``.
+    SQLAlchemy + asyncpg requires ``postgresql+asyncpg://...`` and does not
+    accept ``sslmode`` as a query parameter (asyncpg handles SSL separately).
     """
     if value.startswith("postgres://"):
-        return "postgresql+asyncpg://" + value[len("postgres://") :]
+        value = "postgresql+asyncpg://" + value[len("postgres://") :]
+    parsed = urlparse(value)
+    if "sslmode" in parsed.query:
+        params = {
+            k: v[0] for k, v in parse_qs(parsed.query).items() if k != "sslmode"
+        }
+        value = urlunparse(parsed._replace(query=urlencode(params)))
     return value
 
 
@@ -87,6 +95,7 @@ class Settings(BaseSettings):
 
     cors_allowed_origins: Annotated[
         list[str],
+        NoDecode,
         BeforeValidator(_parse_csv_list),
     ] = ["http://localhost:5173"]
     database_url: Annotated[str, AfterValidator(_coerce_database_url)] = (
