@@ -1,10 +1,14 @@
+import type { components } from '@delve-moar/api-types';
+
 import { Badge } from '@/components/ui/badge';
 import { Column, Grid, Row, Section } from '@/components/ui/layout';
 import { H1, H2, Paragraph, Strong, Text } from '@/components/ui/typography';
-import type { Item, SrdItemContent } from '@/features/items/api';
+import type { Item } from '@/features/items/api';
 import { getRarityOption, ITEM_CATEGORIES } from '@/features/items/constants';
 
 import styles from './item-detail-block.module.css';
+
+type SrdItemContent = components['schemas']['SrdItemContent'];
 
 interface ItemDetailBlockProps {
   readonly item: Item;
@@ -24,19 +28,19 @@ function formatWeight(weight: number): string {
 }
 
 function formatDamage(damage: NonNullable<SrdItemContent['damage']>): string {
-  const dice = damage.damage_bonus
-    ? `${damage.damage_dice} + ${String(damage.damage_bonus)}`
-    : damage.damage_dice;
-  return `${dice} ${damage.damage_type.name.toLowerCase()}`;
+  const dice = damage.damageBonus
+    ? `${damage.damageDice} + ${String(damage.damageBonus)}`
+    : damage.damageDice;
+  return `${dice} ${damage.damageType.name.toLowerCase()}`;
 }
 
 function formatArmorClass(
-  ac: NonNullable<SrdItemContent['armor_class']>,
+  ac: NonNullable<SrdItemContent['armorClass']>,
 ): string {
-  if (ac.dex_bonus && ac.max_bonus !== null) {
-    return `${String(ac.base)} + Dex (max ${String(ac.max_bonus)})`;
+  if (ac.dexBonus && ac.maxBonus !== null && ac.maxBonus !== undefined) {
+    return `${String(ac.base)} + Dex (max ${String(ac.maxBonus)})`;
   }
-  if (ac.dex_bonus) {
+  if (ac.dexBonus) {
     return `${String(ac.base)} + Dex`;
   }
   return String(ac.base);
@@ -73,24 +77,24 @@ function buildStats(
   if (content.cost) {
     stats.push({ label: 'Cost', value: formatCost(content.cost) });
   }
-  if (content.weight !== undefined) {
+  if (content.weight !== undefined && content.weight !== null) {
     stats.push({ label: 'Weight', value: formatWeight(content.weight) });
   }
-  if (content.weapon_category) {
+  if (content.weaponCategory) {
     stats.push({
       label: 'Weapon Type',
-      value: content.weapon_range
-        ? `${content.weapon_category} (${content.weapon_range})`
-        : content.weapon_category,
+      value: content.weaponRange
+        ? `${content.weaponCategory} (${content.weaponRange})`
+        : content.weaponCategory,
     });
   }
   if (content.damage) {
     stats.push({ label: 'Damage', value: formatDamage(content.damage) });
   }
-  if (content.two_handed_damage) {
+  if (content.twoHandedDamage) {
     stats.push({
       label: 'Two-Handed Damage',
-      value: formatDamage(content.two_handed_damage),
+      value: formatDamage(content.twoHandedDamage),
     });
   }
   if (content.range) {
@@ -102,26 +106,30 @@ function buildStats(
       value: content.properties.map((p) => p.name).join(', '),
     });
   }
-  if (content.armor_category) {
-    stats.push({ label: 'Armor Type', value: content.armor_category });
+  if (content.armorCategory) {
+    stats.push({ label: 'Armor Type', value: content.armorCategory });
   }
-  if (content.armor_class) {
+  if (content.armorClass) {
     stats.push({
       label: 'Armor Class',
-      value: formatArmorClass(content.armor_class),
+      value: formatArmorClass(content.armorClass),
     });
   }
-  if (content.str_minimum !== undefined && content.str_minimum > 0) {
+  if (
+    content.strMinimum !== undefined &&
+    content.strMinimum !== null &&
+    content.strMinimum > 0
+  ) {
     stats.push({
       label: 'Strength Required',
-      value: `Str ${String(content.str_minimum)}`,
+      value: `Str ${String(content.strMinimum)}`,
     });
   }
-  if (content.stealth_disadvantage) {
+  if (content.stealthDisadvantage) {
     stats.push({ label: 'Stealth', value: 'Disadvantage' });
   }
-  if (content.requires_attunement) {
-    stats.push({ label: 'Attunement', value: content.requires_attunement });
+  if (content.requiresAttunement) {
+    stats.push({ label: 'Attunement', value: content.requiresAttunement });
   }
   return stats;
 }

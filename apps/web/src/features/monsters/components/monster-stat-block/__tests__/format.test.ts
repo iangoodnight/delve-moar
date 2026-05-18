@@ -86,13 +86,13 @@ describe('formatSenses', () => {
       formatSenses({
         blindsight: '60 ft.',
         darkvision: '120 ft.',
-        passive_perception: 23,
+        passivePerception: 23,
       }),
     ).toBe('Blindsight 60 ft., Darkvision 120 ft., Passive Perception 23');
   });
 
   it('always includes passive perception even with no other senses', () => {
-    expect(formatSenses({ passive_perception: 10 })).toBe(
+    expect(formatSenses({ passivePerception: 10 })).toBe(
       'Passive Perception 10',
     );
   });

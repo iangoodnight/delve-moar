@@ -52,10 +52,10 @@ export function PairingExample() {
             overflowX: 'auto',
           }}
         >
-          {`components:    V, S, M (a tiny ball of bat guano and sulfur)
-casting_time:  1 action
-range:         150 feet
-duration:      instantaneous`}
+          {`components:   V, S, M (a tiny ball of bat guano and sulfur)
+castingTime:  1 action
+range:        150 feet
+duration:     instantaneous`}
         </pre>
       </Column>
     </article>

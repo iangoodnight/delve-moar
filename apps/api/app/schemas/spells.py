@@ -5,6 +5,8 @@ from typing import Any
 from pydantic import field_validator
 
 from app.schemas.base import AppSchema
+from app.schemas.content_source import ContentSource
+from app.schemas.spell_content import SrdSpellContent
 
 
 class SpellSummary(AppSchema):
@@ -59,5 +61,5 @@ class SpellSummary(AppSchema):
 class SpellDetail(SpellSummary):
     """Full spell details, used in the detail endpoint."""
 
-    content: dict[str, Any]
-    content_source: dict[str, Any]
+    content: SrdSpellContent
+    content_source: ContentSource

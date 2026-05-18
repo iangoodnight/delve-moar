@@ -18,10 +18,10 @@ const minimalResponse = {
   contentSource: {
     type: 'srd',
     license: 'CC BY 4.0',
-    license_url: 'https://creativecommons.org/licenses/by/4.0/',
+    licenseUrl: 'https://creativecommons.org/licenses/by/4.0/',
     attribution: 'Wizards of the Coast LLC',
-    data_provider: '5e-bits/5e-database',
-    data_provider_url: 'https://github.com/5e-bits/5e-database',
+    dataProvider: '5e-bits/5e-database',
+    dataProviderUrl: 'https://github.com/5e-bits/5e-database',
   },
 };
 
@@ -37,7 +37,7 @@ describe('getItemQueryOptions', () => {
     expect(opts.queryKey).toEqual(['items', 'detail', 'longsword']);
   });
 
-  it('parses content at the API boundary into a typed Item', async () => {
+  it('fetches the item from the API and returns the typed response', async () => {
     mock.onGet('/v1/items/iron-spike').reply(200, minimalResponse);
     const opts = getItemQueryOptions('iron-spike');
     if (!opts.queryFn) throw new Error('queryFn must be defined');
@@ -51,23 +51,5 @@ describe('getItemQueryOptions', () => {
     expect(item.content.name).toBe('Iron Spike');
     expect(item.itemCategory).toBe('adventuring-gear');
     expect(item.rarity).toBeNull();
-  });
-
-  it('rejects when content fails schema validation', async () => {
-    mock.onGet('/v1/items/broken').reply(200, {
-      ...minimalResponse,
-      slug: 'broken',
-      content: { ...minimalContent, weight: 'heavy' }, // wrong type
-    });
-    const opts = getItemQueryOptions('broken');
-    if (!opts.queryFn) throw new Error('queryFn must be defined');
-    await expect(
-      opts.queryFn({
-        queryKey: opts.queryKey,
-        signal: new AbortController().signal,
-        meta: undefined,
-        client: undefined as never,
-      }),
-    ).rejects.toThrow();
   });
 });

@@ -4,6 +4,16 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./zod": "./src/zod/index.ts"
+  },
+  "scripts": {
+    "gen:zod": "kubb generate"
+  },
+  "devDependencies": {
+    "@kubb/cli": "^4.37.7",
+    "@kubb/core": "^4.37.7",
+    "@kubb/plugin-oas": "^4.37.7",
+    "@kubb/plugin-zod": "^4.37.7"
   }
 }
