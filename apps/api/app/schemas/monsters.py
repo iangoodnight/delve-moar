@@ -7,6 +7,7 @@ from pydantic import field_validator
 from app.display import cr_display
 from app.schemas.base import AppSchema
 from app.schemas.content_source import ContentSource
+from app.schemas.monster_content import SrdMonsterContent
 
 
 class MonsterSummary(AppSchema):
@@ -44,5 +45,5 @@ class MonsterDetail(MonsterSummary):
             the original URL or source file name.
     """
 
-    content: dict[str, Any]
+    content: SrdMonsterContent
     content_source: ContentSource

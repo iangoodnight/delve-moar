@@ -7,7 +7,7 @@ import { armorClassSchema } from "./armorClassSchema.ts";
 import { costSchema } from "./costSchema.ts";
 import { damageSchema } from "./damageSchema.ts";
 import { rangeSchema } from "./rangeSchema.ts";
-import { referenceSchema } from "./referenceSchema.ts";
+import { srdReferenceSchema } from "./srdReferenceSchema.ts";
 import { z } from "zod/v4";
 
 /**
@@ -29,7 +29,7 @@ get "twoHandedDamage"(){
                 return damageSchema.describe("Weapon damage roll (dice + optional flat bonus + damage type).").nullish()
               },
 get "properties"(){
-                return z.array(referenceSchema.describe("An SRD reference link (weapon property, damage type, ...).")).nullish()
+                return z.array(srdReferenceSchema.describe("An SRD reference link.")).nullish()
               },
 get "range"(){
                 return rangeSchema.describe("Weapon range in feet. `long` is omitted on melee weapons.").nullish()

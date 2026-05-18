@@ -4,6 +4,7 @@
 */
 
 import { contentSourceSchema } from "./contentSourceSchema.ts";
+import { srdMonsterContentSchema } from "./srdMonsterContentSchema.ts";
 import { z } from "zod/v4";
 
 /**
@@ -14,9 +15,9 @@ export const monsterDetailSchema = z.object({
 "name": z.string(),
 "monsterType": z.nullable(z.string()),
 "challengeRating": z.string(),
-"content": z.object({
-
-    }).catchall(z.any()),
+get "content"(){
+                return srdMonsterContentSchema.describe("SRD monster content payload.")
+              },
 get "contentSource"(){
                 return contentSourceSchema.describe("SRD content source attribution.\n\nAttributes:\n    type: Identifier for the kind of source (e.g. \"srd\").\n    license: Human-readable license name (e.g. \"CC BY 4.0\").\n    license_url: URL to the license text.\n    attribution: Required attribution string per the license.\n    data_provider: Origin of the seed data (e.g. \"5e-bits/5e-database\").\n    data_provider_url: URL to the data provider's source repo.")
               }

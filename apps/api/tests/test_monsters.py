@@ -17,7 +17,10 @@ from httpx import ASGITransport, AsyncClient
 from app.db import get_session
 from app.main import app
 from app.schemas.monsters import MonsterDetail, MonsterSummary
-from tests.conftest import SRD_CONTENT_SOURCE_FIXTURE
+from tests.conftest import (
+    MINIMAL_MONSTER_CONTENT_FIXTURE,
+    SRD_CONTENT_SOURCE_FIXTURE,
+)
 
 # ---------------------------------------------------------------------------
 # Shared helpers
@@ -36,7 +39,7 @@ def _make_monster(**overrides: Any) -> SimpleNamespace:
         "name": "Goblin",
         "monster_type": "humanoid",
         "challenge_rating": Decimal("0.25"),
-        "content": {"index": "goblin", "name": "Goblin", "size": "Small"},
+        "content": {**MINIMAL_MONSTER_CONTENT_FIXTURE, "index": "goblin"},
         "content_source": SRD_CONTENT_SOURCE_FIXTURE,
     }
     defaults.update(overrides)
@@ -122,13 +125,13 @@ class TestMonsterDetailSchema:
     """Unit tests for MonsterDetail Pydantic schema."""
 
     def test_exposes_content_blob(self) -> None:
-        """MonsterDetail includes the raw content dict."""
+        """MonsterDetail validates content into the typed model."""
         m = MonsterDetail.model_validate(_make_monster())
-        assert m.content == {
-            "index": "goblin",
-            "name": "Goblin",
-            "size": "Small",
-        }
+        assert m.content.name == "Goblin"
+        assert m.content.size == "Small"
+        assert m.content.armor_class[0].value == 12
+        # Unknown SRD fields (e.g. `index`) pass through via extra='allow'.
+        assert getattr(m.content, "index", None) == "goblin"
 
     def test_exposes_content_source(self) -> None:
         """MonsterDetail includes content_source attribution metadata."""

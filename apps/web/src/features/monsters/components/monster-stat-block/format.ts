@@ -1,12 +1,13 @@
 // Pure formatters for the monster stat block. Kept separate so they can be
 // unit-tested without rendering React.
-import type {
-  SrdMonsterArmorClass,
-  SrdMonsterProficiency,
-  SrdMonsterReference,
-  SrdMonsterSenses,
-  SrdMonsterSpeed,
-} from '@/features/monsters/api';
+import type { components } from '@delve-moar/api-types';
+
+type SrdMonsterContent = components['schemas']['SrdMonsterContent'];
+type ArmorClassEntry = SrdMonsterContent['armorClass'][number];
+type Proficiency = SrdMonsterContent['proficiencies'][number];
+type SrdReference = components['schemas']['SrdReference'];
+type Senses = SrdMonsterContent['senses'];
+type Speed = SrdMonsterContent['speed'];
 
 export function formatModifier(score: number): string {
   const mod = Math.floor((score - 10) / 2);
@@ -21,7 +22,7 @@ export function formatXp(xp: number): string {
   return xp.toLocaleString('en-US');
 }
 
-export function formatArmorClass(entries: SrdMonsterArmorClass[]): string {
+export function formatArmorClass(entries: ArmorClassEntry[]): string {
   return entries
     .map((entry) => {
       const annotations = [entry.type, entry.condition]
@@ -33,7 +34,7 @@ export function formatArmorClass(entries: SrdMonsterArmorClass[]): string {
     .join(', ');
 }
 
-export function formatSpeed(speed: SrdMonsterSpeed): string {
+export function formatSpeed(speed: Speed): string {
   const parts: string[] = [];
   if (speed.walk) parts.push(speed.walk);
   if (speed.burrow) parts.push(`burrow ${speed.burrow}`);
@@ -45,30 +46,30 @@ export function formatSpeed(speed: SrdMonsterSpeed): string {
   return parts.length > 0 ? parts.join(', ') : '0 ft.';
 }
 
-export function formatSenses(senses: SrdMonsterSenses): string {
+export function formatSenses(senses: Senses): string {
   const parts: string[] = [];
   if (senses.blindsight) parts.push(`Blindsight ${senses.blindsight}`);
   if (senses.darkvision) parts.push(`Darkvision ${senses.darkvision}`);
   if (senses.tremorsense) parts.push(`Tremorsense ${senses.tremorsense}`);
   if (senses.truesight) parts.push(`Truesight ${senses.truesight}`);
-  parts.push(`Passive Perception ${String(senses.passive_perception)}`);
+  parts.push(`Passive Perception ${String(senses.passivePerception)}`);
   return parts.join(', ');
 }
 
-export function formatReferenceList(refs: SrdMonsterReference[]): string {
+export function formatReferenceList(refs: SrdReference[]): string {
   return refs.map((r) => r.name).join(', ');
 }
 
 interface PartitionedProficiencies {
-  saves: SrdMonsterProficiency[];
-  skills: SrdMonsterProficiency[];
+  saves: Proficiency[];
+  skills: Proficiency[];
 }
 
 export function partitionProficiencies(
-  profs: SrdMonsterProficiency[],
+  profs: Proficiency[],
 ): PartitionedProficiencies {
-  const saves: SrdMonsterProficiency[] = [];
-  const skills: SrdMonsterProficiency[] = [];
+  const saves: Proficiency[] = [];
+  const skills: Proficiency[] = [];
   for (const p of profs) {
     if (p.proficiency.index.startsWith('saving-throw-')) {
       saves.push(p);
@@ -79,12 +80,12 @@ export function partitionProficiencies(
   return { saves, skills };
 }
 
-export function formatProficiency(p: SrdMonsterProficiency): string {
+export function formatProficiency(p: Proficiency): string {
   // "Skill: Perception" -> "Perception"; "Saving Throw: DEX" -> "DEX".
   const label = p.proficiency.name.split(': ')[1] ?? p.proficiency.name;
   return `${label} ${formatSignedNumber(p.value)}`;
 }
 
-export function formatProficiencyList(profs: SrdMonsterProficiency[]): string {
+export function formatProficiencyList(profs: Proficiency[]): string {
   return profs.map(formatProficiency).join(', ');
 }

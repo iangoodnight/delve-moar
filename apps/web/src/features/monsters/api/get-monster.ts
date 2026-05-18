@@ -4,28 +4,15 @@ import { queryOptions, useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import type { QueryConfig } from '@/lib/react-query';
 
-import {
-  type SrdMonsterContent,
-  srdMonsterContentSchema,
-} from './srd-monster-content.schema';
-
 export type MonsterDetailResponse = components['schemas']['MonsterDetail'];
 
-// MonsterDetailResponse with `content` narrowed via Zod. `contentSource`
-// is already typed by the API contract (Pydantic ContentSource → OpenAPI →
-// codegen) so it's consumed straight from the wire shape.
-export interface Monster extends Omit<MonsterDetailResponse, 'content'> {
-  content: SrdMonsterContent;
-}
+// Monster is the codegenned MonsterDetail shape verbatim. The API
+// validates the payload at the boundary via Pydantic; the FE no longer
+// parses with Zod.
+export type Monster = MonsterDetailResponse;
 
-async function getMonster(slug: string): Promise<Monster> {
-  const response = await apiClient.get<MonsterDetailResponse>(
-    `/v1/monsters/${slug}`,
-  );
-  return {
-    ...response,
-    content: srdMonsterContentSchema.parse(response.content),
-  };
+function getMonster(slug: string): Promise<Monster> {
+  return apiClient.get<Monster>(`/v1/monsters/${slug}`);
 }
 
 export function getMonsterQueryOptions(slug: string) {

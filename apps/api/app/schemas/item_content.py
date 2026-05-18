@@ -20,14 +20,7 @@ matches what the FE Zod did pre-#124.
 """
 
 from app.schemas.content_base import ContentBase
-
-
-class Reference(ContentBase):
-    """An SRD reference link (weapon property, damage type, ...)."""
-
-    index: str
-    name: str
-    url: str | None = None
+from app.schemas.srd_reference import SrdReference
 
 
 class Cost(ContentBase):
@@ -42,7 +35,7 @@ class Damage(ContentBase):
 
     damage_dice: str
     damage_bonus: int | None = None
-    damage_type: Reference
+    damage_type: SrdReference
 
 
 class Range(ContentBase):
@@ -75,7 +68,7 @@ class SrdItemContent(ContentBase):
     weapon_range: str | None = None
     damage: Damage | None = None
     two_handed_damage: Damage | None = None
-    properties: list[Reference] | None = None
+    properties: list[SrdReference] | None = None
     range: Range | None = None
 
     # Armor

@@ -254,6 +254,21 @@ export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
         /**
+         * ActionEntry
+         * @description An action-shaped entry (actions, special_abilities, legendary, reactions).
+         *
+         *     We render `name` + `desc`; everything else (damage, dc, usage,
+         *     attack_bonus, ...) flows through via extra='allow'.
+         */
+        ActionEntry: {
+            /** Name */
+            name: string;
+            /** Desc */
+            desc: string;
+        } & {
+            [key: string]: unknown;
+        };
+        /**
          * ArmorClass
          * @description Armor's base AC plus Dex-bonus rules.
          */
@@ -264,6 +279,20 @@ export interface components {
             dexBonus: boolean;
             /** Maxbonus */
             maxBonus?: number | null;
+        } & {
+            [key: string]: unknown;
+        };
+        /**
+         * ArmorClassEntry
+         * @description One element of the AC array (monsters carry multiple AC sources).
+         */
+        ArmorClassEntry: {
+            /** Type */
+            type: string;
+            /** Value */
+            value: number;
+            /** Condition */
+            condition?: string | null;
         } & {
             [key: string]: unknown;
         };
@@ -316,7 +345,7 @@ export interface components {
             damageDice: string;
             /** Damagebonus */
             damageBonus?: number | null;
-            damageType: components["schemas"]["Reference"];
+            damageType: components["schemas"]["SrdReference"];
         } & {
             [key: string]: unknown;
         };
@@ -436,10 +465,7 @@ export interface components {
             monsterType: string | null;
             /** Challengerating */
             challengeRating: string;
-            /** Content */
-            content: {
-                [key: string]: unknown;
-            };
+            content: components["schemas"]["SrdMonsterContent"];
             contentSource: components["schemas"]["ContentSource"];
         };
         /**
@@ -482,6 +508,17 @@ export interface components {
             data: components["schemas"]["SpellSummary"][];
         };
         /**
+         * Proficiency
+         * @description A saving-throw or skill proficiency; index on `proficiency.index`.
+         */
+        Proficiency: {
+            /** Value */
+            value: number;
+            proficiency: components["schemas"]["SrdReference"];
+        } & {
+            [key: string]: unknown;
+        };
+        /**
          * Range
          * @description Weapon range in feet. `long` is omitted on melee weapons.
          */
@@ -490,20 +527,6 @@ export interface components {
             normal: number;
             /** Long */
             long?: number | null;
-        } & {
-            [key: string]: unknown;
-        };
-        /**
-         * Reference
-         * @description An SRD reference link (weapon property, damage type, ...).
-         */
-        Reference: {
-            /** Index */
-            index: string;
-            /** Name */
-            name: string;
-            /** Url */
-            url?: string | null;
         } & {
             [key: string]: unknown;
         };
@@ -518,6 +541,44 @@ export interface components {
             offset: number;
             /** Limit */
             limit: number;
+        };
+        /**
+         * Senses
+         * @description Passive perception (required) plus optional special senses.
+         */
+        Senses: {
+            /** Passiveperception */
+            passivePerception: number;
+            /** Blindsight */
+            blindsight?: string | null;
+            /** Darkvision */
+            darkvision?: string | null;
+            /** Tremorsense */
+            tremorsense?: string | null;
+            /** Truesight */
+            truesight?: string | null;
+        } & {
+            [key: string]: unknown;
+        };
+        /**
+         * Speed
+         * @description Movement speeds. Strings like '40 ft.' verbatim from the SRD.
+         */
+        Speed: {
+            /** Walk */
+            walk?: string | null;
+            /** Fly */
+            fly?: string | null;
+            /** Swim */
+            swim?: string | null;
+            /** Climb */
+            climb?: string | null;
+            /** Burrow */
+            burrow?: string | null;
+            /** Hover */
+            hover?: boolean | null;
+        } & {
+            [key: string]: unknown;
         };
         /**
          * SpellDetail
@@ -577,7 +638,7 @@ export interface components {
             damage?: components["schemas"]["Damage"];
             twoHandedDamage?: components["schemas"]["Damage"];
             /** Properties */
-            properties?: components["schemas"]["Reference"][] | null;
+            properties?: components["schemas"]["SrdReference"][] | null;
             range?: components["schemas"]["Range"];
             /** Armorcategory */
             armorCategory?: string | null;
@@ -588,6 +649,84 @@ export interface components {
             stealthDisadvantage?: boolean | null;
             /** Requiresattunement */
             requiresAttunement?: string | null;
+        } & {
+            [key: string]: unknown;
+        };
+        /**
+         * SrdMonsterContent
+         * @description SRD monster content payload.
+         */
+        SrdMonsterContent: {
+            /** Name */
+            name: string;
+            /** Size */
+            size: string;
+            /** Type */
+            type: string;
+            /** Alignment */
+            alignment: string;
+            /** Armorclass */
+            armorClass: components["schemas"]["ArmorClassEntry"][];
+            /** Hitpoints */
+            hitPoints: number;
+            /** Hitdice */
+            hitDice: string;
+            /** Hitpointsroll */
+            hitPointsRoll?: string | null;
+            speed: components["schemas"]["Speed"];
+            /** Strength */
+            strength: number;
+            /** Dexterity */
+            dexterity: number;
+            /** Constitution */
+            constitution: number;
+            /** Intelligence */
+            intelligence: number;
+            /** Wisdom */
+            wisdom: number;
+            /** Charisma */
+            charisma: number;
+            /** Proficiencies */
+            proficiencies: components["schemas"]["Proficiency"][];
+            /** Damageimmunities */
+            damageImmunities: string[];
+            /** Damageresistances */
+            damageResistances: string[];
+            /** Damagevulnerabilities */
+            damageVulnerabilities: string[];
+            /** Conditionimmunities */
+            conditionImmunities: components["schemas"]["SrdReference"][];
+            senses: components["schemas"]["Senses"];
+            /** Languages */
+            languages: string;
+            /** Challengerating */
+            challengeRating: number;
+            /** Xp */
+            xp: number;
+            /** Proficiencybonus */
+            proficiencyBonus?: number | null;
+            /** Actions */
+            actions: components["schemas"]["ActionEntry"][];
+            /** Specialabilities */
+            specialAbilities: components["schemas"]["ActionEntry"][];
+            /** Reactions */
+            reactions?: components["schemas"]["ActionEntry"][] | null;
+            /** Legendaryactions */
+            legendaryActions?: components["schemas"]["ActionEntry"][] | null;
+        } & {
+            [key: string]: unknown;
+        };
+        /**
+         * SrdReference
+         * @description An SRD reference link.
+         */
+        SrdReference: {
+            /** Index */
+            index: string;
+            /** Name */
+            name: string;
+            /** Url */
+            url?: string | null;
         } & {
             [key: string]: unknown;
         };

@@ -25,6 +25,38 @@ SRD_CONTENT_SOURCE_FIXTURE: dict[str, Any] = {
 }
 
 
+# Minimal valid SrdMonsterContent payload. All required fields are present
+# with defaults; tests can spread + override per scenario. Mirrors the
+# shape produced by the seed pipeline for the smallest possible monster.
+MINIMAL_MONSTER_CONTENT_FIXTURE: dict[str, Any] = {
+    "name": "Goblin",
+    "size": "Small",
+    "type": "humanoid",
+    "alignment": "neutral evil",
+    "armor_class": [{"type": "natural", "value": 12}],
+    "hit_points": 7,
+    "hit_dice": "2d6",
+    "speed": {"walk": "30 ft."},
+    "strength": 8,
+    "dexterity": 14,
+    "constitution": 10,
+    "intelligence": 10,
+    "wisdom": 8,
+    "charisma": 8,
+    "proficiencies": [],
+    "damage_immunities": [],
+    "damage_resistances": [],
+    "damage_vulnerabilities": [],
+    "condition_immunities": [],
+    "senses": {"passive_perception": 9},
+    "languages": "Common, Goblin",
+    "challenge_rating": 0.25,
+    "xp": 50,
+    "actions": [],
+    "special_abilities": [],
+}
+
+
 @pytest.fixture
 async def client() -> AsyncGenerator[AsyncClient, None]:
     """HTTP client wired to the real app instance."""

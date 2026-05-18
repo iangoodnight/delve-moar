@@ -1,12 +1,16 @@
+import type { components } from '@delve-moar/api-types';
+
 import { Column, Grid, Row, Section } from '@/components/ui/layout';
 import { H1, Strong, Text } from '@/components/ui/typography';
-import type { Monster, SrdMonsterContent } from '@/features/monsters/api';
+import type { Monster } from '@/features/monsters/api';
 
 import { AbilityScores } from './ability-scores';
 import { ActionsBlock } from './actions-block';
 import { formatArmorClass, formatSpeed } from './format';
 import styles from './monster-stat-block.module.css';
 import { TraitsBlock } from './traits-block';
+
+type SrdMonsterContent = components['schemas']['SrdMonsterContent'];
 
 interface MonsterStatBlockProps {
   readonly monster: Monster;
@@ -54,11 +58,11 @@ function CombatBlock({ content }: { readonly content: SrdMonsterContent }) {
         <CombatStat label="Speed" value={formatSpeed(content.speed)} />
         <CombatStat
           label="Armor Class"
-          value={formatArmorClass(content.armor_class)}
+          value={formatArmorClass(content.armorClass)}
         />
         <CombatStat
           label="Hit Points"
-          value={`${String(content.hit_points)} (${content.hit_dice})`}
+          value={`${String(content.hitPoints)} (${content.hitDice})`}
         />
       </Grid>
     </figure>
@@ -79,12 +83,12 @@ export function MonsterStatBlock({ monster }: MonsterStatBlockProps) {
       </Section>
       <ActionsBlock
         title="Special Abilities"
-        entries={content.special_abilities}
+        entries={content.specialAbilities}
       />
-      {content.legendary_actions && (
+      {content.legendaryActions && (
         <ActionsBlock
           title="Legendary Actions"
-          entries={content.legendary_actions}
+          entries={content.legendaryActions}
         />
       )}
       <ActionsBlock title="Actions" entries={content.actions} />

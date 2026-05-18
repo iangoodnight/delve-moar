@@ -3,7 +3,7 @@
 * Do not edit manually.
 */
 
-import { referenceSchema } from "./referenceSchema.ts";
+import { srdReferenceSchema } from "./srdReferenceSchema.ts";
 import { z } from "zod/v4";
 
 /**
@@ -13,6 +13,6 @@ export const damageSchema = z.object({
     "damageDice": z.string(),
 "damageBonus": z.int().nullish(),
 get "damageType"(){
-                return referenceSchema.describe("An SRD reference link (weapon property, damage type, ...).")
+                return srdReferenceSchema.describe("An SRD reference link.")
               }
     }).catchall(z.any()).describe("Weapon damage roll (dice + optional flat bonus + damage type).")

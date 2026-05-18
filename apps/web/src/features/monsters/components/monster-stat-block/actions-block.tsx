@@ -1,12 +1,15 @@
+import type { components } from '@delve-moar/api-types';
+
 import { Column, Section } from '@/components/ui/layout';
 import { H2, Paragraph, Strong } from '@/components/ui/typography';
-import type { SrdMonsterAction } from '@/features/monsters/api';
 
 import styles from './monster-stat-block.module.css';
 
+type ActionEntry = components['schemas']['ActionEntry'];
+
 interface ActionsBlockProps {
   readonly title: string;
-  readonly entries: readonly SrdMonsterAction[];
+  readonly entries: readonly ActionEntry[];
 }
 
 export function ActionsBlock({ title, entries }: ActionsBlockProps) {
