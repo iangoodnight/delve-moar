@@ -24,6 +24,28 @@ For the per-PR convention and the manual release ritual, see the
 
 ### Security
 
+## [0.1.1] - 2026-05-18
+
+First working production deploy. v0.1.0 was tagged but never successfully
+served traffic — several config and platform issues only surfaced once the
+CD workflow tried to roll out the image on Fly.io. This patch bundles the
+fixes so the deploy pipeline produces a live site.
+
+### Fixed
+
+- infra: fly.toml `auto_stop_machines` updated from the deprecated string
+  enum (`'stop'`) to the bool flyctl 0.4.x expects. (#137)
+- infra: `task fly:deploy` now builds with `--platform linux/amd64` so M1
+  hosts produce an image Fly's amd64 runtime can run. (#137)
+- api: `DATABASE_URL` injected by `fly postgres attach` is now coerced into
+  the asyncpg dialect (`postgres://` → `postgresql+asyncpg://`) and the
+  `sslmode` query parameter is renamed to asyncpg's `ssl`. The previous
+  attempt to strip it left asyncpg to negotiate SSL by default, which fails
+  on Fly's internal `.flycast` network. (#137, #138)
+- api: `cors_allowed_origins` is now annotated with `NoDecode` so the CSV
+  `BeforeValidator` receives the raw env value instead of pydantic-settings
+  trying to JSON-decode it and crashing on startup. (#137)
+
 ## [0.1.0] - 2026-05-18
 
 Phase 1a: SRD catalog, read-only. Anyone can browse the full 5e SRD through
