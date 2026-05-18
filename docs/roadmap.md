@@ -50,8 +50,9 @@ Milestone: [Phase 1a - SRD Catalog (read-only)](https://github.com/iangoodnight/
 
 What is true at the end of Phase 1a: anyone can browse the full 5e SRD
 through the web app or the CLI. The full stack (seed to API to codegen
-to web and CLI) is proven on real content. No accounts, no edits, no
-campaign scoping.
+to web and CLI) is proven on real content. The site is publicly
+hostable (Vercel + Fly.io) with noindex / nofollow while the product
+matures. No accounts, no edits, no campaign scoping.
 
 The choice to ship read-only first is deliberate. Auth is easy to
 underscope, and we want a working product before we take it on.

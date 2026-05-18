@@ -14,6 +14,9 @@ For the per-PR convention and the manual release ritual, see the
 
 ### Added
 
+- infra: production deploy pipeline -- Vercel (web SPA) + Fly.io (API) + Fly Postgres, with Terraform IaC under `infra/terraform/fly/` and a CD workflow that builds the API image, runs migrations, and deploys on GitHub Release publish (#126)
+- web,api: belt-and-suspenders noindex -- `robots.txt` (Disallow: /), `<meta name="robots" content="noindex, nofollow">` in `index.html`, and `X-Robots-Tag: noindex, nofollow` middleware on the API (#126)
+- docs: `docs/deploy.md` deployment runbook covering release ritual, rollback steps, and first-time infrastructure provisioning (#126)
 - web: `@axe-core/react` for development-time accessibility logging in the browser console (#106)
 - web: `vitest-axe` with `toHaveNoViolations` assertions in unit tests; first assertion in `home-page.test.tsx` (#106)
 - web: Monster list page at `/monsters` with search, type / CR filters, and infinite scroll. URL-driven filter state for deep-linkable views.

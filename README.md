@@ -23,7 +23,8 @@ produces both the web's TypeScript types and the CLI's Go HTTP client.
 git clone git@github.com:iangoodnight/delve-moar.git
 cd delve-moar
 cp .env.example .env
-task setup      # install hooks, pnpm deps, oapi-codegen
+brew bundle         # install required tools (macOS)
+task setup:dev      # git hooks, oapi-codegen, pnpm install
 task dev        # docker compose: postgres, api, web
 ```
 
