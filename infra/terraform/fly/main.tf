@@ -23,13 +23,15 @@ resource "fly_ip" "api_v6" {
 # ---------------------------------------------------------------------------
 # Fly Postgres cluster
 #
-# Postgres is provisioned separately via `fly postgres create` and attached
-# with `fly postgres attach`. Terraform records the cluster as a data source
-# so the app name is a single source of truth, but lifecycle management
-# (backups, failover, version upgrades) stays with flyctl to avoid Terraform
-# state holding connection credentials.
+# The Postgres cluster is intentionally NOT managed by Terraform. Fly's
+# `fly postgres create` command creates a special cluster app type that
+# cannot be pre-created as a plain fly_app without blocking the command.
+# Lifecycle management (create, attach, backups, upgrades) stays with
+# flyctl to keep credentials out of Terraform state.
+#
+#   fly postgres create \
+#     --name delvemoar-db --region iad \
+#     --initial-cluster-size 1 \
+#     --vm-size shared-cpu-1x --volume-size 1
+#   fly postgres attach delvemoar-db --app delvemoar-api
 # ---------------------------------------------------------------------------
-resource "fly_app" "db" {
-  name = var.postgres_app_name
-  org  = "personal"
-}

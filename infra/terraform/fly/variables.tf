@@ -9,9 +9,3 @@ variable "region" {
   type        = string
   default     = "iad"
 }
-
-variable "postgres_app_name" {
-  description = "Fly Postgres cluster app name."
-  type        = string
-  default     = "delvemoar-db"
-}
