@@ -6,6 +6,7 @@ set -euo pipefail
 #
 # Spins up the FastAPI dev server, fetches /openapi.json, and generates:
 #   • TypeScript types  → packages/api-types/src/index.ts    (openapi-typescript)
+#   • Zod schemas       → packages/api-types/src/zod/        (kubb)
 #   • Go HTTP client    → apps/cli/internal/apiclient/client.gen.go (oapi-codegen)
 #
 # Prerequisites:
@@ -60,6 +61,13 @@ echo "→ Generating TypeScript types → packages/api-types/src/index.ts"
 pnpm dlx openapi-typescript "${API_URL}/openapi.json" \
   --output "${REPO_ROOT}/packages/api-types/src/index.ts"
 echo "✓ TypeScript types generated."
+
+# ── 3a. Generate Zod schemas via Kubb ─────────────────────────────────────
+# Kubb config reads ${API_URL}/openapi.json directly and writes Zod schemas
+# under packages/api-types/src/zod/. See packages/api-types/kubb.config.ts.
+echo "→ Generating Zod schemas → packages/api-types/src/zod/"
+pnpm --filter @delve-moar/api-types gen:zod
+echo "✓ Zod schemas generated."
 
 # ── 4. Generate Go HTTP client for apps/cli ───────────────────────────────
 echo "→ Generating Go API client → apps/cli/internal/apiclient/client.gen.go"

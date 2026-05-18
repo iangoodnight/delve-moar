@@ -66,3 +66,9 @@ Desktop.ini
 # Claude
 # =============================================================================
 .claude/
+
+# =============================================================================
+# Codegen intermediates (Kubb pluginOas writes parsed OpenAPI schema JSON
+# alongside the generated Zod files; only the Zod output is shipped)
+# =============================================================================
+packages/api-types/src/zod/schemas/
