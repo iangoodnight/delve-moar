@@ -28,6 +28,11 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 COPY pyproject.toml ./
 COPY app/ ./app/
 
+# alembic.ini + alembic/ are required so the CD workflow can run
+# `uv run alembic upgrade head` against production from this same image.
+COPY alembic.ini ./
+COPY alembic/ ./alembic/
+
 EXPOSE 8000
 
 # In docker-compose dev mode the app/ directory is volume-mounted over this
