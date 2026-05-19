@@ -24,6 +24,16 @@ For the per-PR convention and the manual release ritual, see the
 
 ### Security
 
+## [0.1.2] - 2026-05-18
+
+The bugfix for the production deploy issues in v0.1.1 did not fully resolve
+the problems with the API running on Fly.io. The site was live but the API had
+crashed as a result of a missing alembic migration. This patch mounts
+the alembic files into the production images. Bundled with it is a small
+update to CONTRIBUTING.md capturing lessons learned from the initial two
+releases.
+
+
 ## [0.1.1] - 2026-05-18
 
 First working production deploy. v0.1.0 was tagged but never successfully
