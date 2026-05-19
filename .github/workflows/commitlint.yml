@@ -17,6 +17,30 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: wagoid/commitlint-github-action@v6
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
         with:
-          configFile: .commitlintrc.json
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # Walk only the first parent of merge commits so commits brought in by
+      # a release-merge (e.g. main -> dev after a squash) don't get re-linted.
+      - name: Lint first-parent commits in PR range
+        run: |
+          set -euo pipefail
+          base="${{ github.event.pull_request.base.sha }}"
+          head="${{ github.event.pull_request.head.sha }}"
+          mapfile -t commits < <(git log --first-parent --format=%H "$base..$head")
+          if [ "${#commits[@]}" -eq 0 ]; then
+            echo "No first-parent commits in range; skipping."
+            exit 0
+          fi
+          status=0
+          for sha in "${commits[@]}"; do
+            echo "::group::$sha $(git log -1 --format=%s "$sha")"
+            if ! git log -1 --format=%B "$sha" | pnpm exec commitlint; then
+              status=1
+            fi
+            echo "::endgroup::"
+          done
+          exit $status

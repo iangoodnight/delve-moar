@@ -199,7 +199,7 @@ tasks:
       SHA:
         sh: git rev-parse HEAD
     cmds:
-      - docker build -t registry.fly.io/delvemoar-api:{{.SHA}} apps/api
+      - docker build --platform linux/amd64 -t registry.fly.io/delvemoar-api:{{.SHA}} apps/api
       - flyctl auth docker
       - docker push registry.fly.io/delvemoar-api:{{.SHA}}
       - flyctl deploy --config apps/api/fly.toml --image registry.fly.io/delvemoar-api:{{.SHA}} --ha=false

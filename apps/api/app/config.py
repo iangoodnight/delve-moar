@@ -3,9 +3,10 @@
 import tomllib
 from pathlib import Path
 from typing import Annotated
+from urllib.parse import parse_qs, urlencode, urlparse, urlunparse
 
-from pydantic import BeforeValidator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import AfterValidator, BeforeValidator
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 # Resolve paths relative to this file so settings work regardless of the
 # current working directory (seed scripts, test runners, container, etc.).
@@ -30,6 +31,25 @@ def _read_version() -> str:
         with pyproject.open("rb") as fh:
             return str(tomllib.load(fh)["project"]["version"])
     return "dev"
+
+
+def _coerce_database_url(value: str) -> str:
+    """Rewrite fly postgres attach URLs to the asyncpg dialect.
+
+    ``fly postgres attach`` sets DATABASE_URL as ``postgres://...?sslmode=disable``.
+    SQLAlchemy + asyncpg requires ``postgresql+asyncpg://...``. asyncpg also
+    spells the SSL parameter ``ssl`` rather than ``sslmode``, so rename the
+    query key. Without this, stripping sslmode lets asyncpg default to SSL
+    negotiation, which fails on Fly's internal `.flycast` network.
+    """
+    if value.startswith("postgres://"):
+        value = "postgresql+asyncpg://" + value[len("postgres://") :]
+    parsed = urlparse(value)
+    if "sslmode" in parsed.query:
+        params = {k: v[0] for k, v in parse_qs(parsed.query).items()}
+        params["ssl"] = params.pop("sslmode")
+        value = urlunparse(parsed._replace(query=urlencode(params)))
+    return value
 
 
 def _parse_csv_list(value: str | list[str]) -> list[str]:
@@ -76,9 +96,12 @@ class Settings(BaseSettings):
 
     cors_allowed_origins: Annotated[
         list[str],
+        NoDecode,
         BeforeValidator(_parse_csv_list),
     ] = ["http://localhost:5173"]
-    database_url: str = "postgresql+asyncpg://UNSET:UNSET@localhost:5432/UNSET"
+    database_url: Annotated[str, AfterValidator(_coerce_database_url)] = (
+        "postgresql+asyncpg://UNSET:UNSET@localhost:5432/UNSET"
+    )
     env: str = "development"
     version: str = _read_version()
     public_url: str = "http://localhost:8000"

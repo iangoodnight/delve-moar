@@ -2,22 +2,29 @@ name: Main branch guard
 
 # GitHub's native branch protection cannot enforce "PRs must come from a
 # specific branch." ADR 0009 commits us to a model where main accepts only
-# dev → main release merges; this workflow fails any PR whose head ref is
-# not dev. Required as a status check on main via branch protection.
+# release merges from dev (the normal path) or a release/* branch when we
+# need to merge dev + main together to side-step a prior squash-merge
+# divergence. This workflow rejects any other head ref. Required as a
+# status check on main via branch protection.
 
 on:
   pull_request:
     branches: [main]
 
 jobs:
-  enforce-from-dev:
-    name: PRs to main must come from dev
+  enforce-release-source:
+    name: PRs to main must come from dev or release/*
     runs-on: ubuntu-latest
     steps:
       - name: Check head ref
         run: |
-          if [ "${{ github.head_ref }}" != "dev" ]; then
-            echo "::error::PRs to main must come from dev (got: ${{ github.head_ref }}). See ADR 0009."
-            exit 1
-          fi
-          echo "PR head ref is dev. OK."
+          head="${{ github.head_ref }}"
+          case "$head" in
+            dev|release/*)
+              echo "PR head ref is '$head'. OK."
+              ;;
+            *)
+              echo "::error::PRs to main must come from 'dev' or a 'release/*' branch (got: $head). See ADR 0009."
+              exit 1
+              ;;
+          esac
