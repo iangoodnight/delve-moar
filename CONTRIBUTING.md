@@ -110,7 +110,10 @@ merge to `dev` (the default branch).
 2. The PR template fills in automatically. Walk every checkbox honestly.
 3. CODEOWNERS auto-requests reviewers for the paths you touched.
 4. CI runs lint, tests, and the type-generation diff check on every push.
-5. Merge once checks are green and review is approved. Squash merge by default.
+5. Merge once checks are green and review is approved. **Squash merge by
+   default for feature/fix PRs into `dev`.** See
+   [Cutting a release](#cutting-a-release-manual) for the different rule
+   on `dev → main` release PRs.
 
 If your PR changes the API:
 
@@ -164,8 +167,18 @@ the tag goes on `main` after the release PR merges.
    4. Merge the version-bump PR into `dev`.
 2. **Open a `dev` → `main` Release PR** titled `Release vX.Y.Z`. The
    body is the new `[X.Y.Z]` section of the changelog.
-3. **Merge the Release PR** (linear / fast-forward merge keeps `main`
-   clean).
+3. **Merge the Release PR with "Create a merge commit" or "Rebase and
+   merge" — never Squash.** Squashing the release PR collapses every
+   commit on `dev` into a single new commit on `main`, with no shared
+   ancestry to the original commits. The next release then sees every
+   touched file as a conflict against the squashed history. Use a real
+   merge or rebase so `main` keeps the lineage.
+
+   If `dev` and `main` have already diverged from a prior squash (you
+   will see conflicts on `VERSION`, `CHANGELOG.md`, etc.), branch from
+   `main` to `release/vX.Y.Z`, merge `dev` into it (resolving conflicts
+   in `dev`'s favor), and open the Release PR from that branch instead.
+   The `Main branch guard` workflow accepts `dev` or `release/*` heads.
 4. **Tag the merge commit on `main`:**
    ```bash
    git checkout main && git pull
