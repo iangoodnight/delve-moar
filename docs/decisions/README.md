@@ -90,3 +90,6 @@ status updates as part of the lifecycle above).
 | [0007](0007-web-typography-system.md) | Web typography system: token layering, scoped Radix overrides, design-system contract | proposed |
 | [0008](0008-frontend-coverage-policy.md) | Front-end coverage policy under React Compiler | proposed |
 | [0009](0009-branch-model.md) | Branch model: `dev` for integration, `main` for tagged releases | accepted |
+| [0010](0010-authentication.md) | Authentication: roll our own with argon2id and server-side sessions | proposed |
+| [0011](0011-campaign-model.md) | Campaign model: user-owned content, many-to-many to campaigns | proposed |
+| [0012](0012-visibility-and-sharing.md) | Visibility and sharing: private by default, campaign-based sharing, link sharing as a stretch | proposed |
