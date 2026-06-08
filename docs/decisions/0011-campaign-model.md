@@ -1,6 +1,6 @@
 # 0011. Campaign model: user-owned content, many-to-many to campaigns
 
-- Status: proposed
+- Status: accepted
 - Date: 2026-05-21
 
 ## Context
