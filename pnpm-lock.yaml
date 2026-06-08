@@ -7,6 +7,7 @@ settings:
 overrides:
   postcss: ^8.5.10
   fast-uri: ^3.1.2
+  '@kubb/react-fabric>ws': ^8.20.1
 
 importers:
 
@@ -70,8 +71,8 @@ importers:
         specifier: ^10.0.3
         version: 10.0.3(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       react-router-dom:
-        specifier: ^7.14.0
-        version: 7.14.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+        specifier: ^7.15.0
+        version: 7.17.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       zod:
         specifier: ^4.3.6
         version: 4.3.6
@@ -3966,15 +3967,15 @@ packages:
       '@types/react':
         optional: true
 
-  react-router-dom@7.14.0:
-    resolution: {integrity: sha512-2G3ajSVSZMEtmTjIklRWlNvo8wICEpLihfD/0YMDxbWK2UyP5EGfnoIn9AIQGnF3G/FX0MRbHXdFcD+rL1ZreQ==}
+  react-router-dom@7.17.0:
+    resolution: {integrity: sha512-fyU2yjGups/hE6Xz0I5ZYbVL8Gx29eCjgpHaRaTaVU+OOAdfRX05KsvyRm0GO8YQwOkhpU3MurW1jyMUJn+zSw==}
     engines: {node: '>=20.0.0'}
     peerDependencies:
       react: '>=18'
       react-dom: '>=18'
 
-  react-router@7.14.0:
-    resolution: {integrity: sha512-m/xR9N4LQLmAS0ZhkY2nkPA1N7gQ5TUVa5n8TgANuDTARbn1gt+zLPXEm7W0XDTbrQ2AJSJKhoa6yx1D8BcpxQ==}
+  react-router@7.17.0:
+    resolution: {integrity: sha512-FDELK7rTMlCHO5+reyXsPlmfr7N1F91lPHsWYfMEGQm/KQ+F4JFM8jGoeQDmDvdTs93Fw9aSilH+uKRb4/jXvQ==}
     engines: {node: '>=20.0.0'}
     peerDependencies:
       react: '>=18'
@@ -4637,18 +4638,6 @@ packages:
     peerDependencies:
       bufferutil: ^4.0.1
       utf-8-validate: ^5.0.2
-    peerDependenciesMeta:
-      bufferutil:
-        optional: true
-      utf-8-validate:
-        optional: true
-
-  ws@8.18.0:
-    resolution: {integrity: sha512-8VbfWfHLbbwu3+N6OKsOMpBdT4kXPDDB9cJk2bJ6mh9ucxdlnNvH1e+roYkKmN9Nxw2yjz7VzeO9oOz2zJ04Pw==}
-    engines: {node: '>=10.0.0'}
-    peerDependencies:
-      bufferutil: ^4.0.1
-      utf-8-validate: '>=5.0.2'
     peerDependenciesMeta:
       bufferutil:
         optional: true
@@ -5412,7 +5401,7 @@ snapshots:
       '@kubb/fabric-core': 0.14.0
       react-devtools-core: 6.1.5
       remeda: 2.34.1
-      ws: 8.18.0
+      ws: 8.20.1
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
@@ -8903,13 +8892,13 @@ snapshots:
     optionalDependencies:
       '@types/react': 19.2.14
 
-  react-router-dom@7.14.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
+  react-router-dom@7.17.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
-      react-router: 7.14.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      react-router: 7.17.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
 
-  react-router@7.14.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
+  react-router@7.17.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
       cookie: 1.1.1
       react: 19.2.4
@@ -9668,8 +9657,6 @@ snapshots:
       strip-ansi: 6.0.1
 
   ws@7.5.10: {}
-
-  ws@8.18.0: {}
 
   ws@8.20.1: {}
 

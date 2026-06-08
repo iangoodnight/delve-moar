@@ -24,6 +24,15 @@ For the per-PR convention and the manual release ritual, see the
 
 ### Security
 
+- Bump `react-router` to 7.17.0 (via `react-router-dom`), clearing three
+  advisories: a turbo-stream deserialization RCE
+  (GHSA-49rj-9fvp-4h2h), a DoS via the `__manifest` endpoint
+  (GHSA-8x6r-g9mw-2r78), and a protocol-relative open redirect
+  (GHSA-2j2x-hqr9-3h42).
+- Pin the transitive `ws` under the Kubb codegen tooling to `>= 8.20.1`
+  via a `pnpm.overrides` entry, clearing an uninitialized-memory
+  disclosure (GHSA-58qx-3vcg-4xpx).
+
 ## [0.1.2] - 2026-05-18
 
 The bugfix for the production deploy issues in v0.1.1 did not fully resolve
