@@ -18,6 +18,11 @@ _hasher = PasswordHasher(
     parallelism=settings.argon2_parallelism,
 )
 
+# A precomputed hash used to equalize login timing when an account does not
+# exist, so the response time does not reveal whether an email is
+# registered. Verified against (and always failing) on the no-such-user path.
+DUMMY_PASSWORD_HASH = _hasher.hash("delve-moar-nonexistent-account")
+
 
 async def hash_password(password: str) -> str:
     """Hash a plaintext password with argon2id.

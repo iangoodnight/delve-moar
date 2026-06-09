@@ -108,3 +108,10 @@ ignore_missing_imports = true
 asyncio_mode = "auto"
 testpaths = ["tests"]
 addopts = "--cov=app --cov-report=term-missing --cov-fail-under=90"
+
+[tool.coverage.run]
+# SQLAlchemy's async layer runs DB I/O through greenlets. Without tracking
+# greenlet concurrency, coverage cannot follow an endpoint handler's
+# continuation after an awaited DB call, under-reporting routes that are
+# in fact fully exercised by the DB-backed tests.
+concurrency = ["thread", "greenlet"]

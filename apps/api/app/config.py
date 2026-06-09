@@ -121,6 +121,11 @@ class Settings(BaseSettings):
     # None -> derive from env via cookie_secure: Secure everywhere except
     # local development (plain-HTTP, where Secure cookies are never sent).
     session_cookie_secure: bool | None = None
+    # Cookie Domain attribute. Leave empty for host-only cookies (local dev,
+    # where web and API share localhost). In production set to the shared
+    # parent (e.g. ".delvemoar.com") so the web origin can read the CSRF
+    # cookie set by the API subdomain.
+    session_cookie_domain: str | None = None
 
     @property
     def cookie_secure(self) -> bool:

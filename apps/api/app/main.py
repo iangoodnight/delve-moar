@@ -11,7 +11,7 @@ from app.config import settings
 from app.db import init_db
 from app.exceptions import register_exception_handlers
 from app.openapi import downgrade_to_openapi_30
-from app.routers import health, items, monsters, spells
+from app.routers import auth, health, items, monsters, spells
 
 V1_PREFIX = "/v1"
 
@@ -57,6 +57,7 @@ async def _add_x_robots_tag(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_allowed_origins,
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -67,6 +68,7 @@ register_exception_handlers(app)
 app.include_router(health.router)
 
 # Resource routers are mounted under /v1.
+app.include_router(auth.router, prefix=V1_PREFIX)
 app.include_router(items.router, prefix=V1_PREFIX)
 app.include_router(monsters.router, prefix=V1_PREFIX)
 app.include_router(spells.router, prefix=V1_PREFIX)
