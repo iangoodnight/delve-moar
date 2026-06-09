@@ -4,7 +4,7 @@ Validates that all models are importable, carry the expected table name,
 and expose the expected column names — without requiring a live DB connection.
 """
 
-from app.models import Campaign, Item, Monster, Spell
+from app.models import Campaign, Item, Monster, Session, Spell, User
 
 
 def test_campaign_tablename() -> None:
@@ -74,6 +74,55 @@ def test_item_columns() -> None:
         "created_at",
         "updated_at",
     }
+
+
+def test_user_tablename() -> None:
+    assert User.__tablename__ == "users"
+
+
+def test_user_columns() -> None:
+    cols = {c.key for c in User.__table__.columns}
+    assert cols == {
+        "id",
+        "email",
+        "password_hash",
+        "email_verified_at",
+        "created_at",
+        "updated_at",
+    }
+
+
+def test_user_email_is_unique() -> None:
+    """users.email has a single-column UNIQUE constraint."""
+    assert User.__table__.columns["email"].unique
+
+
+def test_session_tablename() -> None:
+    assert Session.__tablename__ == "sessions"
+
+
+def test_session_columns() -> None:
+    cols = {c.key for c in Session.__table__.columns}
+    assert cols == {
+        "id",
+        "user_id",
+        "token_hash",
+        "created_at",
+        "expires_at",
+        "last_used_at",
+    }
+
+
+def test_session_token_hash_is_unique() -> None:
+    """sessions.token_hash has a single-column UNIQUE constraint."""
+    assert Session.__table__.columns["token_hash"].unique
+
+
+def test_session_user_fk_cascades() -> None:
+    """sessions.user_id references users.id and cascades on delete."""
+    fk = next(iter(Session.__table__.columns["user_id"].foreign_keys))
+    assert fk.column.table.name == "users"
+    assert fk.ondelete == "CASCADE"
 
 
 def test_campaign_slug_is_unique() -> None:
