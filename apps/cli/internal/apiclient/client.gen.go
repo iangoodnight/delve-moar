@@ -4,6 +4,7 @@
 package apiclient
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -11,8 +12,10 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/oapi-codegen/runtime"
+	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
 // ActionEntry An action-shaped entry (actions, special_abilities, reactions, etc.).
@@ -154,6 +157,12 @@ type Links struct {
 	Prev *string `json:"prev"`
 }
 
+// LoginRequest Payload to authenticate with email and password.
+type LoginRequest struct {
+	Email    openapi_types.Email `json:"email"`
+	Password string              `json:"password"`
+}
+
 // MetadataEnvelope Envelopes a paginated resultset with metadata.
 type MetadataEnvelope struct {
 	// Links Prev/next navigation links for a paginated resultset.
@@ -266,6 +275,12 @@ type Senses struct {
 	Tremorsense          *string                `json:"tremorsense,omitempty"`
 	Truesight            *string                `json:"truesight,omitempty"`
 	AdditionalProperties map[string]interface{} `json:"-"`
+}
+
+// SignupRequest Payload to create a new account.
+type SignupRequest struct {
+	Email    openapi_types.Email `json:"email"`
+	Password string              `json:"password"`
 }
 
 // Speed Movement speeds. Strings like '40 ft.' verbatim from the SRD.
@@ -411,6 +426,14 @@ type SrdSpellContent struct {
 	AdditionalProperties map[string]interface{} `json:"-"`
 }
 
+// UserResponse Public representation of a user; never includes the password hash.
+type UserResponse struct {
+	CreatedAt     time.Time           `json:"createdAt"`
+	Email         openapi_types.Email `json:"email"`
+	EmailVerified bool                `json:"emailVerified"`
+	Id            openapi_types.UUID  `json:"id"`
+}
+
 // ValidationError defines model for ValidationError.
 type ValidationError struct {
 	Ctx   *map[string]interface{}    `json:"ctx,omitempty"`
@@ -429,6 +452,12 @@ type ValidationErrorLoc1 = int
 // ValidationError_Loc_Item defines model for ValidationError.loc.Item.
 type ValidationError_Loc_Item struct {
 	union json.RawMessage
+}
+
+// LogoutV1AuthLogoutPostParams defines parameters for LogoutV1AuthLogoutPost.
+type LogoutV1AuthLogoutPostParams struct {
+	// Everywhere Revoke all of this user's sessions, not just this.
+	Everywhere *bool `form:"everywhere,omitempty" json:"everywhere,omitempty"`
 }
 
 // ListItemsV1ItemsGetParams defines parameters for ListItemsV1ItemsGet.
@@ -521,6 +550,12 @@ type GetSpellV1SpellsSlugGetParams struct {
 	// Namespace Source namespace to search in. Defaults to the SRD 5.1 namespace. Use 'user:{user_id}' for homebrew content.
 	Namespace *string `form:"namespace,omitempty" json:"namespace,omitempty"`
 }
+
+// LoginV1AuthLoginPostJSONRequestBody defines body for LoginV1AuthLoginPost for application/json ContentType.
+type LoginV1AuthLoginPostJSONRequestBody = LoginRequest
+
+// SignupV1AuthSignupPostJSONRequestBody defines body for SignupV1AuthSignupPost for application/json ContentType.
+type SignupV1AuthSignupPostJSONRequestBody = SignupRequest
 
 // Getter for additional properties for ActionEntry. Returns the specified
 // element and whether it was found
@@ -2718,6 +2753,22 @@ type ClientInterface interface {
 	// HealthCheckHealthGet request
 	HealthCheckHealthGet(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// LoginV1AuthLoginPostWithBody request with any body
+	LoginV1AuthLoginPostWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	LoginV1AuthLoginPost(ctx context.Context, body LoginV1AuthLoginPostJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// LogoutV1AuthLogoutPost request
+	LogoutV1AuthLogoutPost(ctx context.Context, params *LogoutV1AuthLogoutPostParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// MeV1AuthMeGet request
+	MeV1AuthMeGet(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// SignupV1AuthSignupPostWithBody request with any body
+	SignupV1AuthSignupPostWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	SignupV1AuthSignupPost(ctx context.Context, body SignupV1AuthSignupPostJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// ListItemsV1ItemsGet request
 	ListItemsV1ItemsGet(ctx context.Context, params *ListItemsV1ItemsGetParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -2739,6 +2790,78 @@ type ClientInterface interface {
 
 func (c *Client) HealthCheckHealthGet(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewHealthCheckHealthGetRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) LoginV1AuthLoginPostWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewLoginV1AuthLoginPostRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) LoginV1AuthLoginPost(ctx context.Context, body LoginV1AuthLoginPostJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewLoginV1AuthLoginPostRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) LogoutV1AuthLogoutPost(ctx context.Context, params *LogoutV1AuthLogoutPostParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewLogoutV1AuthLogoutPostRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) MeV1AuthMeGet(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewMeV1AuthMeGetRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) SignupV1AuthSignupPostWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewSignupV1AuthSignupPostRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) SignupV1AuthSignupPost(ctx context.Context, body SignupV1AuthSignupPostJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewSignupV1AuthSignupPostRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -2844,6 +2967,162 @@ func NewHealthCheckHealthGetRequest(server string) (*http.Request, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	return req, nil
+}
+
+// NewLoginV1AuthLoginPostRequest calls the generic LoginV1AuthLoginPost builder with application/json body
+func NewLoginV1AuthLoginPostRequest(server string, body LoginV1AuthLoginPostJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewLoginV1AuthLoginPostRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewLoginV1AuthLoginPostRequestWithBody generates requests for LoginV1AuthLoginPost with any type of body
+func NewLoginV1AuthLoginPostRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/auth/login")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewLogoutV1AuthLogoutPostRequest generates requests for LogoutV1AuthLogoutPost
+func NewLogoutV1AuthLogoutPostRequest(server string, params *LogoutV1AuthLogoutPostParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/auth/logout")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.Everywhere != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "everywhere", *params.Everywhere, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "boolean", Format: ""}); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewMeV1AuthMeGetRequest generates requests for MeV1AuthMeGet
+func NewMeV1AuthMeGetRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/auth/me")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewSignupV1AuthSignupPostRequest calls the generic SignupV1AuthSignupPost builder with application/json body
+func NewSignupV1AuthSignupPostRequest(server string, body SignupV1AuthSignupPostJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewSignupV1AuthSignupPostRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewSignupV1AuthSignupPostRequestWithBody generates requests for SignupV1AuthSignupPost with any type of body
+func NewSignupV1AuthSignupPostRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/auth/signup")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
 
 	return req, nil
 }
@@ -3481,6 +3760,22 @@ type ClientWithResponsesInterface interface {
 	// HealthCheckHealthGetWithResponse request
 	HealthCheckHealthGetWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*HealthCheckHealthGetResponse, error)
 
+	// LoginV1AuthLoginPostWithBodyWithResponse request with any body
+	LoginV1AuthLoginPostWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*LoginV1AuthLoginPostResponse, error)
+
+	LoginV1AuthLoginPostWithResponse(ctx context.Context, body LoginV1AuthLoginPostJSONRequestBody, reqEditors ...RequestEditorFn) (*LoginV1AuthLoginPostResponse, error)
+
+	// LogoutV1AuthLogoutPostWithResponse request
+	LogoutV1AuthLogoutPostWithResponse(ctx context.Context, params *LogoutV1AuthLogoutPostParams, reqEditors ...RequestEditorFn) (*LogoutV1AuthLogoutPostResponse, error)
+
+	// MeV1AuthMeGetWithResponse request
+	MeV1AuthMeGetWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*MeV1AuthMeGetResponse, error)
+
+	// SignupV1AuthSignupPostWithBodyWithResponse request with any body
+	SignupV1AuthSignupPostWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*SignupV1AuthSignupPostResponse, error)
+
+	SignupV1AuthSignupPostWithResponse(ctx context.Context, body SignupV1AuthSignupPostJSONRequestBody, reqEditors ...RequestEditorFn) (*SignupV1AuthSignupPostResponse, error)
+
 	// ListItemsV1ItemsGetWithResponse request
 	ListItemsV1ItemsGetWithResponse(ctx context.Context, params *ListItemsV1ItemsGetParams, reqEditors ...RequestEditorFn) (*ListItemsV1ItemsGetResponse, error)
 
@@ -3516,6 +3811,99 @@ func (r HealthCheckHealthGetResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r HealthCheckHealthGetResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type LoginV1AuthLoginPostResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *UserResponse
+	JSON401      *ErrorResponse
+	JSON422      *HTTPValidationError
+}
+
+// Status returns HTTPResponse.Status
+func (r LoginV1AuthLoginPostResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r LoginV1AuthLoginPostResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type LogoutV1AuthLogoutPostResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON422      *HTTPValidationError
+}
+
+// Status returns HTTPResponse.Status
+func (r LogoutV1AuthLogoutPostResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r LogoutV1AuthLogoutPostResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type MeV1AuthMeGetResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *UserResponse
+	JSON401      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r MeV1AuthMeGetResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r MeV1AuthMeGetResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type SignupV1AuthSignupPostResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON201      *UserResponse
+	JSON409      *ErrorResponse
+	JSON422      *HTTPValidationError
+}
+
+// Status returns HTTPResponse.Status
+func (r SignupV1AuthSignupPostResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r SignupV1AuthSignupPostResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -3672,6 +4060,58 @@ func (c *ClientWithResponses) HealthCheckHealthGetWithResponse(ctx context.Conte
 	return ParseHealthCheckHealthGetResponse(rsp)
 }
 
+// LoginV1AuthLoginPostWithBodyWithResponse request with arbitrary body returning *LoginV1AuthLoginPostResponse
+func (c *ClientWithResponses) LoginV1AuthLoginPostWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*LoginV1AuthLoginPostResponse, error) {
+	rsp, err := c.LoginV1AuthLoginPostWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseLoginV1AuthLoginPostResponse(rsp)
+}
+
+func (c *ClientWithResponses) LoginV1AuthLoginPostWithResponse(ctx context.Context, body LoginV1AuthLoginPostJSONRequestBody, reqEditors ...RequestEditorFn) (*LoginV1AuthLoginPostResponse, error) {
+	rsp, err := c.LoginV1AuthLoginPost(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseLoginV1AuthLoginPostResponse(rsp)
+}
+
+// LogoutV1AuthLogoutPostWithResponse request returning *LogoutV1AuthLogoutPostResponse
+func (c *ClientWithResponses) LogoutV1AuthLogoutPostWithResponse(ctx context.Context, params *LogoutV1AuthLogoutPostParams, reqEditors ...RequestEditorFn) (*LogoutV1AuthLogoutPostResponse, error) {
+	rsp, err := c.LogoutV1AuthLogoutPost(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseLogoutV1AuthLogoutPostResponse(rsp)
+}
+
+// MeV1AuthMeGetWithResponse request returning *MeV1AuthMeGetResponse
+func (c *ClientWithResponses) MeV1AuthMeGetWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*MeV1AuthMeGetResponse, error) {
+	rsp, err := c.MeV1AuthMeGet(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseMeV1AuthMeGetResponse(rsp)
+}
+
+// SignupV1AuthSignupPostWithBodyWithResponse request with arbitrary body returning *SignupV1AuthSignupPostResponse
+func (c *ClientWithResponses) SignupV1AuthSignupPostWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*SignupV1AuthSignupPostResponse, error) {
+	rsp, err := c.SignupV1AuthSignupPostWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseSignupV1AuthSignupPostResponse(rsp)
+}
+
+func (c *ClientWithResponses) SignupV1AuthSignupPostWithResponse(ctx context.Context, body SignupV1AuthSignupPostJSONRequestBody, reqEditors ...RequestEditorFn) (*SignupV1AuthSignupPostResponse, error) {
+	rsp, err := c.SignupV1AuthSignupPost(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseSignupV1AuthSignupPostResponse(rsp)
+}
+
 // ListItemsV1ItemsGetWithResponse request returning *ListItemsV1ItemsGetResponse
 func (c *ClientWithResponses) ListItemsV1ItemsGetWithResponse(ctx context.Context, params *ListItemsV1ItemsGetParams, reqEditors ...RequestEditorFn) (*ListItemsV1ItemsGetResponse, error) {
 	rsp, err := c.ListItemsV1ItemsGet(ctx, params, reqEditors...)
@@ -3746,6 +4186,145 @@ func ParseHealthCheckHealthGetResponse(rsp *http.Response) (*HealthCheckHealthGe
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseLoginV1AuthLoginPostResponse parses an HTTP response from a LoginV1AuthLoginPostWithResponse call
+func ParseLoginV1AuthLoginPostResponse(rsp *http.Response) (*LoginV1AuthLoginPostResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &LoginV1AuthLoginPostResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest UserResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest HTTPValidationError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseLogoutV1AuthLogoutPostResponse parses an HTTP response from a LogoutV1AuthLogoutPostWithResponse call
+func ParseLogoutV1AuthLogoutPostResponse(rsp *http.Response) (*LogoutV1AuthLogoutPostResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &LogoutV1AuthLogoutPostResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest HTTPValidationError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseMeV1AuthMeGetResponse parses an HTTP response from a MeV1AuthMeGetWithResponse call
+func ParseMeV1AuthMeGetResponse(rsp *http.Response) (*MeV1AuthMeGetResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &MeV1AuthMeGetResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest UserResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseSignupV1AuthSignupPostResponse parses an HTTP response from a SignupV1AuthSignupPostWithResponse call
+func ParseSignupV1AuthSignupPostResponse(rsp *http.Response) (*SignupV1AuthSignupPostResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &SignupV1AuthSignupPostResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest UserResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest HTTPValidationError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
 
 	}
 
