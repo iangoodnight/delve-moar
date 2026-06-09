@@ -1,6 +1,6 @@
 # 0010. Authentication: roll our own with argon2id and server-side sessions
 
-- Status: proposed
+- Status: accepted
 - Date: 2026-05-21
 
 ## Context

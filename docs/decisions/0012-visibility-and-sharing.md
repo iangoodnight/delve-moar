@@ -1,6 +1,6 @@
 # 0012. Visibility and sharing: private by default, campaign-based sharing, link sharing as a stretch
 
-- Status: proposed
+- Status: accepted
 - Date: 2026-05-21
 
 ## Context
