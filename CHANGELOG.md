@@ -14,6 +14,15 @@ For the per-PR convention and the manual release ritual, see the
 
 ### Added
 
+- Server-side authentication for the API (ADR 0010): email/password
+  signup, login, and logout under `/v1/auth`, backed by argon2id
+  password hashing and opaque server-side sessions in HttpOnly cookies
+  (sliding expiry, revocable, with "sign out everywhere"). Requests are
+  protected by a double-submit CSRF token, and a single
+  `get_current_user` seam reads identity so OAuth can be added later
+  without touching handlers. A `GET /v1/auth/me` endpoint returns the
+  current user.
+
 ### Changed
 
 ### Deprecated
