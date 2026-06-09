@@ -106,5 +106,41 @@ class Settings(BaseSettings):
     version: str = _read_version()
     public_url: str = "http://localhost:8000"
 
+    # Auth -- argon2id password-hashing parameters. Defaults are the OWASP
+    # minimums; tune upward as hardware allows. They live in config so they
+    # can change without a code edit, and check_needs_rehash() upgrades
+    # stored hashes on the next login when these change.
+    argon2_time_cost: int = 2
+    argon2_memory_cost: int = 19456  # KiB (19 MiB)
+    argon2_parallelism: int = 1
+
+    # Sessions -- opaque token in an HttpOnly cookie; sliding expiry.
+    session_ttl_seconds: int = 1_209_600  # 14 days
+    session_cookie_name: str = "dm_session"
+    csrf_cookie_name: str = "dm_csrf"
+    # None -> derive from env via cookie_secure: Secure everywhere except
+    # local development (plain-HTTP, where Secure cookies are never sent).
+    session_cookie_secure: bool | None = None
+    # Cookie Domain attribute. Leave empty for host-only cookies (local dev,
+    # where web and API share localhost). In production set to the shared
+    # parent (e.g. ".delvemoar.com") so the web origin can read the CSRF
+    # cookie set by the API subdomain.
+    session_cookie_domain: str | None = None
+
+    @property
+    def cookie_secure(self) -> bool:
+        """Whether auth cookies carry the ``Secure`` flag.
+
+        Defaults to ``True`` everywhere except local development, where the
+        API is served over plain HTTP and a ``Secure`` cookie would never be
+        sent back. Set ``SESSION_COOKIE_SECURE`` explicitly to override.
+
+        Returns:
+            ``True`` if auth cookies should be marked ``Secure``.
+        """
+        if self.session_cookie_secure is not None:
+            return self.session_cookie_secure
+        return self.env != "development"
+
 
 settings = Settings()

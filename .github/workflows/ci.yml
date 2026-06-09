@@ -15,6 +15,20 @@ jobs:
       run:
         working-directory: apps/api
 
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: dm
+          POSTGRES_PASSWORD: dm_secret
+          POSTGRES_DB: delve_moar
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - uses: actions/checkout@v4
 
@@ -38,25 +52,10 @@ jobs:
 
       - name: pytest
         run: uv run pytest
-        # When DB-touching tests are added, uncomment the service container below
-        # and set DATABASE_URL in the env block.
-        #
-        # env:
-        #   DATABASE_URL: postgresql+asyncpg://dm:dm_secret@localhost:5432/delve_moar
-        #
-        # services:
-        #   postgres:
-        #     image: postgres:17-alpine
-        #     env:
-        #       POSTGRES_USER: dm
-        #       POSTGRES_PASSWORD: dm_secret
-        #       POSTGRES_DB: delve_moar
-        #     ports: ["5432:5432"]
-        #     options: >-
-        #       --health-cmd pg_isready
-        #       --health-interval 5s
-        #       --health-timeout 5s
-        #       --health-retries 5
+        env:
+          # Auth tests use a real Postgres; conftest derives a dedicated
+          # "<db>_test" database from this URL (never the dev database).
+          DATABASE_URL: postgresql+asyncpg://dm:dm_secret@localhost:5432/delve_moar
 
   # ── TypeScript web app ─────────────────────────────────────────────────────
   lint-and-test-web:
