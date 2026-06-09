@@ -71,6 +71,9 @@ max-complexity = 10
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = [
     "S101", # allow assert in tests
+    "S105", # test fixtures use literal tokens/passwords
+    "S106", # test fixtures pass literal passwords as kwargs
+    "S107", # test fixtures use literal password defaults
     "D",    # docstrings not required in tests
 ]
 "alembic/**" = [
