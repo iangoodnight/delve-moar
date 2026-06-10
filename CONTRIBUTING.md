@@ -48,6 +48,39 @@ task db:migrate  # apply pending Alembic migrations
 
 A full task list: `task --list`.
 
+## Testing
+
+`task test` runs every app's suite in parallel, and each app has its
+own task: `task test:api`, `task test:web`, `task test:cli`.
+
+### The API suite needs a running Postgres
+
+Some API tests run against a real Postgres. Start the dev database —
+the `postgres` service in
+[`infra/docker-compose.yml`](infra/docker-compose.yml) — before
+running the suite locally:
+
+```bash
+task db:up      # start only the postgres container
+uv run pytest   # or `task test:api`, from apps/api
+```
+
+The test harness
+([`apps/api/tests/conftest.py`](apps/api/tests/conftest.py)) derives a
+dedicated `<db>_test` database from `DATABASE_URL` — for the default
+`delve_moar`, that is `delve_moar_test` — creates the schema from the
+model metadata, and isolates each test in a transaction that is rolled
+back afterward (`join_transaction_mode="create_savepoint"`). It never
+touches your dev database.
+
+CI provisions this automatically: the API job in
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs a
+`postgres:17-alpine` service and sets `DATABASE_URL` on the pytest
+step, so no extra setup is needed there.
+
+Only the auth tests hit the database — the read-only SRD route tests
+still use a mocked SQLAlchemy session and need no Postgres.
+
 ## Branch model
 
 DelveMoar uses two long-lived branches:
