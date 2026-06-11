@@ -57,6 +57,11 @@ For the per-PR convention and the manual release ritual, see the
 - Pin the transitive `ws` under the Kubb codegen tooling to `>= 8.20.1`
   via a `pnpm.overrides` entry, clearing an uninitialized-memory
   disclosure (GHSA-58qx-3vcg-4xpx).
+- Pin the transitive `shell-quote` under the Kubb codegen tooling to
+  `>= 1.8.4` via a `pnpm.overrides` entry, clearing a critical advisory
+  in `quote()` (newlines not escaped in object `.op` values,
+  GHSA-w7jw-789q-3m8p). The package is codegen-time only and never ships
+  at runtime.
 
 ## [0.1.2] - 2026-05-18
 
