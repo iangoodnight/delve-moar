@@ -17,7 +17,20 @@ from app.db import get_session
 from app.exceptions import AppError, register_exception_handlers
 from app.main import app
 from app.models.base import Base
+from app.rate_limit import reset_rate_limits
 from app.routers import health
+
+
+@pytest.fixture(autouse=True)
+async def _reset_rate_limits() -> None:
+    """Clear rate-limit counters before each test.
+
+    The limiter's in-process store is a module global shared across tests;
+    without this, hits accumulate per client IP and would trip unrelated
+    auth tests. Resetting up front keeps each test independent.
+    """
+    await reset_rate_limits()
+
 
 # Full SRD content_source shape, mirroring the seed pipeline's
 # SRD_CONTENT_SOURCE constant in scripts/seed_srd.py. Used as a default
