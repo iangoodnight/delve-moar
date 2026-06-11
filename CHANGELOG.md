@@ -22,6 +22,15 @@ For the per-PR convention and the manual release ritual, see the
   `get_current_user` seam reads identity so OAuth can be added later
   without touching handlers. A `GET /v1/auth/me` endpoint returns the
   current user.
+- IP-based rate limiting on the auth endpoints (ADR 0010 threat model):
+  login and signup return `429 Too Many Requests` with a `Retry-After`
+  header once a per-IP budget is exceeded. Limits are tunable per
+  environment (`RATE_LIMIT_LOGIN`, `RATE_LIMIT_SIGNUP`) and the whole
+  feature can be toggled off (`RATE_LIMIT_ENABLED`). Counters use
+  in-process storage by default, swappable to Redis
+  (`RATE_LIMIT_STORAGE_URI`) without a code change. The limiter is a
+  reusable dependency, ready to apply to password-reset and content
+  writes as those land.
 
 ### Changed
 
