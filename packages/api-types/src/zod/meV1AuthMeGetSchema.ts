@@ -10,7 +10,7 @@ import { z } from "zod/v4";
 /**
  * @description Successful Response
  */
-export const meV1AuthMeGet200Schema = z.lazy(() => userResponseSchema).describe("Public representation of a user; never includes the password hash.")
+export const meV1AuthMeGet200Schema = z.lazy(() => userResponseSchema).describe("The owner's own view of their account.\n\nReturned only to the authenticated account holder (signup, login,\n``/me``). ``email`` appears here and nowhere else; other users see the\n``Author`` projection instead.")
 
 /**
  * @description Not authenticated

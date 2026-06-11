@@ -12,7 +12,7 @@ import { z } from "zod/v4";
 /**
  * @description Successful Response
  */
-export const loginV1AuthLoginPost200Schema = z.lazy(() => userResponseSchema).describe("Public representation of a user; never includes the password hash.")
+export const loginV1AuthLoginPost200Schema = z.lazy(() => userResponseSchema).describe("The owner's own view of their account.\n\nReturned only to the authenticated account holder (signup, login,\n``/me``). ``email`` appears here and nowhere else; other users see the\n``Author`` projection instead.")
 
 /**
  * @description Invalid credentials
@@ -29,6 +29,6 @@ export const loginV1AuthLoginPost422Schema = z.lazy(() => HTTPValidationErrorSch
  */
 export const loginV1AuthLoginPost429Schema = z.lazy(() => errorResponseSchema).describe("Standard error response schema.")
 
-export const loginV1AuthLoginPostMutationRequestSchema = z.lazy(() => loginRequestSchema).describe("Payload to authenticate with email and password.")
+export const loginV1AuthLoginPostMutationRequestSchema = z.lazy(() => loginRequestSchema).describe("Payload to authenticate with a username-or-email and password.\n\n``identifier`` accepts either the account's username or its email; the\npresence of ``@`` disambiguates (usernames cannot contain ``@``).")
 
 export const loginV1AuthLoginPostMutationResponseSchema = z.lazy(() => loginV1AuthLoginPost200Schema)

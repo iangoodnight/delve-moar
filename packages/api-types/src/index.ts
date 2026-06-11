@@ -38,7 +38,7 @@ export interface paths {
          * @description Create a new account and start a session.
          *
          *     Args:
-         *         payload: Email and password for the new account.
+         *         payload: Username, email, and password for the new account.
          *         response: Response used to set the session and CSRF cookies.
          *         db: Database session.
          *
@@ -46,7 +46,7 @@ export interface paths {
          *         The created user.
          *
          *     Raises:
-         *         AppError: 409 if the email is already registered.
+         *         AppError: 409 if the username or email is already registered.
          */
         post: operations["signup_v1_auth_signup_post"];
         delete?: never;
@@ -66,10 +66,14 @@ export interface paths {
         put?: never;
         /**
          * Log in
-         * @description Authenticate with email and password and start a session.
+         * @description Authenticate with a username-or-email and password, start a session.
+         *
+         *     The ``identifier`` is matched against email when it contains ``@`` and
+         *     against username otherwise; both lookups are case-insensitive since both
+         *     fields are stored lowercase.
          *
          *     Args:
-         *         payload: Email and password.
+         *         payload: Identifier (username or email) and password.
          *         response: Response used to set the session and CSRF cookies.
          *         db: Database session.
          *
@@ -77,7 +81,7 @@ export interface paths {
          *         The authenticated user.
          *
          *     Raises:
-         *         AppError: 401 if the email or password is incorrect.
+         *         AppError: 401 if the identifier or password is incorrect.
          */
         post: operations["login_v1_auth_login_post"];
         delete?: never;
@@ -555,14 +559,14 @@ export interface components {
         };
         /**
          * LoginRequest
-         * @description Payload to authenticate with email and password.
+         * @description Payload to authenticate with a username-or-email and password.
+         *
+         *     ``identifier`` accepts either the account's username or its email; the
+         *     presence of ``@`` disambiguates (usernames cannot contain ``@``).
          */
         LoginRequest: {
-            /**
-             * Email
-             * Format: email
-             */
-            email: string;
+            /** Identifier */
+            identifier: string;
             /** Password */
             password: string;
         };
@@ -693,6 +697,11 @@ export interface components {
          * @description Payload to create a new account.
          */
         SignupRequest: {
+            /**
+             * Username
+             * @description Public handle. Lowercase letters, digits, hyphen, and underscore only; 3-30 characters.
+             */
+            username: string;
             /**
              * Email
              * Format: email
@@ -903,7 +912,11 @@ export interface components {
         };
         /**
          * UserResponse
-         * @description Public representation of a user; never includes the password hash.
+         * @description The owner's own view of their account.
+         *
+         *     Returned only to the authenticated account holder (signup, login,
+         *     ``/me``). ``email`` appears here and nowhere else; other users see the
+         *     ``Author`` projection instead.
          */
         UserResponse: {
             /**
@@ -911,6 +924,8 @@ export interface components {
              * Format: uuid
              */
             id: string;
+            /** Username */
+            username: string;
             /**
              * Email
              * Format: email
@@ -988,7 +1003,7 @@ export interface operations {
                     "application/json": components["schemas"]["UserResponse"];
                 };
             };
-            /** @description Email already registered */
+            /** @description Username or email already registered */
             409: {
                 headers: {
                     [name: string]: unknown;

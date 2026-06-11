@@ -157,10 +157,13 @@ type Links struct {
 	Prev *string `json:"prev"`
 }
 
-// LoginRequest Payload to authenticate with email and password.
+// LoginRequest Payload to authenticate with a username-or-email and password.
+//
+// “identifier“ accepts either the account's username or its email; the
+// presence of “@“ disambiguates (usernames cannot contain “@“).
 type LoginRequest struct {
-	Email    openapi_types.Email `json:"email"`
-	Password string              `json:"password"`
+	Identifier string `json:"identifier"`
+	Password   string `json:"password"`
 }
 
 // MetadataEnvelope Envelopes a paginated resultset with metadata.
@@ -281,6 +284,9 @@ type Senses struct {
 type SignupRequest struct {
 	Email    openapi_types.Email `json:"email"`
 	Password string              `json:"password"`
+
+	// Username Public handle. Lowercase letters, digits, hyphen, and underscore only; 3-30 characters.
+	Username string `json:"username"`
 }
 
 // Speed Movement speeds. Strings like '40 ft.' verbatim from the SRD.
@@ -426,12 +432,17 @@ type SrdSpellContent struct {
 	AdditionalProperties map[string]interface{} `json:"-"`
 }
 
-// UserResponse Public representation of a user; never includes the password hash.
+// UserResponse The owner's own view of their account.
+//
+// Returned only to the authenticated account holder (signup, login,
+// “/me“). “email“ appears here and nowhere else; other users see the
+// “Author“ projection instead.
 type UserResponse struct {
 	CreatedAt     time.Time           `json:"createdAt"`
 	Email         openapi_types.Email `json:"email"`
 	EmailVerified bool                `json:"emailVerified"`
 	Id            openapi_types.UUID  `json:"id"`
+	Username      string              `json:"username"`
 }
 
 // ValidationError defines model for ValidationError.
