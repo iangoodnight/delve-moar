@@ -177,6 +177,12 @@ def test_schema() -> str:
     Runs once per session on a throwaway event loop (``NullPool`` so no
     connection is cached across loops). Schema comes from model metadata,
     not migrations -- migrations are validated separately via ``alembic``.
+
+    The tables are dropped and recreated each session rather than created
+    `checkfirst`, so the persistent local ``<db>_test`` database self-heals
+    when a model adds or alters a column. Without the drop, a stale schema
+    would keep the old columns and every test touching the table would fail
+    with ``UndefinedColumnError`` until the database was dropped by hand.
     Returns the test database URL.
     """
     test_url = _test_database_url()
@@ -185,6 +191,7 @@ def test_schema() -> str:
         await _ensure_test_database()
         engine = create_async_engine(test_url, poolclass=NullPool)
         async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.drop_all)
             await conn.run_sync(Base.metadata.create_all)
         await engine.dispose()
 
