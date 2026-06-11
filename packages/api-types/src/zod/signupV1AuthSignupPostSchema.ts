@@ -24,6 +24,11 @@ export const signupV1AuthSignupPost409Schema = z.lazy(() => errorResponseSchema)
  */
 export const signupV1AuthSignupPost422Schema = z.lazy(() => HTTPValidationErrorSchema)
 
+/**
+ * @description Too many signup attempts
+ */
+export const signupV1AuthSignupPost429Schema = z.lazy(() => errorResponseSchema).describe("Standard error response schema.")
+
 export const signupV1AuthSignupPostMutationRequestSchema = z.lazy(() => signupRequestSchema).describe("Payload to create a new account.")
 
 export const signupV1AuthSignupPostMutationResponseSchema = z.lazy(() => signupV1AuthSignupPost201Schema)

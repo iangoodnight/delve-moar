@@ -23,6 +23,10 @@ from app.config import settings
 from app.db import DbSession
 from app.exceptions import AppError
 from app.models import User
+from app.rate_limit import (
+    enforce_login_rate_limit,
+    enforce_signup_rate_limit,
+)
 from app.schemas.auth import LoginRequest, SignupRequest, UserResponse
 from app.schemas.errors import ErrorResponse
 
@@ -79,10 +83,15 @@ def _invalid_credentials() -> AppError:
     response_model=UserResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Create an account",
+    dependencies=[Depends(enforce_signup_rate_limit)],
     responses={
         status.HTTP_409_CONFLICT: {
             "model": ErrorResponse,
             "description": "Email already registered",
+        },
+        status.HTTP_429_TOO_MANY_REQUESTS: {
+            "model": ErrorResponse,
+            "description": "Too many signup attempts",
         },
     },
 )
@@ -129,10 +138,15 @@ async def signup(
     "/login",
     response_model=UserResponse,
     summary="Log in",
+    dependencies=[Depends(enforce_login_rate_limit)],
     responses={
         status.HTTP_401_UNAUTHORIZED: {
             "model": ErrorResponse,
             "description": "Invalid credentials",
+        },
+        status.HTTP_429_TOO_MANY_REQUESTS: {
+            "model": ErrorResponse,
+            "description": "Too many login attempts",
         },
     },
 )

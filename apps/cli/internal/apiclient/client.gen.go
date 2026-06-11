@@ -3823,6 +3823,7 @@ type LoginV1AuthLoginPostResponse struct {
 	JSON200      *UserResponse
 	JSON401      *ErrorResponse
 	JSON422      *HTTPValidationError
+	JSON429      *ErrorResponse
 }
 
 // Status returns HTTPResponse.Status
@@ -3892,6 +3893,7 @@ type SignupV1AuthSignupPostResponse struct {
 	JSON201      *UserResponse
 	JSON409      *ErrorResponse
 	JSON422      *HTTPValidationError
+	JSON429      *ErrorResponse
 }
 
 // Status returns HTTPResponse.Status
@@ -4227,6 +4229,13 @@ func ParseLoginV1AuthLoginPostResponse(rsp *http.Response) (*LoginV1AuthLoginPos
 		}
 		response.JSON422 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 429:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON429 = &dest
+
 	}
 
 	return response, nil
@@ -4325,6 +4334,13 @@ func ParseSignupV1AuthSignupPostResponse(rsp *http.Response) (*SignupV1AuthSignu
 			return nil, err
 		}
 		response.JSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 429:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON429 = &dest
 
 	}
 

@@ -127,6 +127,17 @@ class Settings(BaseSettings):
     # cookie set by the API subdomain.
     session_cookie_domain: str | None = None
 
+    # Rate limiting -- brute-force and abuse protection on auth endpoints,
+    # part of the ADR 0010 threat model. Limits use the ``limits`` library
+    # notation (e.g. "10/minute" or "5/hour;100/day") and are keyed by client
+    # IP. Storage defaults to in-process memory, which is correct for the
+    # single-process deploy; point it at "async+redis://..." to share counters
+    # across machines if the app ever scales horizontally.
+    rate_limit_enabled: bool = True
+    rate_limit_storage_uri: str = "async+memory://"
+    rate_limit_login: str = "10/minute"
+    rate_limit_signup: str = "5/hour"
+
     @property
     def cookie_secure(self) -> bool:
         """Whether auth cookies carry the ``Secure`` flag.

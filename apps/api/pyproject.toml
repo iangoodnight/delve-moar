@@ -10,6 +10,7 @@ dependencies = [
     "alembic>=1.13",
     "pydantic-settings>=2.7",
     "argon2-cffi>=25.1.0",
+    "limits>=5.8.0",
 ]
 
 [dependency-groups]
