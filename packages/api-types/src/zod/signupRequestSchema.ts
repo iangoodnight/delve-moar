@@ -9,6 +9,7 @@ import { z } from "zod/v4";
  * @description Payload to create a new account.
  */
 export const signupRequestSchema = z.object({
-    "email": z.email(),
+    "username": z.string().min(3).max(30).regex(/^[a-z0-9_-]+$/).describe("Public handle. Lowercase letters, digits, hyphen, and underscore only; 3-30 characters."),
+"email": z.email(),
 "password": z.string().min(8).max(128)
     }).describe("Payload to create a new account.")

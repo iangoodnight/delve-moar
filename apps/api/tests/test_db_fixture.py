@@ -13,7 +13,13 @@ from app.models import User
 async def test_db_session_persists_within_a_test(
     db_session: AsyncSession,
 ) -> None:
-    db_session.add(User(email="fixture@example.com", password_hash="x"))
+    db_session.add(
+        User(
+            username="fixturedm",
+            email="fixture@example.com",
+            password_hash="x",
+        )
+    )
     await db_session.flush()
 
     count = await db_session.scalar(
@@ -32,7 +38,13 @@ async def test_db_session_rolls_back_between_tests(
     )
     assert count == 0
 
-    db_session.add(User(email="fixture@example.com", password_hash="x"))
+    db_session.add(
+        User(
+            username="fixturedm",
+            email="fixture@example.com",
+            password_hash="x",
+        )
+    )
     await db_session.flush()
     count = await db_session.scalar(
         sa.select(sa.func.count()).select_from(User)

@@ -84,6 +84,7 @@ def test_user_columns() -> None:
     cols = {c.key for c in User.__table__.columns}
     assert cols == {
         "id",
+        "username",
         "email",
         "password_hash",
         "email_verified_at",
@@ -95,6 +96,11 @@ def test_user_columns() -> None:
 def test_user_email_is_unique() -> None:
     """users.email has a single-column UNIQUE constraint."""
     assert User.__table__.columns["email"].unique
+
+
+def test_user_username_is_unique() -> None:
+    """users.username has a single-column UNIQUE constraint."""
+    assert User.__table__.columns["username"].unique
 
 
 def test_session_tablename() -> None:

@@ -5,6 +5,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Query, Request, Response, status
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.csrf import generate_csrf_token
 from app.auth.dependencies import CurrentUser, require_csrf
@@ -68,12 +69,55 @@ def _clear_auth_cookies(response: Response) -> None:
 
 
 def _invalid_credentials() -> AppError:
-    """Build the uniform 401 used for both bad email and bad password."""
+    """Build the uniform 401 used for any bad identifier or password."""
     return AppError(
         status=status.HTTP_401_UNAUTHORIZED,
-        developer_message="Email or password is incorrect.",
-        user_message="Invalid email or password.",
+        developer_message="Identifier or password is incorrect.",
+        user_message="Invalid username/email or password.",
         error_code="INVALID_CREDENTIALS",
+        more_info=f"{settings.public_url}/docs",
+    )
+
+
+async def _signup_conflict(
+    db: AsyncSession, payload: SignupRequest
+) -> AppError:
+    """Attribute a signup unique-violation to the field that was taken.
+
+    Runs only after a rollback on the conflict path, so the extra lookup is
+    cheap. Querying the username (rather than inspecting the violated
+    constraint's name) keeps the mapping robust across both the
+    migration-built production schema and the metadata-built test schema,
+    whose auto-generated constraint names differ. Username collisions are
+    disclosed (the signup UX needs to tell the user the handle is taken);
+    the email branch keeps #170's behavior, with #171 owning the
+    enumeration-resistant alignment.
+
+    Args:
+        db: Session to re-check the username against (post-rollback).
+        payload: The submitted signup payload.
+
+    Returns:
+        A 409 ``AppError`` whose ``error_code`` names the taken field.
+    """
+    username_taken = await db.scalar(
+        select(User.id).where(User.username == payload.username)
+    )
+    if username_taken is not None:
+        return AppError(
+            status=status.HTTP_409_CONFLICT,
+            developer_message=(
+                f"Username '{payload.username}' is already taken."
+            ),
+            user_message="That username is taken.",
+            error_code="USERNAME_TAKEN",
+            more_info=f"{settings.public_url}/docs",
+        )
+    return AppError(
+        status=status.HTTP_409_CONFLICT,
+        developer_message=f"Email '{payload.email}' is already registered.",
+        user_message="That email is already registered.",
+        error_code="EMAIL_TAKEN",
         more_info=f"{settings.public_url}/docs",
     )
 
@@ -87,7 +131,7 @@ def _invalid_credentials() -> AppError:
     responses={
         status.HTTP_409_CONFLICT: {
             "model": ErrorResponse,
-            "description": "Email already registered",
+            "description": "Username or email already registered",
         },
         status.HTTP_429_TOO_MANY_REQUESTS: {
             "model": ErrorResponse,
@@ -101,7 +145,7 @@ async def signup(
     """Create a new account and start a session.
 
     Args:
-        payload: Email and password for the new account.
+        payload: Username, email, and password for the new account.
         response: Response used to set the session and CSRF cookies.
         db: Database session.
 
@@ -109,9 +153,10 @@ async def signup(
         The created user.
 
     Raises:
-        AppError: 409 if the email is already registered.
+        AppError: 409 if the username or email is already registered.
     """
     user = User(
+        username=payload.username,
         email=payload.email.lower(),
         password_hash=await hash_password(payload.password),
     )
@@ -120,13 +165,7 @@ async def signup(
         await db.flush()
     except IntegrityError as exc:
         await db.rollback()
-        raise AppError(
-            status=status.HTTP_409_CONFLICT,
-            developer_message=f"Email '{payload.email}' is already registered.",
-            user_message="That email is already registered.",
-            error_code="EMAIL_TAKEN",
-            more_info=f"{settings.public_url}/docs",
-        ) from exc
+        raise await _signup_conflict(db, payload) from exc
 
     token = await create_session(db, user.id)
     await db.refresh(user)
@@ -153,10 +192,14 @@ async def signup(
 async def login(
     payload: LoginRequest, response: Response, db: DbSession
 ) -> UserResponse:
-    """Authenticate with email and password and start a session.
+    """Authenticate with a username-or-email and password, start a session.
+
+    The ``identifier`` is matched against email when it contains ``@`` and
+    against username otherwise; both lookups are case-insensitive since both
+    fields are stored lowercase.
 
     Args:
-        payload: Email and password.
+        payload: Identifier (username or email) and password.
         response: Response used to set the session and CSRF cookies.
         db: Database session.
 
@@ -164,11 +207,11 @@ async def login(
         The authenticated user.
 
     Raises:
-        AppError: 401 if the email or password is incorrect.
+        AppError: 401 if the identifier or password is incorrect.
     """
-    user = await db.scalar(
-        select(User).where(User.email == payload.email.lower())
-    )
+    identifier = payload.identifier.lower()
+    field = User.email if "@" in identifier else User.username
+    user = await db.scalar(select(User).where(field == identifier))
     if user is None:
         # Verify against a dummy hash so timing does not reveal whether the
         # email is registered.

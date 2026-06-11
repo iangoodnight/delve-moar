@@ -47,7 +47,9 @@ def _client(db_session: AsyncSession) -> AsyncClient:
 
 
 async def _make_user(db: AsyncSession) -> User:
-    user = User(email="seam@example.com", password_hash="argon2-hash")
+    user = User(
+        username="seamdm", email="seam@example.com", password_hash="argon2-hash"
+    )
     db.add(user)
     await db.flush()
     return user

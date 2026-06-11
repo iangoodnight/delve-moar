@@ -12,10 +12,10 @@ import { z } from "zod/v4";
 /**
  * @description Successful Response
  */
-export const signupV1AuthSignupPost201Schema = z.lazy(() => userResponseSchema).describe("Public representation of a user; never includes the password hash.")
+export const signupV1AuthSignupPost201Schema = z.lazy(() => userResponseSchema).describe("The owner's own view of their account.\n\nReturned only to the authenticated account holder (signup, login,\n``/me``). ``email`` appears here and nowhere else; other users see the\n``Author`` projection instead.")
 
 /**
- * @description Email already registered
+ * @description Username or email already registered
  */
 export const signupV1AuthSignupPost409Schema = z.lazy(() => errorResponseSchema).describe("Standard error response schema.")
 

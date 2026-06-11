@@ -6,11 +6,12 @@
 import { z } from "zod/v4";
 
 /**
- * @description Public representation of a user; never includes the password hash.
+ * @description The owner\'s own view of their account.\n\nReturned only to the authenticated account holder (signup, login,\n``/me``). ``email`` appears here and nowhere else; other users see the\n``Author`` projection instead.
  */
 export const userResponseSchema = z.object({
     "id": z.uuid(),
+"username": z.string(),
 "email": z.email(),
 "emailVerified": z.boolean(),
 "createdAt": z.iso.datetime()
-    }).describe("Public representation of a user; never includes the password hash.")
+    }).describe("The owner's own view of their account.\n\nReturned only to the authenticated account holder (signup, login,\n``/me``). ``email`` appears here and nowhere else; other users see the\n``Author`` projection instead.")

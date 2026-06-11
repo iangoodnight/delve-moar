@@ -84,7 +84,7 @@ async def test_login_is_rate_limited_with_retry_after(
     db_client: AsyncClient, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(settings, "rate_limit_login", "2/minute")
-    payload = {"email": "nobody@example.com", "password": PASSWORD}
+    payload = {"identifier": "nobody@example.com", "password": PASSWORD}
 
     first = await db_client.post(LOGIN, json=payload)
     second = await db_client.post(LOGIN, json=payload)
@@ -105,7 +105,7 @@ async def test_rate_limit_resets_after_clear(
     db_client: AsyncClient, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(settings, "rate_limit_login", "1/minute")
-    payload = {"email": "nobody@example.com", "password": PASSWORD}
+    payload = {"identifier": "nobody@example.com", "password": PASSWORD}
 
     assert (await db_client.post(LOGIN, json=payload)).status_code == 401
     assert (await db_client.post(LOGIN, json=payload)).status_code == 429
@@ -121,7 +121,7 @@ async def test_disabled_toggle_bypasses_limiting(
 ) -> None:
     monkeypatch.setattr(settings, "rate_limit_enabled", False)
     monkeypatch.setattr(settings, "rate_limit_login", "1/minute")
-    payload = {"email": "nobody@example.com", "password": PASSWORD}
+    payload = {"identifier": "nobody@example.com", "password": PASSWORD}
 
     for _ in range(3):
         resp = await db_client.post(LOGIN, json=payload)
@@ -134,12 +134,22 @@ async def test_signup_is_rate_limited(
     monkeypatch.setattr(settings, "rate_limit_signup", "1/hour")
 
     first = await db_client.post(
-        SIGNUP, json={"email": "one@example.com", "password": PASSWORD}
+        SIGNUP,
+        json={
+            "username": "ratedm",
+            "email": "one@example.com",
+            "password": PASSWORD,
+        },
     )
     assert first.status_code == 201
 
     blocked = await db_client.post(
-        SIGNUP, json={"email": "two@example.com", "password": PASSWORD}
+        SIGNUP,
+        json={
+            "username": "ratedmtwo",
+            "email": "two@example.com",
+            "password": PASSWORD,
+        },
     )
     assert blocked.status_code == 429
     assert blocked.json()["errorCode"] == "RATE_LIMITED"

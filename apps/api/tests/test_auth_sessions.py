@@ -17,7 +17,11 @@ from app.models import Session, User
 
 
 async def _make_user(db: AsyncSession, email: str = "user@example.com") -> User:
-    user = User(email=email, password_hash="argon2-hash")
+    user = User(
+        username=email.split("@", 1)[0],
+        email=email,
+        password_hash="argon2-hash",
+    )
     db.add(user)
     await db.flush()
     return user
