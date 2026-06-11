@@ -31,6 +31,13 @@ For the per-PR convention and the manual release ritual, see the
   (`RATE_LIMIT_STORAGE_URI`) without a code change. The limiter is a
   reusable dependency, ready to apply to password-reset and content
   writes as those land.
+- Public usernames as the account identity (refining the unreleased
+  ADR 0010 auth core): signup now requires a `username` (lowercase
+  letters, digits, hyphen, and underscore; 3-30 characters; unique),
+  and login accepts either the username or the email in a single
+  `identifier` field. A user's email is returned only in their own
+  `GET /v1/auth/me` view and never to other users, keeping email out
+  of the public author attribution that homebrew publishing will use.
 
 ### Changed
 
