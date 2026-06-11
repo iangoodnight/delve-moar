@@ -24,6 +24,11 @@ export const loginV1AuthLoginPost401Schema = z.lazy(() => errorResponseSchema).d
  */
 export const loginV1AuthLoginPost422Schema = z.lazy(() => HTTPValidationErrorSchema)
 
+/**
+ * @description Too many login attempts
+ */
+export const loginV1AuthLoginPost429Schema = z.lazy(() => errorResponseSchema).describe("Standard error response schema.")
+
 export const loginV1AuthLoginPostMutationRequestSchema = z.lazy(() => loginRequestSchema).describe("Payload to authenticate with email and password.")
 
 export const loginV1AuthLoginPostMutationResponseSchema = z.lazy(() => loginV1AuthLoginPost200Schema)

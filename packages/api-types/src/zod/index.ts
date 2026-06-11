@@ -18,7 +18,7 @@ export { listItemsV1ItemsGet200Schema, listItemsV1ItemsGet422Schema, listItemsV1
 export { listMonstersV1MonstersGet200Schema, listMonstersV1MonstersGet422Schema, listMonstersV1MonstersGetQueryParamsSchema, listMonstersV1MonstersGetQueryResponseSchema } from "./listMonstersV1MonstersGetSchema.ts";
 export { listSpellsV1SpellsGet200Schema, listSpellsV1SpellsGet422Schema, listSpellsV1SpellsGetQueryParamsSchema, listSpellsV1SpellsGetQueryResponseSchema } from "./listSpellsV1SpellsGetSchema.ts";
 export { loginRequestSchema } from "./loginRequestSchema.ts";
-export { loginV1AuthLoginPost200Schema, loginV1AuthLoginPost401Schema, loginV1AuthLoginPost422Schema, loginV1AuthLoginPostMutationRequestSchema, loginV1AuthLoginPostMutationResponseSchema } from "./loginV1AuthLoginPostSchema.ts";
+export { loginV1AuthLoginPost200Schema, loginV1AuthLoginPost401Schema, loginV1AuthLoginPost422Schema, loginV1AuthLoginPost429Schema, loginV1AuthLoginPostMutationRequestSchema, loginV1AuthLoginPostMutationResponseSchema } from "./loginV1AuthLoginPostSchema.ts";
 export { logoutV1AuthLogoutPost204Schema, logoutV1AuthLogoutPost422Schema, logoutV1AuthLogoutPostMutationResponseSchema, logoutV1AuthLogoutPostQueryParamsSchema } from "./logoutV1AuthLogoutPostSchema.ts";
 export { meV1AuthMeGet200Schema, meV1AuthMeGet401Schema, meV1AuthMeGetQueryResponseSchema } from "./meV1AuthMeGetSchema.ts";
 export { metadataEnvelopeSchema } from "./metadataEnvelopeSchema.ts";
@@ -32,7 +32,7 @@ export { rangeSchema } from "./rangeSchema.ts";
 export { resultsetMetaSchema } from "./resultsetMetaSchema.ts";
 export { sensesSchema } from "./sensesSchema.ts";
 export { signupRequestSchema } from "./signupRequestSchema.ts";
-export { signupV1AuthSignupPost201Schema, signupV1AuthSignupPost409Schema, signupV1AuthSignupPost422Schema, signupV1AuthSignupPostMutationRequestSchema, signupV1AuthSignupPostMutationResponseSchema } from "./signupV1AuthSignupPostSchema.ts";
+export { signupV1AuthSignupPost201Schema, signupV1AuthSignupPost409Schema, signupV1AuthSignupPost422Schema, signupV1AuthSignupPost429Schema, signupV1AuthSignupPostMutationRequestSchema, signupV1AuthSignupPostMutationResponseSchema } from "./signupV1AuthSignupPostSchema.ts";
 export { speedSchema } from "./speedSchema.ts";
 export { spellDetailSchema } from "./spellDetailSchema.ts";
 export { spellSummarySchema } from "./spellSummarySchema.ts";
