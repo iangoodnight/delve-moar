@@ -35,15 +35,17 @@ export interface paths {
         put?: never;
         /**
          * Create an account
-         * @description Create a new account and start a session.
+         * @description Create a new account, start a session, and send a verification email.
          *
          *     Args:
          *         payload: Username, email, and password for the new account.
          *         response: Response used to set the session and CSRF cookies.
          *         db: Database session.
+         *         background_tasks: Used to send the verification email off the
+         *             response path.
          *
          *     Returns:
-         *         The created user.
+         *         The created user (with ``email_verified`` false until they confirm).
          *
          *     Raises:
          *         AppError: 409 if the username or email is already registered.
@@ -137,6 +139,128 @@ export interface paths {
         get: operations["me_v1_auth_me_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/verify-email": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Confirm an email address
+         * @description Mark a user's email as verified using a verification token.
+         *
+         *     Unauthenticated: possession of the emailed token is the proof. The token
+         *     is single-use; any siblings are retired on success.
+         *
+         *     Args:
+         *         payload: The verification token.
+         *         db: Database session.
+         *
+         *     Raises:
+         *         AppError: 400 if the token is invalid, expired, or already used.
+         */
+        post: operations["verify_email_v1_auth_verify_email_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/resend-verification": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Resend the verification email
+         * @description Send a fresh verification email to the signed-in user.
+         *
+         *     A no-op (still ``204``) when the account is already verified. Takes no
+         *     email input, so it cannot be used to probe account existence.
+         *
+         *     Args:
+         *         db: Database session.
+         *         user: The authenticated user.
+         *         background_tasks: Used to send the email off the response path.
+         */
+        post: operations["resend_verification_v1_auth_resend_verification_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/password-reset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Request a password reset
+         * @description Email a password-reset link if the identifier matches an account.
+         *
+         *     The response is identical whether or not an account matched, so it never
+         *     discloses which usernames or emails are registered.
+         *
+         *     Args:
+         *         payload: The account's username or email.
+         *         db: Database session.
+         *         background_tasks: Used to send the email off the response path.
+         *
+         *     Returns:
+         *         A generic acknowledgement, regardless of whether an account matched.
+         */
+        post: operations["request_password_reset_v1_auth_password_reset_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/password-reset/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Set a new password with a reset token
+         * @description Set a new password using a reset token and sign the user out.
+         *
+         *     On success the password is rehashed, every reset token is retired, and
+         *     all of the user's sessions are revoked so a thief who held an old session
+         *     is locked out. Receiving the reset email proves control of the address,
+         *     so an unverified account is verified at the same time. Does not log the
+         *     user in; they sign in fresh with the new password.
+         *
+         *     Args:
+         *         payload: The reset token and the new password.
+         *         db: Database session.
+         *
+         *     Raises:
+         *         AppError: 400 if the token is invalid, expired, or already used.
+         */
+        post: operations["confirm_password_reset_v1_auth_password_reset_confirm_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -571,6 +695,14 @@ export interface components {
             password: string;
         };
         /**
+         * MessageResponse
+         * @description A generic, non-revealing acknowledgement message.
+         */
+        MessageResponse: {
+            /** Message */
+            message: string;
+        };
+        /**
          * MetadataEnvelope
          * @description Envelopes a paginated resultset with metadata.
          */
@@ -638,6 +770,28 @@ export interface components {
             metadata: components["schemas"]["MetadataEnvelope"];
             /** Data */
             data: components["schemas"]["SpellSummary"][];
+        };
+        /**
+         * PasswordResetConfirmRequest
+         * @description Payload to set a new password using a reset token.
+         */
+        PasswordResetConfirmRequest: {
+            /** Token */
+            token: string;
+            /** Password */
+            password: string;
+        };
+        /**
+         * PasswordResetRequest
+         * @description Payload to request a password-reset email.
+         *
+         *     ``identifier`` is the account's username or email (same matching as
+         *     login). The response is identical whether or not an account matches, so
+         *     it never reveals which addresses are registered.
+         */
+        PasswordResetRequest: {
+            /** Identifier */
+            identifier: string;
         };
         /**
          * Proficiency
@@ -952,6 +1106,14 @@ export interface components {
             /** Context */
             ctx?: Record<string, never>;
         };
+        /**
+         * VerifyEmailRequest
+         * @description Payload to confirm an email address with a verification token.
+         */
+        VerifyEmailRequest: {
+            /** Token */
+            token: string;
+        };
     };
     responses: never;
     parameters: never;
@@ -1138,6 +1300,173 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    verify_email_v1_auth_verify_email_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VerifyEmailRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Token is invalid or expired */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    resend_verification_v1_auth_resend_verification_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CSRF token missing or invalid */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Too many resend attempts */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    request_password_reset_v1_auth_password_reset_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PasswordResetRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Too many reset requests */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    confirm_password_reset_v1_auth_password_reset_confirm_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PasswordResetConfirmRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Token is invalid or expired */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

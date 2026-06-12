@@ -72,13 +72,18 @@ Username = Annotated[
     AfterValidator(_reject_reserved_username),
 ]
 
+# Shared password constraints for any endpoint that *sets* a password
+# (signup, password reset). Login does not reuse this -- it accepts whatever
+# was stored so older/shorter passwords still authenticate.
+Password = Annotated[str, Field(min_length=8, max_length=128)]
+
 
 class SignupRequest(AppSchema):
     """Payload to create a new account."""
 
     username: Username
     email: EmailStr
-    password: str = Field(min_length=8, max_length=128)
+    password: Password
 
 
 class LoginRequest(AppSchema):
@@ -90,6 +95,36 @@ class LoginRequest(AppSchema):
 
     identifier: str = Field(min_length=1, max_length=255)
     password: str = Field(min_length=1, max_length=128)
+
+
+class VerifyEmailRequest(AppSchema):
+    """Payload to confirm an email address with a verification token."""
+
+    token: str = Field(min_length=1)
+
+
+class PasswordResetRequest(AppSchema):
+    """Payload to request a password-reset email.
+
+    ``identifier`` is the account's username or email (same matching as
+    login). The response is identical whether or not an account matches, so
+    it never reveals which addresses are registered.
+    """
+
+    identifier: str = Field(min_length=1, max_length=255)
+
+
+class PasswordResetConfirmRequest(AppSchema):
+    """Payload to set a new password using a reset token."""
+
+    token: str = Field(min_length=1)
+    password: Password
+
+
+class MessageResponse(AppSchema):
+    """A generic, non-revealing acknowledgement message."""
+
+    message: str
 
 
 class UserResponse(AppSchema):

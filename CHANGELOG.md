@@ -38,6 +38,18 @@ For the per-PR convention and the manual release ritual, see the
   `identifier` field. A user's email is returned only in their own
   `GET /v1/auth/me` view and never to other users, keeping email out
   of the public author attribution that homebrew publishing will use.
+- Email verification and password reset for accounts (ADR 0010):
+  signup now emails a verification link, `POST /v1/auth/verify-email`
+  confirms the address, and `POST /v1/auth/resend-verification` sends a
+  fresh one. Forgotten passwords are recovered via
+  `POST /v1/auth/password-reset`, which always returns the same
+  acknowledgement so it never reveals whether an account exists, and
+  `POST /v1/auth/password-reset/confirm`, which sets the new password
+  and signs the account out of every active session. Mail goes through
+  a configurable transport (`MAILER_TRANSPORT`): a console transport
+  that logs the message for local development and CI, or SMTP for real
+  delivery. Tokens are single-use and expiring; unverified accounts can
+  still sign in.
 
 ### Changed
 

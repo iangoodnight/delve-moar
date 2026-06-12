@@ -4,7 +4,16 @@ Validates that all models are importable, carry the expected table name,
 and expose the expected column names — without requiring a live DB connection.
 """
 
-from app.models import Campaign, Item, Monster, Session, Spell, User
+from app.models import (
+    Campaign,
+    EmailToken,
+    EmailTokenPurpose,
+    Item,
+    Monster,
+    Session,
+    Spell,
+    User,
+)
 
 
 def test_campaign_tablename() -> None:
@@ -129,6 +138,40 @@ def test_session_user_fk_cascades() -> None:
     fk = next(iter(Session.__table__.columns["user_id"].foreign_keys))
     assert fk.column.table.name == "users"
     assert fk.ondelete == "CASCADE"
+
+
+def test_email_token_tablename() -> None:
+    assert EmailToken.__tablename__ == "email_tokens"
+
+
+def test_email_token_columns() -> None:
+    cols = {c.key for c in EmailToken.__table__.columns}
+    assert cols == {
+        "id",
+        "user_id",
+        "token_hash",
+        "purpose",
+        "expires_at",
+        "created_at",
+    }
+
+
+def test_email_token_token_hash_is_unique() -> None:
+    """email_tokens.token_hash has a single-column UNIQUE constraint."""
+    assert EmailToken.__table__.columns["token_hash"].unique
+
+
+def test_email_token_user_fk_cascades() -> None:
+    """email_tokens.user_id references users.id and cascades on delete."""
+    fk = next(iter(EmailToken.__table__.columns["user_id"].foreign_keys))
+    assert fk.column.table.name == "users"
+    assert fk.ondelete == "CASCADE"
+
+
+def test_email_token_purpose_values() -> None:
+    """The purpose enum carries the two #171 lifecycle flows."""
+    assert EmailTokenPurpose.EMAIL_VERIFICATION.value == "email_verification"
+    assert EmailTokenPurpose.PASSWORD_RESET.value == "password_reset"
 
 
 def test_campaign_slug_is_unique() -> None:

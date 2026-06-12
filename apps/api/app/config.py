@@ -137,6 +137,34 @@ class Settings(BaseSettings):
     rate_limit_storage_uri: str = "async+memory://"
     rate_limit_login: str = "10/minute"
     rate_limit_signup: str = "5/hour"
+    # Email-sending endpoints are an abuse vector (mail-bombing a victim's
+    # inbox), so the reset-request and resend-verification routes carry their
+    # own IP-keyed limits. The token-consuming routes are not limited: the
+    # tokens are 256-bit and unbruteforceable.
+    rate_limit_password_reset: str = "5/hour"  # noqa: S105 (rate, not a secret)
+    rate_limit_resend_verification: str = "5/hour"
+
+    # Email / mailer (#171). Verification and password-reset links are sent
+    # through a provider-agnostic seam. ``mailer_transport`` selects the
+    # backend: "console" logs the message (zero-config for local dev, CI, and
+    # self-hosters) while "smtp" delivers via any SMTP server (Mailpit
+    # locally, or a provider's SMTP endpoint in production). Links point at
+    # the web app, whose routes are built in #174.
+    frontend_base_url: str = "http://localhost:5173"
+    mailer_transport: str = "console"
+    mailer_from: str = "DelveMoar <no-reply@delvemoar.com>"
+    smtp_host: str = "localhost"
+    smtp_port: int = 1025
+    smtp_username: str = ""
+    smtp_password: str = ""
+    # Implicit TLS (port 465). STARTTLS (port 587) upgrades a plaintext
+    # connection instead; set at most one. Both off suits a local Mailpit.
+    smtp_use_tls: bool = False
+    smtp_start_tls: bool = False
+    # Single-use token lifetimes. Verification is generous; reset is short
+    # since it grants a password change.
+    email_verification_ttl_seconds: int = 86_400  # 24 hours
+    password_reset_ttl_seconds: int = 3_600  # 1 hour
 
     @property
     def cookie_secure(self) -> bool:
