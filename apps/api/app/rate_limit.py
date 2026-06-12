@@ -123,6 +123,31 @@ async def enforce_signup_rate_limit(request: Request) -> None:
     await _enforce(request, scope="signup", limit=settings.rate_limit_signup)
 
 
+async def enforce_password_reset_rate_limit(request: Request) -> None:
+    """Rate-limit dependency for the password-reset request endpoint.
+
+    Caps how often a single IP can trigger reset emails, blunting attempts
+    to flood a victim's inbox.
+    """
+    await _enforce(
+        request,
+        scope="password_reset",
+        limit=settings.rate_limit_password_reset,
+    )
+
+
+async def enforce_resend_verification_rate_limit(request: Request) -> None:
+    """Rate-limit dependency for the resend-verification endpoint.
+
+    Same anti mail-bombing intent as the password-reset limiter.
+    """
+    await _enforce(
+        request,
+        scope="resend_verification",
+        limit=settings.rate_limit_resend_verification,
+    )
+
+
 async def reset_rate_limits() -> None:
     """Clear all rate-limit counters.
 
