@@ -14,6 +14,11 @@
     "format": "turbo run format"
   },
   "pnpm": {
+    "onlyBuiltDependencies": [
+      "es5-ext",
+      "esbuild",
+      "unrs-resolver"
+    ],
     "overrides": {
       "postcss": "^8.5.10",
       "fast-uri": "^3.1.2",
