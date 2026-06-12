@@ -166,6 +166,11 @@ type LoginRequest struct {
 	Password   string `json:"password"`
 }
 
+// MessageResponse A generic, non-revealing acknowledgement message.
+type MessageResponse struct {
+	Message string `json:"message"`
+}
+
 // MetadataEnvelope Envelopes a paginated resultset with metadata.
 type MetadataEnvelope struct {
 	// Links Prev/next navigation links for a paginated resultset.
@@ -246,6 +251,21 @@ type PaginatedResultsetSpellSummary struct {
 
 	// Metadata Envelopes a paginated resultset with metadata.
 	Metadata MetadataEnvelope `json:"metadata"`
+}
+
+// PasswordResetConfirmRequest Payload to set a new password using a reset token.
+type PasswordResetConfirmRequest struct {
+	Password string `json:"password"`
+	Token    string `json:"token"`
+}
+
+// PasswordResetRequest Payload to request a password-reset email.
+//
+// “identifier“ is the account's username or email (same matching as
+// login). The response is identical whether or not an account matches, so
+// it never reveals which addresses are registered.
+type PasswordResetRequest struct {
+	Identifier string `json:"identifier"`
 }
 
 // Proficiency A saving-throw or skill proficiency; index on `proficiency.index`.
@@ -465,6 +485,11 @@ type ValidationError_Loc_Item struct {
 	union json.RawMessage
 }
 
+// VerifyEmailRequest Payload to confirm an email address with a verification token.
+type VerifyEmailRequest struct {
+	Token string `json:"token"`
+}
+
 // LogoutV1AuthLogoutPostParams defines parameters for LogoutV1AuthLogoutPost.
 type LogoutV1AuthLogoutPostParams struct {
 	// Everywhere Revoke all of this user's sessions, not just this.
@@ -565,8 +590,17 @@ type GetSpellV1SpellsSlugGetParams struct {
 // LoginV1AuthLoginPostJSONRequestBody defines body for LoginV1AuthLoginPost for application/json ContentType.
 type LoginV1AuthLoginPostJSONRequestBody = LoginRequest
 
+// RequestPasswordResetV1AuthPasswordResetPostJSONRequestBody defines body for RequestPasswordResetV1AuthPasswordResetPost for application/json ContentType.
+type RequestPasswordResetV1AuthPasswordResetPostJSONRequestBody = PasswordResetRequest
+
+// ConfirmPasswordResetV1AuthPasswordResetConfirmPostJSONRequestBody defines body for ConfirmPasswordResetV1AuthPasswordResetConfirmPost for application/json ContentType.
+type ConfirmPasswordResetV1AuthPasswordResetConfirmPostJSONRequestBody = PasswordResetConfirmRequest
+
 // SignupV1AuthSignupPostJSONRequestBody defines body for SignupV1AuthSignupPost for application/json ContentType.
 type SignupV1AuthSignupPostJSONRequestBody = SignupRequest
+
+// VerifyEmailV1AuthVerifyEmailPostJSONRequestBody defines body for VerifyEmailV1AuthVerifyEmailPost for application/json ContentType.
+type VerifyEmailV1AuthVerifyEmailPostJSONRequestBody = VerifyEmailRequest
 
 // Getter for additional properties for ActionEntry. Returns the specified
 // element and whether it was found
@@ -2775,10 +2809,28 @@ type ClientInterface interface {
 	// MeV1AuthMeGet request
 	MeV1AuthMeGet(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// RequestPasswordResetV1AuthPasswordResetPostWithBody request with any body
+	RequestPasswordResetV1AuthPasswordResetPostWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	RequestPasswordResetV1AuthPasswordResetPost(ctx context.Context, body RequestPasswordResetV1AuthPasswordResetPostJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ConfirmPasswordResetV1AuthPasswordResetConfirmPostWithBody request with any body
+	ConfirmPasswordResetV1AuthPasswordResetConfirmPostWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	ConfirmPasswordResetV1AuthPasswordResetConfirmPost(ctx context.Context, body ConfirmPasswordResetV1AuthPasswordResetConfirmPostJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ResendVerificationV1AuthResendVerificationPost request
+	ResendVerificationV1AuthResendVerificationPost(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// SignupV1AuthSignupPostWithBody request with any body
 	SignupV1AuthSignupPostWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	SignupV1AuthSignupPost(ctx context.Context, body SignupV1AuthSignupPostJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// VerifyEmailV1AuthVerifyEmailPostWithBody request with any body
+	VerifyEmailV1AuthVerifyEmailPostWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	VerifyEmailV1AuthVerifyEmailPost(ctx context.Context, body VerifyEmailV1AuthVerifyEmailPostJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// ListItemsV1ItemsGet request
 	ListItemsV1ItemsGet(ctx context.Context, params *ListItemsV1ItemsGetParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -2859,6 +2911,66 @@ func (c *Client) MeV1AuthMeGet(ctx context.Context, reqEditors ...RequestEditorF
 	return c.Client.Do(req)
 }
 
+func (c *Client) RequestPasswordResetV1AuthPasswordResetPostWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewRequestPasswordResetV1AuthPasswordResetPostRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) RequestPasswordResetV1AuthPasswordResetPost(ctx context.Context, body RequestPasswordResetV1AuthPasswordResetPostJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewRequestPasswordResetV1AuthPasswordResetPostRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ConfirmPasswordResetV1AuthPasswordResetConfirmPostWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewConfirmPasswordResetV1AuthPasswordResetConfirmPostRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ConfirmPasswordResetV1AuthPasswordResetConfirmPost(ctx context.Context, body ConfirmPasswordResetV1AuthPasswordResetConfirmPostJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewConfirmPasswordResetV1AuthPasswordResetConfirmPostRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ResendVerificationV1AuthResendVerificationPost(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewResendVerificationV1AuthResendVerificationPostRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 func (c *Client) SignupV1AuthSignupPostWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewSignupV1AuthSignupPostRequestWithBody(c.Server, contentType, body)
 	if err != nil {
@@ -2873,6 +2985,30 @@ func (c *Client) SignupV1AuthSignupPostWithBody(ctx context.Context, contentType
 
 func (c *Client) SignupV1AuthSignupPost(ctx context.Context, body SignupV1AuthSignupPostJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewSignupV1AuthSignupPostRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) VerifyEmailV1AuthVerifyEmailPostWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewVerifyEmailV1AuthVerifyEmailPostRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) VerifyEmailV1AuthVerifyEmailPost(ctx context.Context, body VerifyEmailV1AuthVerifyEmailPostJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewVerifyEmailV1AuthVerifyEmailPostRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -3098,6 +3234,113 @@ func NewMeV1AuthMeGetRequest(server string) (*http.Request, error) {
 	return req, nil
 }
 
+// NewRequestPasswordResetV1AuthPasswordResetPostRequest calls the generic RequestPasswordResetV1AuthPasswordResetPost builder with application/json body
+func NewRequestPasswordResetV1AuthPasswordResetPostRequest(server string, body RequestPasswordResetV1AuthPasswordResetPostJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewRequestPasswordResetV1AuthPasswordResetPostRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewRequestPasswordResetV1AuthPasswordResetPostRequestWithBody generates requests for RequestPasswordResetV1AuthPasswordResetPost with any type of body
+func NewRequestPasswordResetV1AuthPasswordResetPostRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/auth/password-reset")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewConfirmPasswordResetV1AuthPasswordResetConfirmPostRequest calls the generic ConfirmPasswordResetV1AuthPasswordResetConfirmPost builder with application/json body
+func NewConfirmPasswordResetV1AuthPasswordResetConfirmPostRequest(server string, body ConfirmPasswordResetV1AuthPasswordResetConfirmPostJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewConfirmPasswordResetV1AuthPasswordResetConfirmPostRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewConfirmPasswordResetV1AuthPasswordResetConfirmPostRequestWithBody generates requests for ConfirmPasswordResetV1AuthPasswordResetConfirmPost with any type of body
+func NewConfirmPasswordResetV1AuthPasswordResetConfirmPostRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/auth/password-reset/confirm")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewResendVerificationV1AuthResendVerificationPostRequest generates requests for ResendVerificationV1AuthResendVerificationPost
+func NewResendVerificationV1AuthResendVerificationPostRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/auth/resend-verification")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewSignupV1AuthSignupPostRequest calls the generic SignupV1AuthSignupPost builder with application/json body
 func NewSignupV1AuthSignupPostRequest(server string, body SignupV1AuthSignupPostJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
@@ -3119,6 +3362,46 @@ func NewSignupV1AuthSignupPostRequestWithBody(server string, contentType string,
 	}
 
 	operationPath := fmt.Sprintf("/v1/auth/signup")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewVerifyEmailV1AuthVerifyEmailPostRequest calls the generic VerifyEmailV1AuthVerifyEmailPost builder with application/json body
+func NewVerifyEmailV1AuthVerifyEmailPostRequest(server string, body VerifyEmailV1AuthVerifyEmailPostJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewVerifyEmailV1AuthVerifyEmailPostRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewVerifyEmailV1AuthVerifyEmailPostRequestWithBody generates requests for VerifyEmailV1AuthVerifyEmailPost with any type of body
+func NewVerifyEmailV1AuthVerifyEmailPostRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/auth/verify-email")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -3782,10 +4065,28 @@ type ClientWithResponsesInterface interface {
 	// MeV1AuthMeGetWithResponse request
 	MeV1AuthMeGetWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*MeV1AuthMeGetResponse, error)
 
+	// RequestPasswordResetV1AuthPasswordResetPostWithBodyWithResponse request with any body
+	RequestPasswordResetV1AuthPasswordResetPostWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*RequestPasswordResetV1AuthPasswordResetPostResponse, error)
+
+	RequestPasswordResetV1AuthPasswordResetPostWithResponse(ctx context.Context, body RequestPasswordResetV1AuthPasswordResetPostJSONRequestBody, reqEditors ...RequestEditorFn) (*RequestPasswordResetV1AuthPasswordResetPostResponse, error)
+
+	// ConfirmPasswordResetV1AuthPasswordResetConfirmPostWithBodyWithResponse request with any body
+	ConfirmPasswordResetV1AuthPasswordResetConfirmPostWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ConfirmPasswordResetV1AuthPasswordResetConfirmPostResponse, error)
+
+	ConfirmPasswordResetV1AuthPasswordResetConfirmPostWithResponse(ctx context.Context, body ConfirmPasswordResetV1AuthPasswordResetConfirmPostJSONRequestBody, reqEditors ...RequestEditorFn) (*ConfirmPasswordResetV1AuthPasswordResetConfirmPostResponse, error)
+
+	// ResendVerificationV1AuthResendVerificationPostWithResponse request
+	ResendVerificationV1AuthResendVerificationPostWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ResendVerificationV1AuthResendVerificationPostResponse, error)
+
 	// SignupV1AuthSignupPostWithBodyWithResponse request with any body
 	SignupV1AuthSignupPostWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*SignupV1AuthSignupPostResponse, error)
 
 	SignupV1AuthSignupPostWithResponse(ctx context.Context, body SignupV1AuthSignupPostJSONRequestBody, reqEditors ...RequestEditorFn) (*SignupV1AuthSignupPostResponse, error)
+
+	// VerifyEmailV1AuthVerifyEmailPostWithBodyWithResponse request with any body
+	VerifyEmailV1AuthVerifyEmailPostWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*VerifyEmailV1AuthVerifyEmailPostResponse, error)
+
+	VerifyEmailV1AuthVerifyEmailPostWithResponse(ctx context.Context, body VerifyEmailV1AuthVerifyEmailPostJSONRequestBody, reqEditors ...RequestEditorFn) (*VerifyEmailV1AuthVerifyEmailPostResponse, error)
 
 	// ListItemsV1ItemsGetWithResponse request
 	ListItemsV1ItemsGetWithResponse(ctx context.Context, params *ListItemsV1ItemsGetParams, reqEditors ...RequestEditorFn) (*ListItemsV1ItemsGetResponse, error)
@@ -3898,6 +4199,77 @@ func (r MeV1AuthMeGetResponse) StatusCode() int {
 	return 0
 }
 
+type RequestPasswordResetV1AuthPasswordResetPostResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON202      *MessageResponse
+	JSON422      *HTTPValidationError
+	JSON429      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r RequestPasswordResetV1AuthPasswordResetPostResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r RequestPasswordResetV1AuthPasswordResetPostResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ConfirmPasswordResetV1AuthPasswordResetConfirmPostResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON400      *ErrorResponse
+	JSON422      *HTTPValidationError
+}
+
+// Status returns HTTPResponse.Status
+func (r ConfirmPasswordResetV1AuthPasswordResetConfirmPostResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ConfirmPasswordResetV1AuthPasswordResetConfirmPostResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ResendVerificationV1AuthResendVerificationPostResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON429      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r ResendVerificationV1AuthResendVerificationPostResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ResendVerificationV1AuthResendVerificationPostResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type SignupV1AuthSignupPostResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -3917,6 +4289,29 @@ func (r SignupV1AuthSignupPostResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r SignupV1AuthSignupPostResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type VerifyEmailV1AuthVerifyEmailPostResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON400      *ErrorResponse
+	JSON422      *HTTPValidationError
+}
+
+// Status returns HTTPResponse.Status
+func (r VerifyEmailV1AuthVerifyEmailPostResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r VerifyEmailV1AuthVerifyEmailPostResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -4108,6 +4503,49 @@ func (c *ClientWithResponses) MeV1AuthMeGetWithResponse(ctx context.Context, req
 	return ParseMeV1AuthMeGetResponse(rsp)
 }
 
+// RequestPasswordResetV1AuthPasswordResetPostWithBodyWithResponse request with arbitrary body returning *RequestPasswordResetV1AuthPasswordResetPostResponse
+func (c *ClientWithResponses) RequestPasswordResetV1AuthPasswordResetPostWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*RequestPasswordResetV1AuthPasswordResetPostResponse, error) {
+	rsp, err := c.RequestPasswordResetV1AuthPasswordResetPostWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseRequestPasswordResetV1AuthPasswordResetPostResponse(rsp)
+}
+
+func (c *ClientWithResponses) RequestPasswordResetV1AuthPasswordResetPostWithResponse(ctx context.Context, body RequestPasswordResetV1AuthPasswordResetPostJSONRequestBody, reqEditors ...RequestEditorFn) (*RequestPasswordResetV1AuthPasswordResetPostResponse, error) {
+	rsp, err := c.RequestPasswordResetV1AuthPasswordResetPost(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseRequestPasswordResetV1AuthPasswordResetPostResponse(rsp)
+}
+
+// ConfirmPasswordResetV1AuthPasswordResetConfirmPostWithBodyWithResponse request with arbitrary body returning *ConfirmPasswordResetV1AuthPasswordResetConfirmPostResponse
+func (c *ClientWithResponses) ConfirmPasswordResetV1AuthPasswordResetConfirmPostWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ConfirmPasswordResetV1AuthPasswordResetConfirmPostResponse, error) {
+	rsp, err := c.ConfirmPasswordResetV1AuthPasswordResetConfirmPostWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseConfirmPasswordResetV1AuthPasswordResetConfirmPostResponse(rsp)
+}
+
+func (c *ClientWithResponses) ConfirmPasswordResetV1AuthPasswordResetConfirmPostWithResponse(ctx context.Context, body ConfirmPasswordResetV1AuthPasswordResetConfirmPostJSONRequestBody, reqEditors ...RequestEditorFn) (*ConfirmPasswordResetV1AuthPasswordResetConfirmPostResponse, error) {
+	rsp, err := c.ConfirmPasswordResetV1AuthPasswordResetConfirmPost(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseConfirmPasswordResetV1AuthPasswordResetConfirmPostResponse(rsp)
+}
+
+// ResendVerificationV1AuthResendVerificationPostWithResponse request returning *ResendVerificationV1AuthResendVerificationPostResponse
+func (c *ClientWithResponses) ResendVerificationV1AuthResendVerificationPostWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ResendVerificationV1AuthResendVerificationPostResponse, error) {
+	rsp, err := c.ResendVerificationV1AuthResendVerificationPost(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseResendVerificationV1AuthResendVerificationPostResponse(rsp)
+}
+
 // SignupV1AuthSignupPostWithBodyWithResponse request with arbitrary body returning *SignupV1AuthSignupPostResponse
 func (c *ClientWithResponses) SignupV1AuthSignupPostWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*SignupV1AuthSignupPostResponse, error) {
 	rsp, err := c.SignupV1AuthSignupPostWithBody(ctx, contentType, body, reqEditors...)
@@ -4123,6 +4561,23 @@ func (c *ClientWithResponses) SignupV1AuthSignupPostWithResponse(ctx context.Con
 		return nil, err
 	}
 	return ParseSignupV1AuthSignupPostResponse(rsp)
+}
+
+// VerifyEmailV1AuthVerifyEmailPostWithBodyWithResponse request with arbitrary body returning *VerifyEmailV1AuthVerifyEmailPostResponse
+func (c *ClientWithResponses) VerifyEmailV1AuthVerifyEmailPostWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*VerifyEmailV1AuthVerifyEmailPostResponse, error) {
+	rsp, err := c.VerifyEmailV1AuthVerifyEmailPostWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseVerifyEmailV1AuthVerifyEmailPostResponse(rsp)
+}
+
+func (c *ClientWithResponses) VerifyEmailV1AuthVerifyEmailPostWithResponse(ctx context.Context, body VerifyEmailV1AuthVerifyEmailPostJSONRequestBody, reqEditors ...RequestEditorFn) (*VerifyEmailV1AuthVerifyEmailPostResponse, error) {
+	rsp, err := c.VerifyEmailV1AuthVerifyEmailPost(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseVerifyEmailV1AuthVerifyEmailPostResponse(rsp)
 }
 
 // ListItemsV1ItemsGetWithResponse request returning *ListItemsV1ItemsGetResponse
@@ -4311,6 +4766,119 @@ func ParseMeV1AuthMeGetResponse(rsp *http.Response) (*MeV1AuthMeGetResponse, err
 	return response, nil
 }
 
+// ParseRequestPasswordResetV1AuthPasswordResetPostResponse parses an HTTP response from a RequestPasswordResetV1AuthPasswordResetPostWithResponse call
+func ParseRequestPasswordResetV1AuthPasswordResetPostResponse(rsp *http.Response) (*RequestPasswordResetV1AuthPasswordResetPostResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &RequestPasswordResetV1AuthPasswordResetPostResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 202:
+		var dest MessageResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON202 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest HTTPValidationError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 429:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON429 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseConfirmPasswordResetV1AuthPasswordResetConfirmPostResponse parses an HTTP response from a ConfirmPasswordResetV1AuthPasswordResetConfirmPostWithResponse call
+func ParseConfirmPasswordResetV1AuthPasswordResetConfirmPostResponse(rsp *http.Response) (*ConfirmPasswordResetV1AuthPasswordResetConfirmPostResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ConfirmPasswordResetV1AuthPasswordResetConfirmPostResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest HTTPValidationError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseResendVerificationV1AuthResendVerificationPostResponse parses an HTTP response from a ResendVerificationV1AuthResendVerificationPostWithResponse call
+func ParseResendVerificationV1AuthResendVerificationPostResponse(rsp *http.Response) (*ResendVerificationV1AuthResendVerificationPostResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ResendVerificationV1AuthResendVerificationPostResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 429:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON429 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseSignupV1AuthSignupPostResponse parses an HTTP response from a SignupV1AuthSignupPostWithResponse call
 func ParseSignupV1AuthSignupPostResponse(rsp *http.Response) (*SignupV1AuthSignupPostResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -4352,6 +4920,39 @@ func ParseSignupV1AuthSignupPostResponse(rsp *http.Response) (*SignupV1AuthSignu
 			return nil, err
 		}
 		response.JSON429 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseVerifyEmailV1AuthVerifyEmailPostResponse parses an HTTP response from a VerifyEmailV1AuthVerifyEmailPostWithResponse call
+func ParseVerifyEmailV1AuthVerifyEmailPostResponse(rsp *http.Response) (*VerifyEmailV1AuthVerifyEmailPostResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &VerifyEmailV1AuthVerifyEmailPostResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest HTTPValidationError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
 
 	}
 
