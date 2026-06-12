@@ -1,5 +1,6 @@
 """FastAPI application factory and lifespan configuration."""
 
+import logging
 from collections.abc import AsyncGenerator, Awaitable, Callable
 from contextlib import asynccontextmanager
 from typing import Any
@@ -16,12 +17,32 @@ from app.routers import auth, health, items, monsters, spells
 V1_PREFIX = "/v1"
 
 
+def _configure_app_logging() -> None:
+    """Make the application's own loggers visible in the server output.
+
+    uvicorn configures its ``uvicorn*`` loggers but neither the root nor the
+    ``app`` logger, so ``logging.getLogger("app.*").info(...)`` records are
+    dropped by the level-WARNING last-resort handler. Bind the ``app`` logger
+    to uvicorn's handlers (falling back to a plain stream handler off
+    uvicorn) at INFO, so app logs -- such as the console mailer transport --
+    actually appear. Idempotent: a second call is a no-op.
+    """
+    app_logger = logging.getLogger("app")
+    app_logger.setLevel(logging.INFO)
+    if app_logger.handlers:
+        return
+    uvicorn_handlers = logging.getLogger("uvicorn").handlers
+    app_logger.handlers = uvicorn_handlers or [logging.StreamHandler()]
+    app_logger.propagate = False
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Manage application startup and shutdown.
 
-    Initializes the database engine on startup. Teardown logic for a
-    graceful connection pool shutdown will be added here as needed.
+    Configures application logging and initializes the database engine on
+    startup. Teardown logic for a graceful connection pool shutdown will be
+    added here as needed.
 
     Args:
         app: The FastAPI application instance.
@@ -29,6 +50,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     Yields:
         Control back to FastAPI after startup tasks complete.
     """
+    _configure_app_logging()
     init_db(settings.database_url)
     yield
 
