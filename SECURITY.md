@@ -6,16 +6,18 @@ expect in return.
 
 ## Supported versions
 
-DelveMoar is in early development. Only the current `main` branch is
-supported. Older commits and pre-release tags receive no fixes.
+DelveMoar is pre-1.0 and ships patch releases off `main`. Only the
+latest released version, and the `main` branch it ships from, receive
+security fixes. Older releases and pre-release tags do not.
 
-| Version       | Supported |
-| ------------- | --------- |
-| `main` (HEAD) | yes       |
-| anything else | no        |
+| Version          | Supported |
+| ---------------- | --------- |
+| `main` (HEAD)    | yes       |
+| `0.1.2` (latest) | yes       |
+| `< 0.1.2`        | no        |
 
-Once the first tagged release ships, this table will be updated to list
-supported version ranges.
+This table is bumped as part of the release ritual (see the "Cutting a
+release" checklist in `CONTRIBUTING.md`).
 
 ## Reporting a vulnerability
 

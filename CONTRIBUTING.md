@@ -197,7 +197,10 @@ the tag goes on `main` after the release PR merges.
    2. In `CHANGELOG.md`, rename `[Unreleased]` to `## [X.Y.Z] - YYYY-MM-DD`.
    3. Insert a fresh empty `[Unreleased]` block at the top with the six
       sub-sections.
-   4. Merge the version-bump PR into `dev`.
+   4. In [`SECURITY.md`](SECURITY.md), bump the supported-versions table
+      so the new version is the latest supported and the prior release
+      drops to unsupported.
+   5. Merge the version-bump PR into `dev`.
 2. **Open a `dev` → `main` Release PR** titled `Release vX.Y.Z`. The
    body is the new `[X.Y.Z]` section of the changelog.
 3. **Merge the Release PR with "Create a merge commit" or "Rebase and
