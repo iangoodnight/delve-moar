@@ -8,6 +8,7 @@ import { Suspense, useState } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { HelmetProvider } from 'react-helmet-async';
 
+import { AuthProvider } from '@/lib/auth';
 import { queryConfig } from '@/lib/react-query';
 
 interface AppProviderProps {
@@ -35,7 +36,7 @@ export function AppProvider({ children }: Readonly<AppProviderProps>) {
             {import.meta.env.DEV && <ReactQueryDevtools />}
             <Theme>
               {import.meta.env.DEV && <ThemePanel defaultOpen={false} />}
-              {children}
+              <AuthProvider>{children}</AuthProvider>
             </Theme>
           </QueryClientProvider>
         </HelmetProvider>
