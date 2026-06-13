@@ -1,0 +1,48 @@
+import { Meta, Story } from '@storybook/addon-docs/blocks';
+
+import * as FieldStories from './field.stories';
+
+<Meta title="Design System/Forms/Overview" />
+
+# Forms
+
+Form fields are built from one primitive, `FieldWrapper`: a stateful label
+over a control, with a reserved message row beneath. `TextField` composes it
+with a Radix input; textareas and custom controls reuse the same wrapper so
+every field looks and behaves the same.
+
+<Story of={FieldStories.States} />
+
+## Anatomy
+
+- **Label** — uses the heading-font `label` style. A leading icon and the
+  label colour both track field state.
+- **Control** — the input itself (Radix `TextField`, or any control dropped
+  into the wrapper).
+- **Message row** — holds help text or the validation error. It reserves one
+  line at all times, so an error appearing never shifts the layout.
+
+## Why the states are loud
+
+Visible focus and error states are an accessibility requirement, not a
+flourish. A field that does not clearly show where keyboard focus sits, or
+that signals an error with colour alone, fails people who navigate by keyboard
+or who cannot rely on subtle colour cues. So the field leans on several
+redundant signals at once:
+
+- **Focus** moves the label to `accent-11` and slides an arrow in to its left,
+  on top of the input's own focus ring.
+- **Error** turns the label `red-11`, swaps in a prohibit icon, and gives the
+  input a red border and a red focus ring. The message is announced as an
+  alert so screen readers hear it immediately.
+- **Help text** is tied to the input with `aria-describedby`, so assistive
+  tech reads it as part of the field.
+
+<Story of={FieldStories.InForm} />
+
+## Disabled
+
+Disabled fields dim the label alongside the control so the whole field reads
+as inactive, not just the input.
+
+<Story of={FieldStories.Disabled} />

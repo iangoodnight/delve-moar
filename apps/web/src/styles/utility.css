@@ -5,6 +5,10 @@
   box-shadow: var(--shadow-2);
 }
 
+.text-muted {
+  color: var(--gray-11);
+}
+
 .text-oblique {
   font-style: oblique;
 }
