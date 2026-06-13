@@ -19,9 +19,13 @@ export function ProtectedRoute({ children }: Readonly<ProtectedRouteProps>) {
   }
 
   if (status === 'anonymous') {
-    // Carry the attempted location so login can send the user back.
+    // Carry the attempted path so login can send the user back.
     return (
-      <Navigate to={paths.login.getHref()} state={{ from: location }} replace />
+      <Navigate
+        to={paths.login.getHref()}
+        state={{ from: `${location.pathname}${location.search}` }}
+        replace
+      />
     );
   }
 

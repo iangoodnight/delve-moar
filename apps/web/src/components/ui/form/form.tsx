@@ -1,23 +1,23 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { ReactNode } from 'react';
-import type {
-  FieldValues,
-  SubmitHandler,
-  UseFormReturn,
-} from 'react-hook-form';
+import type { FieldValues, UseFormReturn } from 'react-hook-form';
 import { FormProvider, useForm } from 'react-hook-form';
 import type { z } from 'zod';
 
+type FormMethods<TSchema extends z.ZodType<FieldValues, FieldValues>> =
+  UseFormReturn<z.input<TSchema>, unknown, z.output<TSchema>>;
+
 interface FormProps<TSchema extends z.ZodType<FieldValues, FieldValues>> {
   readonly schema: TSchema;
-  // Receives the schema's parsed (output) values.
-  readonly onSubmit: SubmitHandler<z.output<TSchema>>;
-  // Render-prop exposing the RHF methods (e.g. setError for server errors).
-  // Fields subscribe to their own state via context, so reactive form state
-  // is never read here.
-  readonly children: (
-    methods: UseFormReturn<z.input<TSchema>, unknown, z.output<TSchema>>,
-  ) => ReactNode;
+  // Receives the schema's parsed (output) values plus the RHF methods, so
+  // handlers can map server errors onto fields via methods.setError.
+  readonly onSubmit: (
+    values: z.output<TSchema>,
+    methods: FormMethods<TSchema>,
+  ) => unknown;
+  // Render-prop exposing the RHF methods. Fields subscribe to their own state
+  // via context, so reactive form state is never read here.
+  readonly children: (methods: FormMethods<TSchema>) => ReactNode;
   readonly id?: string;
   readonly className?: string;
 }
@@ -43,7 +43,7 @@ export function Form<TSchema extends z.ZodType<FieldValues, FieldValues>>({
       <form
         id={id}
         className={className}
-        onSubmit={methods.handleSubmit(onSubmit)}
+        onSubmit={methods.handleSubmit((values) => onSubmit(values, methods))}
         noValidate
       >
         {children(methods)}
