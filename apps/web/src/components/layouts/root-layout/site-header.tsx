@@ -3,6 +3,7 @@ import { Row } from '@/components/ui/layout';
 import { MD } from '@/constants/breakpoints';
 import { useWindowDimensions } from '@/hooks/use-window-dimensions';
 
+import { AuthNav } from './auth-nav';
 import { NavProgress } from './nav-progress';
 import { SiteNavigation } from './site-navigation';
 
@@ -22,7 +23,10 @@ export function SiteHeader() {
       >
         <header>
           <BrandMark asLink={true} short={shouldBrandMarkShrink} />
-          <SiteNavigation />
+          <Row align="center" gap={{ initial: '3', lg: '5' }}>
+            <SiteNavigation />
+            <AuthNav />
+          </Row>
         </header>
       </Row>
     </>
