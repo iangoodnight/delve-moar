@@ -21,6 +21,7 @@
     "@fontsource-variable/space-grotesk": "^5.2.10",
     "@fontsource/atkinson-hyperlegible": "^5.2.8",
     "@fontsource/major-mono-display": "^5.2.8",
+    "@hookform/resolvers": "^5.4.0",
     "@phosphor-icons/react": "^2.1.10",
     "@radix-ui/react-navigation-menu": "^1.2.14",
     "@radix-ui/themes": "^3.3.0",
@@ -30,6 +31,7 @@
     "react-dom": "^19.2.4",
     "react-error-boundary": "^6.1.1",
     "react-helmet-async": "^3.0.0",
+    "react-hook-form": "^7.78.0",
     "react-intersection-observer": "^10.0.3",
     "react-router-dom": "^7.15.0",
     "zod": "^4.3.6"
