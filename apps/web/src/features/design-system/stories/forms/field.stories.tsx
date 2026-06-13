@@ -1,7 +1,7 @@
-import { Button } from '@radix-ui/themes';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { z } from 'zod';
 
+import { Button } from '@/components/ui/button';
 import { Form, FormTextField, TextField } from '@/components/ui/form';
 import { Column } from '@/components/ui/layout';
 

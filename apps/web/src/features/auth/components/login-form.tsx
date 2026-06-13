@@ -1,7 +1,7 @@
-import { Button } from '@radix-ui/themes';
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
+import { Button } from '@/components/ui/button';
 import { Callout } from '@/components/ui/callout';
 import { Form, FormTextField } from '@/components/ui/form';
 import { Column, Row } from '@/components/ui/layout';
