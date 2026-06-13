@@ -92,14 +92,42 @@ function toApiError(error: AxiosError): ApiError {
   });
 }
 
+// Auth uses cookie sessions with double-submit CSRF: the API sets a
+// readable `dm_csrf` cookie whose value the SPA echoes in this header on
+// state-changing requests (see apps/api/app/auth/csrf.py).
+const CSRF_COOKIE_NAME = 'dm_csrf';
+const CSRF_HEADER_NAME = 'X-CSRF-Token';
+const MUTATING_METHODS = new Set(['post', 'put', 'patch', 'delete']);
+
+function readCookie(name: string): string | null {
+  const prefix = `${name}=`;
+  const cookies = document.cookie ? document.cookie.split('; ') : [];
+  for (const cookie of cookies) {
+    if (cookie.startsWith(prefix)) {
+      return decodeURIComponent(cookie.slice(prefix.length));
+    }
+  }
+  return null;
+}
+
 function onRequest(config: InternalAxiosRequestConfig) {
-  // TODO(Phase 1b): attach auth header from session store once auth lands.
   config.headers.Accept = 'application/json';
+  // Echo the CSRF cookie on mutating requests. Missing cookie -> no header,
+  // which the API rejects with 403 on the endpoints that require it.
+  const method = config.method?.toLowerCase();
+  if (method !== undefined && MUTATING_METHODS.has(method)) {
+    const csrfToken = readCookie(CSRF_COOKIE_NAME);
+    if (csrfToken !== null) {
+      config.headers[CSRF_HEADER_NAME] = csrfToken;
+    }
+  }
   return config;
 }
 
 export const apiClient = axios.create({
   baseURL: env.API_URL,
+  // Send and receive the session/CSRF cookies on cross-origin API calls.
+  withCredentials: true,
   headers: { 'Content-Type': 'application/json' },
 });
 
