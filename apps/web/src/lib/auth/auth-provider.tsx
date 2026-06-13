@@ -20,7 +20,7 @@ interface AuthProviderProps {
   readonly children: ReactNode;
 }
 
-export function AuthProvider({ children }: AuthProviderProps) {
+export function AuthProvider({ children }: Readonly<AuthProviderProps>) {
   const enabled = hasSessionCookie();
   const query = useQuery({ ...getCurrentUserQueryOptions(), enabled });
 
