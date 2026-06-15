@@ -24,12 +24,12 @@ export default function ItemDetail() {
   return (
     <Column aria-busy={isLoading} mb="8">
       <Head
-        title={item?.name ?? `Item ${safeSlug}`}
         description={
           item?.name
             ? `Details for ${item.name}.`
             : `Detail page for item ${safeSlug}.`
         }
+        title={item?.name ?? `Item ${safeSlug}`}
       />
       {isLoading && <ItemDetailSkeleton />}
       {isError && isNotFound && (

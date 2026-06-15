@@ -112,8 +112,8 @@ export function MonsterFilters() {
                 {MONSTER_TYPES.map((type) => {
                   return (
                     <Select.Item
-                      className={styles['type-option']}
                       key={type}
+                      className={styles['type-option']}
                       value={type}
                     >
                       {type}

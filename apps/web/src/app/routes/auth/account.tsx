@@ -5,7 +5,7 @@ import { ProtectedRoute } from '@/lib/auth';
 export default function Account() {
   return (
     <>
-      <Head title="Your account" description="Manage your DelveMoar account." />
+      <Head description="Manage your DelveMoar account." title="Your account" />
       <ProtectedRoute>
         <AccountPanel />
       </ProtectedRoute>

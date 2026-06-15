@@ -5,8 +5,8 @@ export default function ForgotPassword() {
   return (
     <>
       <Head
-        title="Forgot password"
         description="Request a password reset link."
+        title="Forgot password"
       />
       <ForgotPasswordForm />
     </>

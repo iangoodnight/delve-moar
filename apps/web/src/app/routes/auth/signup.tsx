@@ -4,7 +4,7 @@ import { SignupForm } from '@/features/auth';
 export default function Signup() {
   return (
     <>
-      <Head title="Sign up" description="Create a DelveMoar account." />
+      <Head description="Create a DelveMoar account." title="Sign up" />
       <SignupForm />
     </>
   );

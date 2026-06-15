@@ -6,7 +6,7 @@ import { SpellFilters, SpellGrid } from '@/features/spells/components';
 export default function Spells() {
   return (
     <Column gap="4">
-      <Head title="Spells" description="Browse SRD spells." />
+      <Head description="Browse SRD spells." title="Spells" />
       <H1>Spells</H1>
       <SpellFilters />
       <SpellGrid />

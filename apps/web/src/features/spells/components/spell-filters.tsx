@@ -96,8 +96,8 @@ export function SpellFilters() {
                 <Select.Item value={ALL_VALUE}>Any school</Select.Item>
                 {SPELL_SCHOOLS.map((school) => (
                   <Select.Item
-                    className={styles['school-option']}
                     key={school}
+                    className={styles['school-option']}
                     value={school}
                   >
                     {school}

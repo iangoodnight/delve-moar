@@ -22,9 +22,9 @@ export function ProtectedRoute({ children }: Readonly<ProtectedRouteProps>) {
     // Carry the attempted path so login can send the user back.
     return (
       <Navigate
-        to={paths.login.getHref()}
-        state={{ from: `${location.pathname}${location.search}` }}
         replace
+        state={{ from: `${location.pathname}${location.search}` }}
+        to={paths.login.getHref()}
       />
     );
   }

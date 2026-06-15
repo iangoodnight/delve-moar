@@ -29,12 +29,12 @@ export default function SpellDetail() {
   return (
     <Column aria-busy={isLoading} mb="8">
       <Head
-        title={spell?.name ?? `Spell ${safeSlug}`}
         description={
           spell?.name
             ? `Details for ${spell.name}.`
             : `Detail page for spell ${safeSlug}.`
         }
+        title={spell?.name ?? `Spell ${safeSlug}`}
       />
       {isLoading && <SpellDetailSkeleton />}
       {isError && isNotFound && (

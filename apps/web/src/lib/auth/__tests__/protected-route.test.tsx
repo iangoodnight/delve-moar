@@ -30,14 +30,14 @@ function renderAccountRoute() {
         <MemoryRouter initialEntries={['/account']}>
           <Routes>
             <Route
-              path="/account"
               element={
                 <ProtectedRoute>
                   <div>account secret</div>
                 </ProtectedRoute>
               }
+              path="/account"
             />
-            <Route path="/login" element={<div>login page</div>} />
+            <Route element={<div>login page</div>} path="/login" />
           </Routes>
         </MemoryRouter>
       </AuthProvider>

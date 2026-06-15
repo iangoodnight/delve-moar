@@ -1,9 +1,13 @@
+// For more info, see https://github.com/storybookjs/eslint-plugin-storybook#configuration-flat-config-format
+import storybook from 'eslint-plugin-storybook';
+
 // @ts-check
 import js from '@eslint/js';
 import globals from 'globals';
 import checkFile from 'eslint-plugin-check-file';
 import boundaries from 'eslint-plugin-boundaries';
 import jsxA11y from 'eslint-plugin-jsx-a11y';
+import react from 'eslint-plugin-react';
 import reactCompiler from 'eslint-plugin-react-compiler';
 import reactHooks from 'eslint-plugin-react-hooks';
 import reactRefresh from 'eslint-plugin-react-refresh';
@@ -62,9 +66,7 @@ const SHARED_LAYERS = [
 
 export default tseslint.config(
   // IGNORED PATHS
-  { ignores: ['dist/**', 'coverage/**', 'storybook-static/**'] },
-
-  // TYPESCRIPT
+  { ignores: ['dist/**', 'coverage/**', 'storybook-static/**'] }, // TYPESCRIPT
   {
     files: ['**/*.{ts,tsx}'],
     extends: [
@@ -93,9 +95,7 @@ export default tseslint.config(
         { checksVoidReturn: { attributes: false } },
       ],
     },
-  },
-
-  // REACT
+  }, // REACT
   {
     files: ['**/*.{ts,tsx}'],
     extends: [
@@ -103,13 +103,15 @@ export default tseslint.config(
       reactRefresh.configs.vite,
       jsxA11y.flatConfigs.strict,
     ],
-    plugins: { 'react-compiler': reactCompiler },
+    plugins: { 'react-compiler': reactCompiler, react },
+    settings: { react: { version: 'detect' } },
     rules: {
       'react-compiler/react-compiler': 'error',
+      // Sort JSX props alphabetically (case-sensitive, so capitalized props
+      // sort first); `key` is pinned ahead of the sort.
+      'react/jsx-sort-props': ['error', { reservedFirst: ['key'] }],
     },
-  },
-
-  // IMPORT SORTING
+  }, // IMPORT SORTING
   {
     files: ['**/*.{ts,tsx}'],
     plugins: { 'simple-import-sort': simpleImportSort },
@@ -131,9 +133,7 @@ export default tseslint.config(
       ],
       'simple-import-sort/exports': 'error',
     },
-  },
-
-  // CODE STYLE
+  }, // CODE STYLE
   {
     files: ['**/*.{ts,tsx}'],
     rules: {
@@ -147,9 +147,7 @@ export default tseslint.config(
         },
       ],
     },
-  },
-
-  // ARCHITECTURAL BOUNDARIES
+  }, // ARCHITECTURAL BOUNDARIES
   {
     files: ['**/*.{ts,tsx}'],
     plugins: { boundaries },
@@ -247,9 +245,7 @@ export default tseslint.config(
       'boundaries/no-unknown': 'off',
       'boundaries/dependencies': 'off',
     },
-  },
-
-  // FILE NAMING
+  }, // FILE NAMING
   {
     plugins: { 'check-file': checkFile },
     rules: {
@@ -267,9 +263,8 @@ export default tseslint.config(
         { 'src/**/': '@(__tests__|+([a-z0-9])*(-+([a-z0-9])))' },
       ],
     },
-  },
-
-  // PRETTIER
+  }, // PRETTIER
   // prettier must be last
   prettier,
+  storybook.configs['flat/recommended'],
 );

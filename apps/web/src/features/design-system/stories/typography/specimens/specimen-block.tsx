@@ -27,12 +27,12 @@ export function SpecimenBlock({
       }}
     >
       <section>
-        <Row asChild align="baseline" justify="between">
+        <Row align="baseline" asChild justify="between">
           <header>
             <Label
               as="span"
-              size="1"
               color="gray"
+              size="1"
               style={{
                 letterSpacing: '0.12em',
                 textTransform: 'uppercase',
@@ -43,8 +43,8 @@ export function SpecimenBlock({
             {meta ? (
               <Label
                 as="span"
-                size="1"
                 color="gray"
+                size="1"
                 style={{ letterSpacing: '0.04em' }}
               >
                 {meta}

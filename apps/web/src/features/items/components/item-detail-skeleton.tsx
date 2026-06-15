@@ -22,8 +22,8 @@ export function ItemDetailSkeleton() {
           <Grid columns={{ initial: '1', md: '3' }} gap="3">
             {Array.from({ length: ITEM_STAT_COUNT }).map((_, i) => (
               <Skeleton
-                height="calc(2.4rem - calc(var(--space-1) / 2)"
                 key={i}
+                height="calc(2.4rem - calc(var(--space-1) / 2)"
                 ml="4"
                 width="18rem"
               />
@@ -36,8 +36,8 @@ export function ItemDetailSkeleton() {
           <Skeleton height="4.32rem" width="26rem" />
           {Array.from({ length: DESC_PARAGRAPH_COUNT }).map((_, i) => (
             <Skeleton
-              height="5.1rem"
               key={i}
+              height="5.1rem"
               ml="4"
               mt={i === 0 ? '0' : '3'}
               width="calc(100% - var(--space-4))"

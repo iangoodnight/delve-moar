@@ -1,7 +1,4 @@
-import {
-  PaperPlaneTiltIcon,
-  SignOutIcon,
-} from '@phosphor-icons/react';
+import { PaperPlaneTiltIcon, SignOutIcon } from '@phosphor-icons/react';
 import { useNavigate } from 'react-router-dom';
 
 import { Badge } from '@/components/ui/badge';
@@ -38,14 +35,9 @@ export function AccountPanel() {
           <DataList.Label>Email</DataList.Label>
           <DataList.Value>
             <Row gap="4" gapY="2" wrap="wrap">
-              <Row
-                maxWidth={{ initial: '24rem', xs: '26.4rem' }}
-                minWidth="0"
-              >
+              <Row maxWidth={{ initial: '24rem', xs: '26.4rem' }} minWidth="0">
                 <Tooltip content={user.email}>
-                  <Text truncate>
-                    {user.email}
-                  </Text>
+                  <Text truncate>{user.email}</Text>
                 </Tooltip>
               </Row>
               <Row gap="2">
@@ -56,9 +48,9 @@ export function AccountPanel() {
                 )}
                 <InfoPopover maxWidth={{ initial: '24rem', xs: '52rem' }}>
                   <Text>
-                    Your email address is used for account recovery and receiving
-                    important notifications. Please verify it to ensure you can
-                    regain access if you forget your password.
+                    Your email address is used for account recovery and
+                    receiving important notifications. Please verify it to
+                    ensure you can regain access if you forget your password.
                   </Text>
                 </InfoPopover>
               </Row>

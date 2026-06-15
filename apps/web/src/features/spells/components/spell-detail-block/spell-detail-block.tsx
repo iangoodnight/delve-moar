@@ -88,8 +88,8 @@ export function SpellDetailBlock({ spell }: SpellDetailBlockProps) {
           <H2>Description</H2>
           {content.desc.map((paragraph, index) => (
             <Paragraph
-              className={styles['desc-paragraph']}
               key={index}
+              className={styles['desc-paragraph']}
               ml={{ initial: '0', sm: '4' }}
             >
               {paragraph}
@@ -105,8 +105,8 @@ export function SpellDetailBlock({ spell }: SpellDetailBlockProps) {
             <Column gap="2">
               {content.higherLevel.map((paragraph, index) => (
                 <Paragraph
-                  className={styles['higher-level']}
                   key={index}
+                  className={styles['higher-level']}
                   ml={{ initial: '0', sm: '4' }}
                 >
                   {paragraph}

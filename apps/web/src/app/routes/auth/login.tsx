@@ -4,7 +4,7 @@ import { LoginForm } from '@/features/auth';
 export default function Login() {
   return (
     <>
-      <Head title="Log in" description="Sign in to your DelveMoar account." />
+      <Head description="Sign in to your DelveMoar account." title="Log in" />
       <LoginForm />
     </>
   );

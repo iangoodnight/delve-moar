@@ -38,8 +38,8 @@ export function BookPage({
             {eyebrow ? (
               <Label
                 as="span"
-                size="1"
                 color="gray"
+                size="1"
                 style={{
                   letterSpacing: '0.18em',
                   textTransform: 'uppercase',
@@ -51,10 +51,10 @@ export function BookPage({
             {children}
             {folio ? (
               <Label
-                as="span"
-                size="1"
-                color="gray"
                 align="center"
+                as="span"
+                color="gray"
+                size="1"
                 style={{
                   letterSpacing: '0.18em',
                   marginTop: '24px',

@@ -82,18 +82,18 @@ export function MonsterStatBlock({ monster }: MonsterStatBlockProps) {
         </Column>
       </Section>
       <ActionsBlock
-        title="Special Abilities"
         entries={content.specialAbilities}
+        title="Special Abilities"
       />
       {content.legendaryActions && (
         <ActionsBlock
-          title="Legendary Actions"
           entries={content.legendaryActions}
+          title="Legendary Actions"
         />
       )}
-      <ActionsBlock title="Actions" entries={content.actions} />
+      <ActionsBlock entries={content.actions} title="Actions" />
       {content.reactions && (
-        <ActionsBlock title="Reactions" entries={content.reactions} />
+        <ActionsBlock entries={content.reactions} title="Reactions" />
       )}
     </Column>
   );

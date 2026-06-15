@@ -161,9 +161,9 @@ function SectionHeading({ children }: { readonly children: string }) {
   return (
     <Label
       as="span"
-      size="1"
       color="gray"
       mt="5"
+      size="1"
       style={{ letterSpacing: '0.12em', textTransform: 'uppercase' }}
     >
       {children}
@@ -235,7 +235,7 @@ export const Showcase: Story = {
         use (eyebrows, badges, in-card meta), pass{' '}
         <Code>as=&quot;span&quot;</Code>.
       </Paragraph>
-      <Column gap="2" align="start">
+      <Column align="start" gap="2">
         <Label
           as="label"
           size={labelSize}
@@ -304,26 +304,26 @@ export const Showcase: Story = {
         The locked sizes for each project heading level.
       </Paragraph>
       <Column gap="2">
-        <Row gap="3" align="baseline">
-          <Label as="span" size="1" color="gray" style={{ width: '40px' }}>
+        <Row align="baseline" gap="3">
+          <Label as="span" color="gray" size="1" style={{ width: '40px' }}>
             H1
           </Label>
           <Text>48px / 700 / 1.2</Text>
         </Row>
-        <Row gap="3" align="baseline">
-          <Label as="span" size="1" color="gray" style={{ width: '40px' }}>
+        <Row align="baseline" gap="3">
+          <Label as="span" color="gray" size="1" style={{ width: '40px' }}>
             H2
           </Label>
           <Text>36px / 600 / 1.2</Text>
         </Row>
-        <Row gap="3" align="baseline">
-          <Label as="span" size="1" color="gray" style={{ width: '40px' }}>
+        <Row align="baseline" gap="3">
+          <Label as="span" color="gray" size="1" style={{ width: '40px' }}>
             H3
           </Label>
           <Text>28px / 500 / 1.2</Text>
         </Row>
-        <Row gap="3" align="baseline">
-          <Label as="span" size="1" color="gray" style={{ width: '40px' }}>
+        <Row align="baseline" gap="3">
+          <Label as="span" color="gray" size="1" style={{ width: '40px' }}>
             H4
           </Label>
           <Text>22px / 500 / 1.2</Text>

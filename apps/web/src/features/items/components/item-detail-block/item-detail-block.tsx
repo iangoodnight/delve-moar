@@ -178,8 +178,8 @@ export function ItemDetailBlock({ item }: ItemDetailBlockProps) {
             <H2>Description</H2>
             {content.desc.map((paragraph, index) => (
               <Paragraph
-                className={styles['desc-paragraph']}
                 key={index}
+                className={styles['desc-paragraph']}
                 ml={{ initial: '0', sm: '4' }}
               >
                 {paragraph}
