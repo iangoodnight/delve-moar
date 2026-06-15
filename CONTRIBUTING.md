@@ -125,7 +125,7 @@ Conventional Commits, enforced by commitlint as a `commit-msg` hook:
 
 [optional body]
 
-[optional footer, e.g. Closes #123]
+refs: #123
 ```
 
 Common types: `feat`, `fix`, `chore`, `docs`, `refactor`, `test`, `ci`, `build`.
@@ -133,9 +133,15 @@ Common types: `feat`, `fix`, `chore`, `docs`, `refactor`, `test`, `ci`, `build`.
 Common scopes: `web`, `api`, `cli`, `data`, `infra`, `repo`, `deps`.
 
 The subject is imperative, lowercase, no trailing period. The body explains
-**why** more than what. If the PR closes an issue, put `Closes #N` in the
-footer of the PR description (not the commit body), so GitHub auto-closes on
-merge to `dev` (the default branch).
+**why** more than what.
+
+End every commit with a `refs: #<issue>` trailer naming the issue the work
+belongs to. It links the commit to its issue without closing it, so each
+commit on a multi-commit branch still points back. Reserve the closing
+keyword for the PR: put `Closes #<issue>` in the PR description (not the
+commit body) so GitHub auto-closes the issue when the PR merges to `dev`
+(the default branch). Commitlint does not enforce the trailer today (no
+`references-empty` rule); add one only if drift becomes a problem.
 
 ## Pull requests
 
