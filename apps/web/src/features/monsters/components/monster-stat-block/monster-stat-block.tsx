@@ -12,11 +12,11 @@ import { TraitsBlock } from './traits-block';
 
 type SrdMonsterContent = components['schemas']['SrdMonsterContent'];
 
-interface MonsterStatBlockProps {
-  readonly monster: Monster;
+interface ContentBlockProps {
+  readonly content: SrdMonsterContent;
 }
 
-function IdentityBlock({ content }: { readonly content: SrdMonsterContent }) {
+function IdentityBlock({ content }: Readonly<ContentBlockProps>) {
   return (
     <Row
       align="end"
@@ -50,7 +50,7 @@ function CombatStat({
   );
 }
 
-function CombatBlock({ content }: { readonly content: SrdMonsterContent }) {
+function CombatBlock({ content }: Readonly<ContentBlockProps>) {
   return (
     <figure className={styles['combat-block']}>
       <figcaption>Combat</figcaption>
@@ -69,7 +69,11 @@ function CombatBlock({ content }: { readonly content: SrdMonsterContent }) {
   );
 }
 
-export function MonsterStatBlock({ monster }: MonsterStatBlockProps) {
+interface MonsterStatBlockProps {
+  readonly monster: Monster;
+}
+
+export function MonsterStatBlock({ monster }: Readonly<MonsterStatBlockProps>) {
   const { content } = monster;
   return (
     <Column>

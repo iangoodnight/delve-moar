@@ -5,6 +5,11 @@
   box-shadow: var(--shadow-2);
 }
 
+.text-constraint {
+  /* 80 characters is a common measure for optimal readability. */
+  max-width: 80ch;
+}
+
 .text-muted {
   color: var(--gray-11);
 }

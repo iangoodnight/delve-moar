@@ -1,7 +1,10 @@
+import type { ReactNode } from 'react';
+
 import { DataList } from '@/components/ui/data-list';
 import { Column, Row, Section } from '@/components/ui/layout';
 import { H1, H2, Paragraph } from '@/components/ui/typography';
 import type { Spell } from '@/features/spells/api';
+import { classNames } from '@/utils/style/class-names';
 
 import styles from './spell-detail-block.module.css';
 
@@ -9,7 +12,7 @@ interface SpellDetailBlockProps {
   readonly spell: Spell;
 }
 
-function formatComponents(spell: Spell): string {
+function formatComponents(spell: Readonly<Spell>): string {
   const parts = [...spell.content.components];
   if (spell.content.material) {
     return `${parts.join(', ')} (${spell.content.material})`;
@@ -17,7 +20,26 @@ function formatComponents(spell: Spell): string {
   return parts.join(', ');
 }
 
-export function SpellDetailBlock({ spell }: SpellDetailBlockProps) {
+interface SpellDetailRowProps {
+  readonly children: ReactNode;
+  readonly className?: string;
+  readonly term: string;
+}
+
+function SpellDetailRow({
+  children,
+  className,
+  term,
+}: Readonly<SpellDetailRowProps>) {
+  return (
+    <DataList.Item className={className}>
+      <DataList.Label>{term}</DataList.Label>
+      <DataList.Value className="text-constraint">{children}</DataList.Value>
+    </DataList.Item>
+  );
+}
+
+export function SpellDetailBlock({ spell }: Readonly<SpellDetailBlockProps>) {
   const { content } = spell;
   const classes = content.classes ?? [];
 
@@ -45,39 +67,25 @@ export function SpellDetailBlock({ spell }: SpellDetailBlockProps) {
             orientation={{ initial: 'vertical', xs: 'horizontal' }}
             size="1"
           >
-            <DataList.Item>
-              <DataList.Label>Casting Time</DataList.Label>
-              <DataList.Value>{content.castingTime}</DataList.Value>
-            </DataList.Item>
-            <DataList.Item>
-              <DataList.Label>Range</DataList.Label>
-              <DataList.Value>{content.range}</DataList.Value>
-            </DataList.Item>
-            <DataList.Item>
-              <DataList.Label>Components</DataList.Label>
-              <DataList.Value>{formatComponents(spell)}</DataList.Value>
-            </DataList.Item>
-            <DataList.Item>
-              <DataList.Label>Duration</DataList.Label>
-              <DataList.Value>
-                {content.concentration
-                  ? `Concentration, up to ${content.duration}`
-                  : content.duration}
-              </DataList.Value>
-            </DataList.Item>
+            <SpellDetailRow term="Casting Time">
+              {content.castingTime}
+            </SpellDetailRow>
+            <SpellDetailRow term="Range">{content.range}</SpellDetailRow>
+            <SpellDetailRow term="Components">
+              {formatComponents(spell)}
+            </SpellDetailRow>
+            <SpellDetailRow term="Duration">
+              {content.concentration
+                ? `Concentration, up to ${content.duration}`
+                : content.duration}
+            </SpellDetailRow>
             {content.ritual && (
-              <DataList.Item>
-                <DataList.Label>Ritual</DataList.Label>
-                <DataList.Value>Yes</DataList.Value>
-              </DataList.Item>
+              <SpellDetailRow term="Ritual">Yes</SpellDetailRow>
             )}
             {classes.length > 0 && (
-              <DataList.Item>
-                <DataList.Label>Classes</DataList.Label>
-                <DataList.Value>
-                  {classes.map((c) => c.name).join(', ')}
-                </DataList.Value>
-              </DataList.Item>
+              <SpellDetailRow term="Classes">
+                {classes.map((c) => c.name).join(', ')}
+              </SpellDetailRow>
             )}
           </DataList.Root>
         </figure>
@@ -89,7 +97,10 @@ export function SpellDetailBlock({ spell }: SpellDetailBlockProps) {
           {content.desc.map((paragraph, index) => (
             <Paragraph
               key={index}
-              className={styles['desc-paragraph']}
+              className={classNames(
+                styles['desc-paragraph'],
+                'text-constraint',
+              )}
               ml={{ initial: '0', sm: '4' }}
             >
               {paragraph}
@@ -106,7 +117,10 @@ export function SpellDetailBlock({ spell }: SpellDetailBlockProps) {
               {content.higherLevel.map((paragraph, index) => (
                 <Paragraph
                   key={index}
-                  className={styles['higher-level']}
+                  className={classNames(
+                    styles['higher-level'],
+                    'text-constraint',
+                  )}
                   ml={{ initial: '0', sm: '4' }}
                 >
                   {paragraph}

@@ -71,6 +71,10 @@ For the per-PR convention and the manual release ritual, see the
 
 ### Fixed
 
+- SRD description paragraphs in the spell, item, and monster detail
+  views no longer use a hanging indent; body text now wraps to a
+  readable line length instead.
+
 ### Security
 
 - Bump `react-router` to 7.17.0 (via `react-router-dom`), clearing three

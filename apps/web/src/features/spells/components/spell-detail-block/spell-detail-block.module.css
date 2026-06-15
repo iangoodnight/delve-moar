@@ -1,15 +1,5 @@
-.desc-paragraph {
-  text-indent: var(--space-4) hanging;
-  text-wrap: revert;
-}
-
 .desc-paragraph + .desc-paragraph {
   margin-top: var(--space-3);
-}
-
-.higher-level {
-  text-indent: var(--space-4) hanging;
-  text-wrap: revert;
 }
 
 .higher-level + .higher-level {
