@@ -25,8 +25,8 @@ export function MonsterDetailSkeleton() {
             <Grid columns={{ initial: '1', md: '3' }} gap="3">
               {Array.from({ length: COMBAT_COUNT }).map((_, i) => (
                 <Skeleton
-                  height="calc(2.4rem - calc(var(--space-1) / 2)"
                   key={i}
+                  height="calc(2.4rem - calc(var(--space-1) / 2)"
                   ml="4"
                   width="18rem"
                 />
@@ -41,8 +41,8 @@ export function MonsterDetailSkeleton() {
             <Grid columns={{ initial: '3', sm: '6' }} gap="2">
               {Array.from({ length: ABILITY_COUNT }).map((_, i) => (
                 <Skeleton
-                  height="calc(6.4rem - calc(var(--space-1) / 2)"
                   key={i}
+                  height="calc(6.4rem - calc(var(--space-1) / 2)"
                 />
               ))}
             </Grid>
@@ -63,7 +63,7 @@ export function MonsterDetailSkeleton() {
         <Column gap="2">
           <Skeleton height="4.3rem" width="30%" />
           {Array.from({ length: ACTION_COUNT }).map((_, i) => (
-            <Skeleton height="2.5rem" key={i} ml="4" />
+            <Skeleton key={i} height="2.5rem" ml="4" />
           ))}
         </Column>
       </Section>

@@ -44,7 +44,7 @@ describe('Head component', () => {
 
   it('has no accessibility violations', async () => {
     const { container } = renderWithProvider(
-      <Head title="Accessibility Test" description="Testing accessibility." />,
+      <Head description="Testing accessibility." title="Accessibility Test" />,
     );
     const results = await axe(container);
     expect(results).toHaveNoViolations();

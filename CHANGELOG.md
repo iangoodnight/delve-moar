@@ -50,6 +50,18 @@ For the per-PR convention and the manual release ritual, see the
   that logs the message for local development and CI, or SMTP for real
   delivery. Tokens are single-use and expiring; unverified accounts can
   still sign in.
+- Web UI for the authentication flows (ADR 0010): signup, login, and
+  logout screens, plus email-verification and password-reset pages
+  that read their token from the link, all wired to the `/v1/auth`
+  API through a credentialed client that attaches the double-submit
+  CSRF token automatically. A session context derives sign-in state
+  from the cached `GET /v1/auth/me` result, so the header reacts to
+  signing in and out without a refresh: anonymous visitors get an
+  account menu with log in / sign up, signed-in users get their
+  account and a log out action. The `/account` route is guarded and
+  returns visitors to where they were headed once they sign in.
+  Server errors surface inline on the relevant field, or as a toast
+  when they do not map to one.
 
 ### Changed
 

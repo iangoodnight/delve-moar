@@ -27,7 +27,7 @@ export function MonsterCard({ monster }: Readonly<MonsterCardProps>) {
             </Text>
             <Text size="2">{monster.monsterType ?? 'Unknown'}</Text>
           </Column>
-          <Text size="2" color="gray">
+          <Text color="gray" size="2">
             CR {monster.challengeRating}
           </Text>
         </Row>

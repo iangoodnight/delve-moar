@@ -20,7 +20,7 @@ export function Head({ title, description }: Readonly<HeadProps>) {
       titleTemplate={`%s | ${siteTitle}`}
     >
       {title && <title>{title}</title>}
-      <meta name="description" content={description} />
+      <meta content={description} name="description" />
     </Helmet>
   );
 }

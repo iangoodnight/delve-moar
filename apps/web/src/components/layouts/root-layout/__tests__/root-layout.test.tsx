@@ -1,8 +1,9 @@
-import { Theme } from '@radix-ui/themes';
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import type * as ReactRouter from 'react-router-dom';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
+
+import { renderWithProvider } from '@/testing/setup';
 
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual<typeof ReactRouter>('react-router-dom');
@@ -16,14 +17,12 @@ const { RootLayout } = await import('../root-layout');
 
 describe('RootLayout', () => {
   it('renders the site header and the children inside <main>', () => {
-    render(
-      <Theme>
-        <MemoryRouter>
-          <RootLayout>
-            <p>Page contents</p>
-          </RootLayout>
-        </MemoryRouter>
-      </Theme>,
+    renderWithProvider(
+      <MemoryRouter>
+        <RootLayout>
+          <p>Page contents</p>
+        </RootLayout>
+      </MemoryRouter>,
     );
 
     expect(screen.getByRole('banner')).toBeInTheDocument();

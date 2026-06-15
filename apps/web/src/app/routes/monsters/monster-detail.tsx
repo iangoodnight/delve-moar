@@ -29,12 +29,12 @@ export default function MonsterDetail() {
   return (
     <Column aria-busy={isLoading} mb="8">
       <Head
-        title={monster?.name ?? `Monster ${safeSlug}`}
         description={
           monster?.name
             ? `Stat block for ${monster.name}.`
             : `Detail page for monster ${safeSlug}.`
         }
+        title={monster?.name ?? `Monster ${safeSlug}`}
       />
       {isLoading && <MonsterDetailSkeleton />}
       {isError && isNotFound && (

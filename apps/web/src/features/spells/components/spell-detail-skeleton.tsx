@@ -26,8 +26,8 @@ export function SpellDetailSkeleton() {
           <Skeleton height="4.32rem" width="26rem" />
           {Array.from({ length: DESC_PARAGRAPH_COUNT }).map((_, i) => (
             <Skeleton
-              height="5.1rem"
               key={i}
+              height="5.1rem"
               ml="4"
               mt={i === 0 ? '0' : '3'}
               width="calc(100% - var(--space-4))"

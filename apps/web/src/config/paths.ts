@@ -34,4 +34,36 @@ export const paths = {
     path: '/spells/:slug',
     getHref: (slug: string) => `/spells/${slug}`,
   },
+  login: {
+    displayName: 'Log in',
+    path: '/login',
+    getHref: () => '/login',
+  },
+  signup: {
+    displayName: 'Sign up',
+    path: '/signup',
+    getHref: () => '/signup',
+  },
+  forgotPassword: {
+    displayName: 'Forgot password',
+    path: '/forgot-password',
+    getHref: () => '/forgot-password',
+  },
+  // Target of the password-reset email link; reads the token from ?token=.
+  resetPassword: {
+    displayName: 'Reset password',
+    path: '/reset-password',
+    getHref: () => '/reset-password',
+  },
+  // Target of the verification email link; reads the token from ?token=.
+  verifyEmail: {
+    displayName: 'Verify email',
+    path: '/verify-email',
+    getHref: () => '/verify-email',
+  },
+  account: {
+    displayName: 'Account',
+    path: '/account',
+    getHref: () => '/account',
+  },
 };

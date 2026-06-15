@@ -1,5 +1,15 @@
 import type { DefaultOptions, UseMutationOptions } from '@tanstack/react-query';
 
+declare module '@tanstack/react-query' {
+  interface Register {
+    mutationMeta: {
+      // When true, the global error toast is skipped because the caller shows
+      // the error itself (e.g. as a page state).
+      readonly suppressErrorToast?: boolean;
+    };
+  }
+}
+
 export const queryConfig = {
   queries: {
     refetchOnWindowFocus: false,
