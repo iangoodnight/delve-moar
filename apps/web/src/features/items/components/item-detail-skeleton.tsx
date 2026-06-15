@@ -38,6 +38,7 @@ export function ItemDetailSkeleton() {
             <Skeleton
               key={i}
               height="5.1rem"
+              maxWidth="80ch"
               ml="4"
               mt={i === 0 ? '0' : '3'}
               width="calc(100% - var(--space-4))"

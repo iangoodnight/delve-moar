@@ -63,7 +63,13 @@ export function MonsterDetailSkeleton() {
         <Column gap="2">
           <Skeleton height="4.3rem" width="30%" />
           {Array.from({ length: ACTION_COUNT }).map((_, i) => (
-            <Skeleton key={i} height="2.5rem" ml="4" />
+            <Skeleton
+              key={i}
+              height="2.5rem"
+              maxWidth="80ch"
+              ml={{ initial: '0', sm: '4' }}
+              width="100%"
+            />
           ))}
         </Column>
       </Section>

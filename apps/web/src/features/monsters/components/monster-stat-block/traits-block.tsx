@@ -13,26 +13,26 @@ import {
 } from './format';
 import styles from './monster-stat-block.module.css';
 
-interface TraitsBlockProps {
-  readonly monster: Monster;
-}
-
 interface TraitRowProps {
   readonly children: ReactNode;
   readonly className?: string;
   readonly term: string;
 }
 
-function TraitRow({ children, className, term }: TraitRowProps) {
+function TraitRow({ children, className, term }: Readonly<TraitRowProps>) {
   return (
     <DataList.Item className={className}>
       <DataList.Label>{term}</DataList.Label>
-      <DataList.Value>{children}</DataList.Value>
+      <DataList.Value className="text-constraint">{children}</DataList.Value>
     </DataList.Item>
   );
 }
 
-export function TraitsBlock({ monster }: TraitsBlockProps) {
+interface TraitsBlockProps {
+  readonly monster: Monster;
+}
+
+export function TraitsBlock({ monster }: Readonly<TraitsBlockProps>) {
   const { content, challengeRating } = monster;
   const { saves, skills } = partitionProficiencies(content.proficiencies);
 

@@ -3,8 +3,6 @@ import { Skeleton } from '@/components/ui/loading';
 
 const DESC_PARAGRAPH_COUNT = 2;
 
-// Decorative placeholder; the loading announcement lives on the page wrapper
-// via aria-busy.  Mirrors the rough shape of SpellDetailBlock.
 export function SpellDetailSkeleton() {
   return (
     <Column aria-hidden="true">
@@ -28,6 +26,7 @@ export function SpellDetailSkeleton() {
             <Skeleton
               key={i}
               height="5.1rem"
+              maxWidth="80ch"
               ml="4"
               mt={i === 0 ? '0' : '3'}
               width="calc(100% - var(--space-4))"

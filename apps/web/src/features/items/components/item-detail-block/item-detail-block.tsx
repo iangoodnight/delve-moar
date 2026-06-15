@@ -5,14 +5,11 @@ import { Column, Grid, Row, Section } from '@/components/ui/layout';
 import { H1, H2, Paragraph, Strong, Text } from '@/components/ui/typography';
 import type { Item } from '@/features/items/api';
 import { getRarityOption, ITEM_CATEGORIES } from '@/features/items/constants';
+import { classNames } from '@/utils/style/class-names';
 
 import styles from './item-detail-block.module.css';
 
 type SrdItemContent = components['schemas']['SrdItemContent'];
-
-interface ItemDetailBlockProps {
-  readonly item: Item;
-}
 
 function categoryLabel(value: string | null): string {
   if (!value) return 'Uncategorized';
@@ -53,13 +50,12 @@ function formatRange(range: NonNullable<SrdItemContent['range']>): string {
   return `${String(range.normal)} ft.`;
 }
 
-function ItemStat({
-  label,
-  value,
-}: {
+interface ItemStatProps {
   readonly label: string;
   readonly value: string;
-}) {
+}
+
+function ItemStat({ label, value }: Readonly<ItemStatProps>) {
   return (
     <Row gap="2">
       <Text as="div" ml="4" size="3">
@@ -70,10 +66,8 @@ function ItemStat({
   );
 }
 
-function buildStats(
-  content: SrdItemContent,
-): { label: string; value: string }[] {
-  const stats: { label: string; value: string }[] = [];
+function buildStats(content: SrdItemContent): readonly ItemStatProps[] {
+  const stats: ItemStatProps[] = [];
   if (content.cost) {
     stats.push({ label: 'Cost', value: formatCost(content.cost) });
   }
@@ -134,7 +128,11 @@ function buildStats(
   return stats;
 }
 
-export function ItemDetailBlock({ item }: ItemDetailBlockProps) {
+interface ItemDetailBlockProps {
+  readonly item: Item;
+}
+
+export function ItemDetailBlock({ item }: Readonly<ItemDetailBlockProps>) {
   const { content } = item;
   const rarity = getRarityOption(item.rarity);
   const stats = buildStats(content);
@@ -179,7 +177,10 @@ export function ItemDetailBlock({ item }: ItemDetailBlockProps) {
             {content.desc.map((paragraph, index) => (
               <Paragraph
                 key={index}
-                className={styles['desc-paragraph']}
+                className={classNames(
+                  styles['desc-paragraph'],
+                  'text-constraint',
+                )}
                 ml={{ initial: '0', sm: '4' }}
               >
                 {paragraph}
