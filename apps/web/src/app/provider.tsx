@@ -11,14 +11,15 @@ import type { ReactNode } from 'react';
 import { Suspense, useState } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { HelmetProvider } from 'react-helmet-async';
-import { toast, Toaster } from 'sonner';
 
+import { AppToaster } from '@/components/ui/toaster';
 import {
   ApiError,
   getApiErrorMessage,
   INLINE_FIELD_ERROR_CODES,
 } from '@/lib/api-client';
 import { AuthProvider } from '@/lib/auth';
+import { notify } from '@/lib/notifications';
 import { queryConfig } from '@/lib/react-query';
 
 interface AppProviderProps {
@@ -29,9 +30,8 @@ export function AppProvider({ children }: Readonly<AppProviderProps>) {
   const [queryClient] = useState(() => {
     return new QueryClient({
       defaultOptions: queryConfig,
-      // Surface unexpected mutation failures as a toast. Skipped when the
-      // mutation opts out (it shows the error itself) or when the error is a
-      // field-bound code a form already renders inline.
+      // toast unexpected mutation failures; skip when the mutation opts out or
+      // the code is a field-bound one a form already renders inline.
       mutationCache: new MutationCache({
         onError: (error, _variables, _context, mutation) => {
           if (mutation.meta?.suppressErrorToast === true) {
@@ -43,7 +43,7 @@ export function AppProvider({ children }: Readonly<AppProviderProps>) {
           ) {
             return;
           }
-          toast.error(getApiErrorMessage(error));
+          notify.error(getApiErrorMessage(error));
         },
       }),
     });
@@ -64,7 +64,7 @@ export function AppProvider({ children }: Readonly<AppProviderProps>) {
             <Theme>
               {import.meta.env.DEV && <ThemePanel defaultOpen={false} />}
               <AuthProvider>{children}</AuthProvider>
-              <Toaster position="bottom-right" richColors theme="system" />
+              <AppToaster />
             </Theme>
           </QueryClientProvider>
         </HelmetProvider>
