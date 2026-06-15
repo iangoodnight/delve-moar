@@ -92,7 +92,7 @@ describe('lib/auth api hooks', () => {
     await waitFor(() => {
       expect(result.current.isSuccess).toBe(true);
     });
-    expect(queryClient.getQueryData(USER_QUERY_KEY)).toBeUndefined();
+    expect(queryClient.getQueryData(USER_QUERY_KEY)).toBeNull();
   });
 
   it('useVerifyEmail posts the token', async () => {
@@ -140,6 +140,6 @@ describe('lib/auth api hooks', () => {
     await waitFor(() => {
       expect(result.current.isSuccess).toBe(true);
     });
-    expect(queryClient.getQueryData(USER_QUERY_KEY)).toBeUndefined();
+    expect(queryClient.getQueryData(USER_QUERY_KEY)).toBeNull();
   });
 });

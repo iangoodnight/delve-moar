@@ -21,7 +21,22 @@ export type MessageResponse = components['schemas']['MessageResponse'];
 // context reads this key; the mutations below keep it in sync.
 export const USER_QUERY_KEY = ['auth', 'me'] as const;
 
-export function getCurrentUser(): Promise<User> {
+// The session cookie is HttpOnly, but the API sets a readable dm_csrf cookie
+// alongside it. Its presence is our signal that a session may exist.
+function hasSessionCookie(): boolean {
+  return document.cookie
+    .split('; ')
+    .some((cookie) => cookie.startsWith('dm_csrf='));
+}
+
+// Resolves null (no network) when there is no session cookie, so anonymous
+// visitors -- and tests -- never hit /me. Checking the cookie inside the
+// queryFn keeps it reactive: it is re-evaluated on every (re)fetch rather
+// than frozen at a render, unlike a render-time `enabled` gate.
+export function getCurrentUser(): Promise<User | null> {
+  if (!hasSessionCookie()) {
+    return Promise.resolve(null);
+  }
   return apiClient.get<User>('/v1/auth/me');
 }
 
@@ -31,6 +46,9 @@ export function getCurrentUserQueryOptions() {
     queryFn: getCurrentUser,
     // A 401 means "not signed in", not a transient failure worth retrying.
     retry: false,
+    // Settle synchronously as signed-out with no cookie, so anonymous loads
+    // never flash a loading state and make no request.
+    initialData: hasSessionCookie() ? undefined : null,
   });
 }
 
@@ -91,9 +109,11 @@ export function useLogout() {
   return useMutation({
     mutationFn: logout,
     onSuccess: () => {
-      // Session is revoked server-side; drop the cached identity so the UI
-      // reflects signed-out state without waiting on a refetch.
-      queryClient.removeQueries({ queryKey: USER_QUERY_KEY });
+      // Session is revoked server-side. Write null straight into the cache so
+      // the UI flips to signed-out immediately. removeQueries would instead
+      // leave the active observer to refetch /me, which races cookie clearing
+      // and can momentarily re-authenticate the header.
+      queryClient.setQueryData(USER_QUERY_KEY, null);
     },
   });
 }
@@ -102,9 +122,11 @@ export function useVerifyEmail() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: verifyEmail,
+    // The panel renders the result (verifying/verified/invalid) inline, so the
+    // global error toast would be redundant.
+    meta: { suppressErrorToast: true },
     onSuccess: () => {
-      // If a session exists, emailVerified just flipped; refetch /me. A no-op
-      // when the query is disabled (verifying from an email in a fresh tab).
+      // If a session exists, emailVerified just flipped; refetch /me.
       void queryClient.invalidateQueries({ queryKey: USER_QUERY_KEY });
     },
   });
@@ -124,7 +146,7 @@ export function useResetPassword() {
     mutationFn: resetPassword,
     onSuccess: () => {
       // Confirming a reset revokes every session; force a fresh sign-in.
-      queryClient.removeQueries({ queryKey: USER_QUERY_KEY });
+      queryClient.setQueryData(USER_QUERY_KEY, null);
     },
   });
 }
