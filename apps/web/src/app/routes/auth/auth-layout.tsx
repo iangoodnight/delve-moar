@@ -1,16 +1,12 @@
 import { Outlet } from 'react-router-dom';
 
-import { Card } from '@/components/ui/card';
-import { Container } from '@/components/ui/layout';
+import { AuthCard } from '@/features/auth';
 
-// Shared shell for the auth pages: a narrow, centered card. Each page renders
-// into the Outlet.
+// Routes the auth pages through the shared, width-constrained auth card.
 export default function AuthLayout() {
   return (
-    <Container size="1" px="4" py="6">
-      <Card size="4">
-        <Outlet />
-      </Card>
-    </Container>
+    <AuthCard>
+      <Outlet />
+    </AuthCard>
   );
 }
