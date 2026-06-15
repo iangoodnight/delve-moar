@@ -9,7 +9,6 @@ const meta: Meta<typeof TextField> = {
   title: 'Design System/Forms/Field',
   component: TextField,
   parameters: {
-    layout: 'padded',
     docs: {
       description: {
         component:
@@ -69,20 +68,20 @@ export const States: Story = {
     <>
       <TextField
         {...args}
-        label="Default"
+        error={undefined}
         helpText={undefined}
-        error={undefined}
+        label="Default"
       />
       <TextField
         {...args}
-        label="With help text"
+        error={undefined}
         helpText="Help text reserves the message row."
-        error={undefined}
+        label="With help text"
       />
       <TextField
         {...args}
-        label="With error"
         error="This is what an error looks like."
+        label="With error"
       />
     </>
   ),
@@ -96,17 +95,17 @@ const accountSchema = z.object({
 // Live form: submit empty to see validation drive the field states.
 export const InForm: Story = {
   render: () => (
-    <Form schema={accountSchema} onSubmit={() => undefined}>
+    <Form onSubmit={() => undefined} schema={accountSchema}>
       {() => (
         <Column gap="3">
           <FormTextField
-            name="username"
-            label="Username"
             helpText="Lowercase letters, numbers, hyphen, and underscore."
+            label="Username"
+            name="username"
           />
           <FormTextField
-            name="email"
             label="Email"
+            name="email"
             placeholder="you@example.com"
           />
           <Button type="submit">Create account</Button>

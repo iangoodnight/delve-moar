@@ -11,7 +11,6 @@ const meta: Meta<typeof MonsterCard> = {
   title: 'Features/Monsters/MonsterCard',
   component: MonsterCard,
   parameters: {
-    layout: 'padded',
     docs: {
       description: {
         component:
