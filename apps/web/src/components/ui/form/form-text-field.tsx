@@ -36,8 +36,8 @@ export function FormTextField({
       {...field}
       // Coerce to a controlled string value (RHF seeds undefined when no
       // defaultValue is set, which React rejects on a controlled input).
-      value={typeof field.value === 'string' ? field.value : ''}
       error={fieldState.error?.message}
+      value={typeof field.value === 'string' ? field.value : ''}
     />
   );
 }

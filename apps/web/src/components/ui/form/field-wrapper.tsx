@@ -2,6 +2,7 @@ import { ArrowRightIcon, ProhibitIcon } from '@phosphor-icons/react';
 import type { ReactNode } from 'react';
 import { useId } from 'react';
 
+import { Column } from '@/components/ui/layout';
 import { Label, Text } from '@/components/ui/typography';
 import { classNames } from '@/utils/style/class-names';
 
@@ -38,19 +39,19 @@ export function FieldWrapper({
   const hasMessage = hasError || helpText !== undefined;
 
   return (
-    <div
+    <Column
       className={styles['field-wrapper']}
       data-invalid={hasError ? '' : undefined}
     >
-      <Label htmlFor={fieldId} size="2" className={styles['label']}>
-        <span className={styles['icon-slot']} aria-hidden="true">
+      <Label className={styles['label']} htmlFor={fieldId} size="2">
+        <span aria-hidden="true" className={styles['icon-slot']}>
           <ArrowRightIcon
-            weight="bold"
             className={classNames(styles['icon'], styles['icon-focus'])}
+            weight="bold"
           />
           <ProhibitIcon
-            weight="bold"
             className={classNames(styles['icon'], styles['icon-error'])}
+            weight="bold"
           />
         </span>
         {label}
@@ -60,25 +61,25 @@ export function FieldWrapper({
         describedBy: hasMessage ? messageId : undefined,
         invalid: hasError,
       })}
-      <div id={messageId} className={styles['message']}>
+      <div className={styles['message']} id={messageId}>
         {hasError ? (
-          <Text role="alert" size="1" color="red">
+          <Text color="red" role="alert" size="1">
             {error}
           </Text>
         ) : helpText !== undefined ? (
           <Text
-            size="1"
             className={classNames('text-muted', styles['help-text'])}
+            size="1"
           >
             {helpText}
           </Text>
         ) : (
           // Hold exactly one line so swapping in an error never shifts layout.
-          <Text size="1" aria-hidden="true">
+          <Text aria-hidden="true" size="1">
             {' '}
           </Text>
         )}
       </div>
-    </div>
+    </Column>
   );
 }

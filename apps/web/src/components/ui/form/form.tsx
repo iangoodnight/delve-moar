@@ -41,10 +41,10 @@ export function Form<TSchema extends z.ZodType<FieldValues, FieldValues>>({
   return (
     <FormProvider {...methods}>
       <form
-        id={id}
         className={className}
-        onSubmit={methods.handleSubmit((values) => onSubmit(values, methods))}
+        id={id}
         noValidate
+        onSubmit={methods.handleSubmit((values) => onSubmit(values, methods))}
       >
         {children(methods)}
       </form>

@@ -13,12 +13,12 @@ interface RenderOptions {
 
 function renderField({ error, helpText }: RenderOptions = {}) {
   return renderWithProvider(
-    <FieldWrapper label="Email" error={error} helpText={helpText}>
+    <FieldWrapper error={error} helpText={helpText} label="Email">
       {({ id, describedBy, invalid }) => (
         <input
-          id={id}
           aria-describedby={describedBy}
           aria-invalid={invalid ? true : undefined}
+          id={id}
         />
       )}
     </FieldWrapper>,

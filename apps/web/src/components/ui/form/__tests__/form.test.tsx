@@ -19,10 +19,10 @@ interface TestFormProps {
 
 function TestForm({ onSubmit }: TestFormProps) {
   return (
-    <Form schema={schema} onSubmit={onSubmit}>
+    <Form onSubmit={onSubmit} schema={schema}>
       {() => (
         <>
-          <FormTextField name="username" label="Username" />
+          <FormTextField label="Username" name="username" />
           <button type="submit">Submit</button>
         </>
       )}
