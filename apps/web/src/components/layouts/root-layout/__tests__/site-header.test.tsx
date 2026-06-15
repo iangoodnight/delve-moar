@@ -35,7 +35,7 @@ describe('SiteHeader', () => {
     ).toBeInTheDocument();
   });
 
-  it('shows sign-in links when anonymous', () => {
+  it('shows an account menu trigger when anonymous', () => {
     renderWithProvider(
       <MemoryRouter>
         <SiteHeader />
@@ -44,10 +44,7 @@ describe('SiteHeader', () => {
 
     const banner = screen.getByRole('banner');
     expect(
-      within(banner).getByRole('link', { name: 'Log in' }),
-    ).toBeInTheDocument();
-    expect(
-      within(banner).getByRole('link', { name: 'Sign up' }),
+      within(banner).getByRole('button', { name: 'Account menu' }),
     ).toBeInTheDocument();
   });
 });
