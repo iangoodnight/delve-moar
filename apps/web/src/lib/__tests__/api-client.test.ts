@@ -1,7 +1,7 @@
 import MockAdapter from 'axios-mock-adapter';
 import { afterEach, describe, expect, expectTypeOf, it } from 'vitest';
 
-import { apiClient, ApiError } from '../api-client';
+import { apiClient, ApiError, getApiErrorMessage } from '../api-client';
 
 describe('apiClient', () => {
   const mock = new MockAdapter(apiClient);
@@ -142,5 +142,36 @@ describe('apiClient', () => {
     });
     expect(err).toBeInstanceOf(Error);
     expect(err.message).toBe('user');
+  });
+});
+
+describe('getApiErrorMessage', () => {
+  function apiError(userMessage: string): ApiError {
+    return new ApiError({
+      status: 400,
+      errorCode: 'X',
+      developerMessage: 'dev',
+      userMessage,
+      moreInfo: '',
+      envelope: null,
+    });
+  }
+
+  it("returns the ApiError's userMessage", () => {
+    expect(getApiErrorMessage(apiError('Bad credentials.'))).toBe(
+      'Bad credentials.',
+    );
+  });
+
+  it('falls back for a non-ApiError', () => {
+    expect(getApiErrorMessage(new Error('boom'))).toBe(
+      'Something went wrong. Please try again.',
+    );
+  });
+
+  it('falls back when the userMessage is empty', () => {
+    expect(getApiErrorMessage(apiError(''))).toBe(
+      'Something went wrong. Please try again.',
+    );
   });
 });

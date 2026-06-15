@@ -1,8 +1,7 @@
-import { useState } from 'react';
+import { SignInIcon } from '@phosphor-icons/react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
-import { Button } from '@/components/ui/button';
-import { Callout } from '@/components/ui/callout';
+import { FormButton } from '@/components/ui/button';
 import { Form, FormTextField } from '@/components/ui/form';
 import { Column, Row } from '@/components/ui/layout';
 import { RouterLink } from '@/components/ui/navigation';
@@ -10,14 +9,12 @@ import { H1, Text } from '@/components/ui/typography';
 import { paths } from '@/config/paths';
 import { useLogin } from '@/lib/auth';
 
-import { authErrorMessage } from '../error-mapping';
 import { loginSchema } from '../schemas';
 
 export function LoginForm() {
   const navigate = useNavigate();
   const location = useLocation();
   const loginMutation = useLogin();
-  const [formError, setFormError] = useState<string | null>(null);
 
   // ProtectedRoute stashes the attempted path here for return-to.
   const state = location.state as { from?: string } | null;
@@ -25,47 +22,42 @@ export function LoginForm() {
 
   return (
     <Column gap="4">
-      <H1>Log in</H1>
-      {formError !== null && (
-        <Callout.Root color="red" role="alert">
-          <Callout.Text>{formError}</Callout.Text>
-        </Callout.Root>
-      )}
+      <H1 mb="3">Log in</H1>
       <Form
-        schema={loginSchema}
         onSubmit={(values) => {
-          setFormError(null);
+          // Errors (invalid credentials, network) surface via the global toast.
           loginMutation.mutate(values, {
             onSuccess: () => {
               void navigate(returnTo, { replace: true });
             },
-            onError: (error) => {
-              setFormError(authErrorMessage(error));
-            },
           });
         }}
+        schema={loginSchema}
       >
         {() => (
           <Column gap="3">
             <FormTextField
-              name="identifier"
-              label="Username or email"
               autoComplete="username"
+              label="Username or email"
+              name="identifier"
             />
             <FormTextField
-              name="password"
-              label="Password"
-              type="password"
               autoComplete="current-password"
+              label="Password"
+              name="password"
+              type="password"
             />
-            <Button type="submit" loading={loginMutation.isPending}>
+            <FormButton
+              icon={<SignInIcon aria-hidden="true" weight="bold" />}
+              loading={loginMutation.isPending}
+            >
               Log in
-            </Button>
+            </FormButton>
           </Column>
         )}
       </Form>
-      <Row justify="between" gap="3" wrap="wrap">
-        <RouterLink to={paths.forgotPassword.getHref()} size="2">
+      <Row gap="3" justify="between" wrap="wrap">
+        <RouterLink size="2" to={paths.forgotPassword.getHref()}>
           Forgot password?
         </RouterLink>
         <Text size="2">

@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
@@ -10,14 +9,12 @@ import { H1, Text } from '@/components/ui/typography';
 import { paths } from '@/config/paths';
 import { useResetPassword } from '@/lib/auth';
 
-import { authErrorMessage } from '../error-mapping';
 import { resetPasswordSchema } from '../schemas';
 
 export function ResetPasswordForm() {
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token');
   const resetPassword = useResetPassword();
-  const [formError, setFormError] = useState<string | null>(null);
 
   if (token === null) {
     return (
@@ -56,41 +53,29 @@ export function ResetPasswordForm() {
   return (
     <Column gap="4">
       <H1>Choose a new password</H1>
-      {formError !== null && (
-        <Callout.Root color="red" role="alert">
-          <Callout.Text>{formError}</Callout.Text>
-        </Callout.Root>
-      )}
       <Form
-        schema={resetPasswordSchema}
         onSubmit={(values) => {
-          setFormError(null);
-          resetPassword.mutate(
-            { token, password: values.password },
-            {
-              onError: (error) => {
-                setFormError(authErrorMessage(error));
-              },
-            },
-          );
+          // An invalid/expired token surfaces via the global toast.
+          resetPassword.mutate({ token, password: values.password });
         }}
+        schema={resetPasswordSchema}
       >
         {() => (
           <Column gap="3">
             <FormTextField
-              name="password"
-              label="New password"
-              type="password"
               autoComplete="new-password"
               helpText="At least 8 characters."
+              label="New password"
+              name="password"
+              type="password"
             />
             <FormTextField
-              name="confirmPassword"
-              label="Confirm new password"
-              type="password"
               autoComplete="new-password"
+              label="Confirm new password"
+              name="confirmPassword"
+              type="password"
             />
-            <Button type="submit" loading={resetPassword.isPending}>
+            <Button loading={resetPassword.isPending} type="submit">
               Reset password
             </Button>
           </Column>

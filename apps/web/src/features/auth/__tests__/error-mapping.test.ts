@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { ApiError } from '@/lib/api-client';
 
-import { authErrorMessage, signupFieldForError } from '../error-mapping';
+import { signupFieldForError } from '../error-mapping';
 
 function apiError(errorCode: string, userMessage = 'A message.'): ApiError {
   return new ApiError({
@@ -14,26 +14,6 @@ function apiError(errorCode: string, userMessage = 'A message.'): ApiError {
     envelope: null,
   });
 }
-
-describe('authErrorMessage', () => {
-  it('returns the ApiError userMessage', () => {
-    expect(authErrorMessage(apiError('X', 'Bad credentials.'))).toBe(
-      'Bad credentials.',
-    );
-  });
-
-  it('falls back for a non-ApiError', () => {
-    expect(authErrorMessage(new Error('boom'))).toBe(
-      'Something went wrong. Please try again.',
-    );
-  });
-
-  it('falls back when the userMessage is empty', () => {
-    expect(authErrorMessage(apiError('X', ''))).toBe(
-      'Something went wrong. Please try again.',
-    );
-  });
-});
 
 describe('signupFieldForError', () => {
   it('maps USERNAME_TAKEN to the username field', () => {

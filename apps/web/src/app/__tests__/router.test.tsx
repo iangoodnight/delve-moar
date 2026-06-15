@@ -34,8 +34,8 @@ describe('AppRouter', () => {
 
   it.each([
     ['/login', /log in/i],
-    ['/signup', /create your account/i],
-    ['/forgot-password', /reset your password/i],
+    ['/signup', /create account/i],
+    ['/forgot-password', /reset password/i],
     ['/reset-password', /invalid reset link/i],
     ['/verify-email', /invalid verification link/i],
   ])('renders the auth page at %s', async (path, heading) => {

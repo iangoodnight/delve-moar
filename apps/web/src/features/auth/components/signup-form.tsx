@@ -1,35 +1,32 @@
-import { useState } from 'react';
+import { UserCirclePlusIcon } from '@phosphor-icons/react';
 import { useNavigate } from 'react-router-dom';
 
-import { Button } from '@/components/ui/button';
-import { Callout } from '@/components/ui/callout';
+import { FormButton } from '@/components/ui/button';
 import { Form, FormTextField } from '@/components/ui/form';
 import { Column } from '@/components/ui/layout';
 import { RouterLink } from '@/components/ui/navigation';
 import { H1, Text } from '@/components/ui/typography';
 import { paths } from '@/config/paths';
+import { getApiErrorMessage } from '@/lib/api-client';
 import { useSignup } from '@/lib/auth';
 
-import { authErrorMessage, signupFieldForError } from '../error-mapping';
+import { signupFieldForError } from '../error-mapping';
 import { signupSchema } from '../schemas';
 
 export function SignupForm() {
   const navigate = useNavigate();
   const signupMutation = useSignup();
-  const [formError, setFormError] = useState<string | null>(null);
 
   return (
     <Column gap="4">
-      <H1>Create your account</H1>
-      {formError !== null && (
-        <Callout.Root color="red" role="alert">
-          <Callout.Text>{formError}</Callout.Text>
-        </Callout.Root>
-      )}
+      <H1>Create account</H1>
+      <Text size="2">
+        Creating an account lets you build and access custom content and
+        campaigns, save your progress, and more. It's free and only takes a
+        minute. We will not share your email or send you spam.
+      </Text>
       <Form
-        schema={signupSchema}
         onSubmit={(values, methods) => {
-          setFormError(null);
           signupMutation.mutate(
             {
               username: values.username,
@@ -41,47 +38,56 @@ export function SignupForm() {
                 void navigate(paths.account.getHref(), { replace: true });
               },
               onError: (error) => {
+                // Taken username/email show inline at the field (and are
+                // skipped by the global toast); anything else toasts.
                 const field = signupFieldForError(error);
                 if (field !== null) {
-                  methods.setError(field, { message: authErrorMessage(error) });
-                } else {
-                  setFormError(authErrorMessage(error));
+                  methods.setError(field, {
+                    message: getApiErrorMessage(error),
+                  });
                 }
               },
             },
           );
         }}
+        schema={signupSchema}
       >
         {() => (
           <Column gap="3">
             <FormTextField
-              name="username"
-              label="Username"
               autoComplete="username"
               helpText="Lowercase letters, numbers, hyphen, and underscore. 3-30 characters."
+              label="Username"
+              name="username"
             />
             <FormTextField
-              name="email"
-              label="Email"
-              type="email"
               autoComplete="email"
+              helpText="Used for password recovery and notifications."
+              label="Email"
+              name="email"
+              type="email"
             />
             <FormTextField
-              name="password"
-              label="Password"
-              type="password"
               autoComplete="new-password"
               helpText="At least 8 characters."
+              label="Password"
+              name="password"
+              type="password"
             />
             <FormTextField
-              name="confirmPassword"
-              label="Confirm password"
-              type="password"
               autoComplete="new-password"
+              helpText="Retype your password to confirm it matches."
+              label="Confirm password"
+              name="confirmPassword"
+              type="password"
             />
-            <Button type="submit" loading={signupMutation.isPending}>
+            <FormButton
+              icon={<UserCirclePlusIcon aria-hidden="true" weight="bold" />}
+              loading={signupMutation.isPending}
+              mt="2"
+            >
               Create account
-            </Button>
+            </FormButton>
           </Column>
         )}
       </Form>

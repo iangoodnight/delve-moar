@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { PaperPlaneTiltIcon } from '@phosphor-icons/react';
 
-import { Button } from '@/components/ui/button';
+import { FormButton } from '@/components/ui/button';
 import { Callout } from '@/components/ui/callout';
 import { Form, FormTextField } from '@/components/ui/form';
 import { Column } from '@/components/ui/layout';
@@ -9,12 +9,10 @@ import { H1, Text } from '@/components/ui/typography';
 import { paths } from '@/config/paths';
 import { useRequestPasswordReset } from '@/lib/auth';
 
-import { authErrorMessage } from '../error-mapping';
 import { forgotPasswordSchema } from '../schemas';
 
 export function ForgotPasswordForm() {
   const requestReset = useRequestPasswordReset();
-  const [formError, setFormError] = useState<string | null>(null);
 
   // The API responds identically whether or not the account exists, so the
   // success screen is safe to show for any submitted identifier.
@@ -34,36 +32,30 @@ export function ForgotPasswordForm() {
 
   return (
     <Column gap="4">
-      <H1>Reset your password</H1>
+      <H1>Reset password</H1>
       <Text size="2">
         Enter your username or email and we will send a reset link.
       </Text>
-      {formError !== null && (
-        <Callout.Root color="red" role="alert">
-          <Callout.Text>{formError}</Callout.Text>
-        </Callout.Root>
-      )}
       <Form
-        schema={forgotPasswordSchema}
         onSubmit={(values) => {
-          setFormError(null);
-          requestReset.mutate(values, {
-            onError: (error) => {
-              setFormError(authErrorMessage(error));
-            },
-          });
+          requestReset.mutate(values);
         }}
+        schema={forgotPasswordSchema}
       >
         {() => (
           <Column gap="3">
             <FormTextField
-              name="identifier"
-              label="Username or email"
               autoComplete="username"
+              helpText="A verified email is required to receive a reset link."
+              label="Username or email"
+              name="identifier"
             />
-            <Button type="submit" loading={requestReset.isPending}>
+            <FormButton
+              icon={<PaperPlaneTiltIcon aria-hidden="true" weight="bold" />}
+              loading={requestReset.isPending}
+            >
               Send reset link
-            </Button>
+            </FormButton>
           </Column>
         )}
       </Form>

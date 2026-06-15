@@ -33,6 +33,25 @@ export class ApiError extends Error {
   }
 }
 
+const FALLBACK_ERROR_MESSAGE = 'Something went wrong. Please try again.';
+
+// A human-facing message for any thrown error. ApiError already carries a
+// user-facing message from the API; everything else falls back to a generic.
+export function getApiErrorMessage(error: unknown): string {
+  if (error instanceof ApiError && error.userMessage !== '') {
+    return error.userMessage;
+  }
+  return FALLBACK_ERROR_MESSAGE;
+}
+
+// Error codes that the forms surface inline at the field, so the global error
+// toast skips them to avoid showing the same problem twice.
+export const INLINE_FIELD_ERROR_CODES = new Set([
+  'USERNAME_TAKEN',
+  'EMAIL_TAKEN',
+  'validation_error',
+]);
+
 function isErrorResponse(body: unknown): body is ErrorResponse {
   if (typeof body !== 'object' || body === null) return false;
   const candidate = body as Record<string, unknown>;
