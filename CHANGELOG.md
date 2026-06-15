@@ -90,6 +90,12 @@ For the per-PR convention and the manual release ritual, see the
   in `quote()` (newlines not escaped in object `.op` values,
   GHSA-w7jw-789q-3m8p). The package is codegen-time only and never ships
   at runtime.
+- Pin the transitive `esbuild` under the web build tooling to `^0.28.1`
+  via a `pnpm.overrides` entry, clearing two advisories: a Deno
+  binary-integrity remote code execution via `NPM_CONFIG_REGISTRY`
+  (GHSA-gv7w-rqvm-qjhr) and an arbitrary file read in the dev server on
+  Windows (GHSA-g7r4-m6w7-qqqr). The package is build-time only
+  (Vite/Storybook/Vitest) and never ships at runtime.
 
 ## [0.1.2] - 2026-05-18
 
