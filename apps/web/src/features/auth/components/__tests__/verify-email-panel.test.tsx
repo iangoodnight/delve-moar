@@ -1,5 +1,6 @@
 import { screen } from '@testing-library/react';
 import MockAdapter from 'axios-mock-adapter';
+import { StrictMode } from 'react';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, describe, expect, it } from 'vitest';
 import { axe } from 'vitest-axe';
@@ -44,6 +45,24 @@ describe('VerifyEmailPanel', () => {
     expect(JSON.parse(mock.history.post[0]?.data as string)).toEqual({
       token: 'verify-token',
     });
+  });
+
+  it('reaches success under StrictMode and fires a single request', async () => {
+    mock.onPost('/v1/auth/verify-email').reply(204);
+    renderWithProvider(
+      <StrictMode>
+        <MemoryRouter initialEntries={['/verify-email?token=verify-token']}>
+          <VerifyEmailPanel />
+        </MemoryRouter>
+      </StrictMode>,
+    );
+
+    expect(
+      await screen.findByText('Your email is verified.'),
+    ).toBeInTheDocument();
+    // The ref guard keeps StrictMode's double effect to one (single-use) token
+    // submission, and the panel still settles out of "verifying".
+    expect(mock.history.post).toHaveLength(1);
   });
 
   it('shows an error when the token is invalid', async () => {
