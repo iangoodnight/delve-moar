@@ -89,6 +89,12 @@ jobs:
       - name: Vitest
         run: pnpm test
 
+      - name: Build
+        run: pnpm build
+
+      - name: Build Storybook
+        run: pnpm build-storybook
+
   # ── Go CLI ─────────────────────────────────────────────────────────────────
   lint-and-test-cli:
     name: CLI — lint + test
