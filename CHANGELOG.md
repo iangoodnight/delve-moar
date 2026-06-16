@@ -101,6 +101,16 @@ For the per-PR convention and the manual release ritual, see the
   (GHSA-gv7w-rqvm-qjhr) and an arbitrary file read in the dev server on
   Windows (GHSA-g7r4-m6w7-qqqr). The package is build-time only
   (Vite/Storybook/Vitest) and never ships at runtime.
+- Pin three more transitive dependencies via `pnpm.overrides`, clearing
+  their advisories: `form-data` to `^4.0.6` (CRLF injection via
+  unescaped multipart field names, GHSA-hmw2-7cc7-3qxx; reachable at
+  runtime through `axios`), `ws` to `^7.5.11` / `^8.21.0` (memory-
+  exhaustion DoS, GHSA-96hv-2xvq-fx4p; build-time only, via Storybook
+  and the Kubb codegen tooling), and `js-yaml` to `^4.2.0`
+  (quadratic-complexity DoS in merge-key handling, GHSA-h67p-54hq-rp68;
+  build-time only, via commitlint). The `ws` pin replaces the earlier
+  Kubb-scoped override so both the Storybook and codegen paths are
+  covered.
 
 ## [0.1.2] - 2026-05-18
 
