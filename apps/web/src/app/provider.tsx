@@ -19,6 +19,7 @@ import {
   INLINE_FIELD_ERROR_CODES,
 } from '@/lib/api-client';
 import { AuthProvider } from '@/lib/auth';
+import { captureError } from '@/lib/monitoring';
 import { notify } from '@/lib/notifications';
 import { queryConfig } from '@/lib/react-query';
 
@@ -57,7 +58,10 @@ export function AppProvider({ children }: Readonly<AppProviderProps>) {
         </main>
       }
     >
-      <ErrorBoundary fallback={<div>Something went wrong.</div>}>
+      <ErrorBoundary
+        fallback={<div>Something went wrong.</div>}
+        onError={captureError}
+      >
         <HelmetProvider>
           <QueryClientProvider client={queryClient}>
             {import.meta.env.DEV && <ReactQueryDevtools />}
