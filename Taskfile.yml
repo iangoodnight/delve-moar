@@ -112,6 +112,14 @@ tasks:
     dir: "{{.API_DIR}}"
     cmd: uv run alembic downgrade -1
 
+  db:dump:
+    desc: "Logical backup of production Postgres to ./backups (needs PROD_DATABASE_URL; see runbook)"
+    cmd: bash scripts/db_backup.sh dump
+
+  db:restore:
+    desc: "Restore a dump into a LOCAL database (drill/inspection): task db:restore -- ./backups/x.dump [db]"
+    cmd: bash scripts/db_backup.sh restore {{.CLI_ARGS}}
+
   seed:srd:monsters:
     desc: Seed SRD monsters from dnd5eapi.co
     dir: "{{.API_DIR}}"
