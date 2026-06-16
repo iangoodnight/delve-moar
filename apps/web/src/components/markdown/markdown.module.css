@@ -1,0 +1,20 @@
+.markdown > * + * {
+  margin-top: var(--space-3);
+}
+
+.markdown ul,
+.markdown ol {
+  padding-left: var(--space-5);
+}
+
+.markdown ul {
+  list-style-type: disc;
+}
+
+.markdown ol {
+  list-style-type: decimal;
+}
+
+.markdown li + li {
+  margin-top: var(--space-1);
+}
