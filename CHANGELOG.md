@@ -65,6 +65,11 @@ For the per-PR convention and the manual release ritual, see the
 
 ### Changed
 
+- SRD descriptions in the spell, item, and monster detail views now
+  render a limited markdown subset: bold and italic emphasis,
+  blockquotes, links, inline code, and lists. Unsupported markdown
+  (such as tables) and any raw HTML degrade safely to plain text.
+
 ### Deprecated
 
 ### Removed
