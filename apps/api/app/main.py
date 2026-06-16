@@ -11,10 +11,16 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.db import init_db
 from app.exceptions import register_exception_handlers
+from app.observability import init_observability
 from app.openapi import downgrade_to_openapi_30
 from app.routers import auth, health, items, monsters, spells
 
 V1_PREFIX = "/v1"
+
+# Initialize error tracking before the app is created so the SDK's
+# FastAPI/Starlette integrations instrument the request path. No-op until
+# SENTRY_DSN is set.
+init_observability()
 
 
 def _configure_app_logging() -> None:

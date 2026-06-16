@@ -166,6 +166,16 @@ class Settings(BaseSettings):
     email_verification_ttl_seconds: int = 86_400  # 24 hours
     password_reset_ttl_seconds: int = 3_600  # 1 hour
 
+    # Observability / error tracking (#167). Sentry is wired through a seam
+    # (app/observability.py) that stays inert until sentry_dsn is set, so local
+    # dev, CI, and tests never emit events; the deploy sets SENTRY_DSN as a
+    # secret. sentry_environment falls back to `env` when empty. Tracing is off
+    # by default (errors only) to stay within the free quota; PII is never sent
+    # (send_default_pii stays off in the SDK init).
+    sentry_dsn: str = ""
+    sentry_environment: str = ""
+    sentry_traces_sample_rate: float = 0.0
+
     @property
     def cookie_secure(self) -> bool:
         """Whether auth cookies carry the ``Secure`` flag.
