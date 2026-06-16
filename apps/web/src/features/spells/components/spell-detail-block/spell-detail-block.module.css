@@ -1,11 +1,3 @@
-.desc-paragraph + .desc-paragraph {
-  margin-top: var(--space-3);
-}
-
-.higher-level + .higher-level {
-  margin-top: var(--space-3);
-}
-
 .spell-data {
   composes: card from global;
   padding: var(--space-4);

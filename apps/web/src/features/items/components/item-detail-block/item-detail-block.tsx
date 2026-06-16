@@ -1,11 +1,11 @@
 import type { components } from '@delve-moar/api-types';
 
+import { Markdown } from '@/components/markdown';
 import { Badge } from '@/components/ui/badge';
-import { Column, Grid, Row, Section } from '@/components/ui/layout';
+import { Box, Column, Grid, Row, Section } from '@/components/ui/layout';
 import { H1, H2, Paragraph, Strong, Text } from '@/components/ui/typography';
 import type { Item } from '@/features/items/api';
 import { getRarityOption, ITEM_CATEGORIES } from '@/features/items/constants';
-import { classNames } from '@/utils/style/class-names';
 
 import styles from './item-detail-block.module.css';
 
@@ -174,18 +174,9 @@ export function ItemDetailBlock({ item }: Readonly<ItemDetailBlockProps>) {
         <Section size="1">
           <Column gap="2">
             <H2>Description</H2>
-            {content.desc.map((paragraph, index) => (
-              <Paragraph
-                key={index}
-                className={classNames(
-                  styles['desc-paragraph'],
-                  'text-constraint',
-                )}
-                ml={{ initial: '0', sm: '4' }}
-              >
-                {paragraph}
-              </Paragraph>
-            ))}
+            <Box className="text-constraint" ml={{ initial: '0', sm: '4' }}>
+              <Markdown>{content.desc.join('\n\n')}</Markdown>
+            </Box>
           </Column>
         </Section>
       )}

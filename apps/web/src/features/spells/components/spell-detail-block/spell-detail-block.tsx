@@ -1,10 +1,10 @@
 import type { ReactNode } from 'react';
 
+import { Markdown } from '@/components/markdown';
 import { DataList } from '@/components/ui/data-list';
-import { Column, Row, Section } from '@/components/ui/layout';
+import { Box, Column, Row, Section } from '@/components/ui/layout';
 import { H1, H2, Paragraph } from '@/components/ui/typography';
 import type { Spell } from '@/features/spells/api';
-import { classNames } from '@/utils/style/class-names';
 
 import styles from './spell-detail-block.module.css';
 
@@ -94,18 +94,9 @@ export function SpellDetailBlock({ spell }: Readonly<SpellDetailBlockProps>) {
       <Section size="1">
         <Column gap="2">
           <H2>Description</H2>
-          {content.desc.map((paragraph, index) => (
-            <Paragraph
-              key={index}
-              className={classNames(
-                styles['desc-paragraph'],
-                'text-constraint',
-              )}
-              ml={{ initial: '0', sm: '4' }}
-            >
-              {paragraph}
-            </Paragraph>
-          ))}
+          <Box className="text-constraint" ml={{ initial: '0', sm: '4' }}>
+            <Markdown>{content.desc.join('\n\n')}</Markdown>
+          </Box>
         </Column>
       </Section>
 
@@ -113,20 +104,9 @@ export function SpellDetailBlock({ spell }: Readonly<SpellDetailBlockProps>) {
         <Section size="1">
           <Column gap="2">
             <H2>At Higher Levels</H2>
-            <Column gap="2">
-              {content.higherLevel.map((paragraph, index) => (
-                <Paragraph
-                  key={index}
-                  className={classNames(
-                    styles['higher-level'],
-                    'text-constraint',
-                  )}
-                  ml={{ initial: '0', sm: '4' }}
-                >
-                  {paragraph}
-                </Paragraph>
-              ))}
-            </Column>
+            <Box className="text-constraint" ml={{ initial: '0', sm: '4' }}>
+              <Markdown>{content.higherLevel.join('\n\n')}</Markdown>
+            </Box>
           </Column>
         </Section>
       )}
