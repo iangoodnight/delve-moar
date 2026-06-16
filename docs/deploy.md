@@ -78,6 +78,15 @@ fly ssh console --app delvemoar-api \
   -C "uv run alembic downgrade -1"
 ```
 
+## Backup and restore
+
+Database recovery (daily volume snapshots, on-demand logical dumps,
+and the tested restore procedure) lives in its own runbook:
+[Postgres backup and restore](runbooks/postgres-backup-restore.md).
+Take a logical backup before any release that runs a migration; the
+[release checklist](../CONTRIBUTING.md#cutting-a-release-manual) calls
+this out.
+
 ## Infrastructure provisioning (first-time setup)
 
 These steps are one-time. The repo ships with the IaC config; apply it

@@ -226,7 +226,17 @@ the tag goes on `main` after the release PR merges.
    git checkout main && git pull
    git tag vX.Y.Z && git push origin vX.Y.Z
    ```
-5. **Create a GitHub Release** pointing at the tag, using the new
+5. **If the release runs an Alembic migration, back up production
+   first.** The CD workflow runs `alembic upgrade head` before traffic
+   swaps, so take a logical backup so a bad migration is recoverable:
+   ```bash
+   export PROD_DATABASE_URL=$(fly ssh console -a delvemoar-api -C 'printenv DATABASE_URL')
+   task db:dump
+   ```
+   Keep the dump until the deploy is verified healthy, then delete it.
+   See the
+   [Postgres backup and restore runbook](docs/runbooks/postgres-backup-restore.md).
+6. **Create a GitHub Release** pointing at the tag, using the new
    `[X.Y.Z]` section as the body. The production CD workflow
    fires on the tag and deploys the API to Fly.io; Vercel deploys the
    web automatically on the `main` push. See
