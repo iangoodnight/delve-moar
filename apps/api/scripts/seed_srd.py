@@ -44,6 +44,9 @@ from app.utils import cr_display
 BASE_URL = "https://www.dnd5eapi.co/api/2014"
 RATE_LIMIT_DELAY = 0.1  # seconds between detail requests — be polite
 SRD_NAMESPACE = "srd-5.1"
+# Stable slug of the system SRD book (ADR 0014). Migration 007 creates the
+# book; this script links freshly-seeded content into it.
+SRD_BOOK_SLUG = "srd-5.1"
 
 SRD_CONTENT_SOURCE: dict[str, str] = {
     "type": "srd",
@@ -484,6 +487,71 @@ async def seed_magic_items(
 
 
 # ---------------------------------------------------------------------------
+# Link content into the SRD book
+# ---------------------------------------------------------------------------
+
+_SRD_BOOK_JOINS = (
+    ("book_monsters", "monsters", "monster_id"),
+    ("book_spells", "spells", "spell_id"),
+    ("book_items", "items", "item_id"),
+)
+
+
+async def link_srd_book(
+    session_factory: async_sessionmaker[AsyncSession],
+) -> None:
+    """Ensure the system SRD book exists and holds all SRD content.
+
+    Idempotent: the book is created once (matching migration 007), then any
+    SRD content not already in it is added. Run after seeding so a fresh
+    database -- where 007 created an empty book before content existed --
+    ends up with the catalog linked.
+
+    Args:
+        session_factory: An async_sessionmaker for creating database sessions.
+
+    Returns:
+        None
+    """
+    print("→ Linking SRD content into the SRD book…")
+    async with session_factory() as session:
+        book_id = await session.scalar(
+            sa.text("SELECT id FROM books WHERE slug = :slug").bindparams(
+                slug=SRD_BOOK_SLUG
+            )
+        )
+        if book_id is None:
+            book_id = await session.scalar(
+                sa.text(
+                    "INSERT INTO books "
+                    "(name, slug, description, is_public, is_system) "
+                    "VALUES (:name, :slug, :description, true, true) "
+                    "RETURNING id"
+                ).bindparams(
+                    name="SRD 5.1",
+                    slug=SRD_BOOK_SLUG,
+                    description=(
+                        "The System Reference Document 5.1 catalog "
+                        "(CC BY 4.0). Read-only."
+                    ),
+                )
+            )
+        # Table and column names come from the _SRD_BOOK_JOINS constant.
+        for join_table, content_table, fk_col in _SRD_BOOK_JOINS:
+            await session.execute(
+                sa.text(
+                    f"INSERT INTO {join_table} (book_id, {fk_col}) "  # noqa: S608
+                    "SELECT :book_id, c.id "
+                    f"FROM {content_table} c "
+                    "WHERE c.source_namespace = :namespace "
+                    "ON CONFLICT DO NOTHING"
+                ).bindparams(book_id=book_id, namespace=SRD_NAMESPACE)
+            )
+        await session.commit()
+    print("✓ SRD book linked.")
+
+
+# ---------------------------------------------------------------------------
 # Attribution notice
 # ---------------------------------------------------------------------------
 
@@ -534,6 +602,9 @@ async def main(targets: list[str]) -> None:
                 file=sys.stderr,
             )
             sys.exit(1)
+
+    # Keep the SRD book in sync with whatever content now exists.
+    await link_srd_book(session_factory)
 
 
 if __name__ == "__main__":
