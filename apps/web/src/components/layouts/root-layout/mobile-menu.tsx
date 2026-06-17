@@ -33,6 +33,7 @@ export function MobileMenu() {
       <Dialog.Content className={styles['content']}>
         <VisuallyHidden>
           <Dialog.Title>Site menu</Dialog.Title>
+          <Dialog.Description>Account and site navigation</Dialog.Description>
         </VisuallyHidden>
         <Column gap="4">
           <Column asChild gap="1">

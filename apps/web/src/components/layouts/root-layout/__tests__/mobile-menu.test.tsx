@@ -47,6 +47,17 @@ describe('MobileMenu', () => {
     expect(screen.getByRole('link', { name: 'Spells' })).toBeInTheDocument();
   });
 
+  it('exposes an accessible name and description on the dialog', async () => {
+    const user = userEvent.setup();
+    renderMobileMenu();
+
+    await user.click(screen.getByRole('button', { name: 'Open menu' }));
+
+    const dialog = await screen.findByRole('dialog');
+    expect(dialog).toHaveAccessibleName('Site menu');
+    expect(dialog).toHaveAccessibleDescription('Account and site navigation');
+  });
+
   it('shows account actions when authenticated', async () => {
     const user = userEvent.setup();
     document.cookie = 'dm_csrf=token';
