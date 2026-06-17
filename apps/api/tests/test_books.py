@@ -7,6 +7,8 @@ explicitly via ``db_session`` rather than backfilled.
 """
 
 import uuid
+from collections.abc import Callable
+from typing import Any
 
 import pytest
 from httpx import AsyncClient
@@ -18,7 +20,14 @@ from app.models import Book, Item, Monster, Spell
 BOOKS = "/v1/books"
 
 # resource path -> (ORM model, row factory keyed by index, detail count key)
-_CONTENT = {
+_CONTENT: dict[
+    str,
+    tuple[
+        type[Item] | type[Monster] | type[Spell],
+        Callable[[int], dict[str, Any]],
+        str,
+    ],
+] = {
     "monsters": (
         Monster,
         lambda i: {
@@ -246,7 +255,7 @@ async def test_write_missing_book_404(
 ) -> None:
     await _signup(db_client, f"writer{method}")
     request = getattr(db_client, method)
-    kwargs: dict = {"headers": _csrf_header(db_client)}
+    kwargs: dict[str, Any] = {"headers": _csrf_header(db_client)}
     if method == "patch":
         kwargs["json"] = {"name": "x"}
     resp = await request(f"{BOOKS}/{uuid.uuid4()}", **kwargs)
@@ -307,7 +316,8 @@ async def _new_book(db_client: AsyncClient, name: str = "Curated") -> str:
         BOOKS, json={"name": name}, headers=_csrf_header(db_client)
     )
     assert resp.status_code == 201
-    return resp.json()["id"]
+    book_id: str = resp.json()["id"]
+    return book_id
 
 
 @pytest.mark.parametrize("resource", ["monsters", "spells", "items"])
