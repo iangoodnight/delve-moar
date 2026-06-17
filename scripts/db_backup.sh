@@ -37,20 +37,29 @@ wait_for_port() {
   done
 }
 
+# Print a Postgres URL's user, password, and database on three lines. Strips
+# the scheme and any ?query (the proxy is plaintext). No external commands, so
+# it stays unit-testable (test/db_backup.bats).
+parse_pg_url() {
+  local raw="$1"
+  local url="${raw%%\?*}"
+  local creds_host="${url#*://}"
+  local creds="${creds_host%%@*}"
+  printf '%s\n%s\n%s\n' "${creds%%:*}" "${creds#*:}" "${creds_host##*/}"
+}
+
 dump() {
   require_container
   [[ -n "${PROD_DATABASE_URL:-}" ]] || die \
     "PROD_DATABASE_URL is unset. In your own shell, run (do not paste the value anywhere):
     export PROD_DATABASE_URL=\$(fly ssh console -a delvemoar-api -C 'printenv DATABASE_URL')"
 
-  # Normalize the SQLAlchemy scheme to plain libpq and drop query params
-  # (the proxy is plaintext, so sslmode etc. do not apply).
-  local url="${PROD_DATABASE_URL%%\?*}"
-  local creds_host="${url#*://}"
-  local creds="${creds_host%%@*}"
-  local user="${creds%%:*}"
-  local pass="${creds#*:}"
-  local db="${creds_host##*/}"
+  local user pass db
+  {
+    read -r user
+    read -r pass
+    read -r db
+  } < <(parse_pg_url "${PROD_DATABASE_URL}")
 
   mkdir -p "${BACKUP_DIR}"
   local stamp
@@ -94,10 +103,18 @@ restore() {
   echo "    docker exec ${PG_CONTAINER} psql -U dm -d ${target} -c '\\dt'"
 }
 
-cmd="${1:-}"
-shift || true
-case "${cmd}" in
-  dump) dump "$@" ;;
-  restore) restore "$@" ;;
-  *) die "usage: db_backup.sh {dump|restore} [args]" ;;
-esac
+main() {
+  local cmd="${1:-}"
+  shift || true
+  case "${cmd}" in
+    dump) dump "$@" ;;
+    restore) restore "$@" ;;
+    *) die "usage: db_backup.sh {dump|restore} [args]" ;;
+  esac
+}
+
+# Only dispatch when executed directly, so tests can source this file and
+# exercise the functions in isolation (test/db_backup.bats).
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+  main "$@"
+fi
