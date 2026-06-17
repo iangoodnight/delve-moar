@@ -13,7 +13,7 @@ from app.db import init_db
 from app.exceptions import register_exception_handlers
 from app.observability import init_observability
 from app.openapi import downgrade_to_openapi_30
-from app.routers import auth, health, items, monsters, spells
+from app.routers import auth, books, health, items, monsters, spells
 
 V1_PREFIX = "/v1"
 
@@ -97,6 +97,7 @@ app.include_router(health.router)
 
 # Resource routers are mounted under /v1.
 app.include_router(auth.router, prefix=V1_PREFIX)
+app.include_router(books.router, prefix=V1_PREFIX)
 app.include_router(items.router, prefix=V1_PREFIX)
 app.include_router(monsters.router, prefix=V1_PREFIX)
 app.include_router(spells.router, prefix=V1_PREFIX)

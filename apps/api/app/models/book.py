@@ -54,6 +54,7 @@ class Book(Base):
     updated_at: Mapped[datetime] = mapped_column(
         sa.TIMESTAMP(timezone=True),
         server_default=sa.text("NOW()"),
+        onupdate=sa.text("NOW()"),
     )
 
 
