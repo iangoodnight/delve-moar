@@ -12,6 +12,7 @@ dependencies = [
     "argon2-cffi>=25.1.0",
     "limits>=5.8.0",
     "aiosmtplib>=5.1.0",
+    "sentry-sdk[fastapi]>=2.20",
 ]
 
 [dependency-groups]

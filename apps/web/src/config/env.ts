@@ -5,6 +5,11 @@ function createEnv() {
     API_URL: z.url(),
     FONT_SOURCE: z.enum(['local', 'google']).default('local'),
     TITLE: z.string().default('DelveMoar'),
+    // empty/unset disables error tracking (dev, CI); a set DSN must be a URL
+    SENTRY_DSN: z.preprocess(
+      (value) => (value === '' ? undefined : value),
+      z.url().optional(),
+    ),
   });
 
   const envVars = Object.entries(import.meta.env).reduce<

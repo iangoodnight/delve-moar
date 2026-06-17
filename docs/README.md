@@ -31,6 +31,7 @@ Walkthroughs for common contributor tasks.
 Operational procedures for production.
 
 - [Postgres backup and restore](runbooks/postgres-backup-restore.md), backup mechanisms, RPO/RTO, and the tested restore procedure
+- [Monitoring and alerting](runbooks/monitoring.md), error tracking, uptime, Postgres metrics, and alert setup
 
 ### Decisions
 
