@@ -29,7 +29,7 @@ git operations. See [hooks](#hooks) below.
 | Lint everything                      | `task lint`               |
 | Lint one app                         | `task lint:api`, `task lint:web`, `task lint:cli`, `task lint:shell` |
 | Test everything                      | `task test`               |
-| Test one app                         | `task test:api`, `task test:web`, `task test:cli` |
+| Test one suite                       | `task test:api`, `task test:web`, `task test:cli`, `task test:shell` |
 | Build everything                     | `task build`              |
 | Regenerate OpenAPI types             | `task gen:types`          |
 | Apply pending DB migrations          | `task db:migrate`          |

@@ -50,8 +50,20 @@ A full task list: `task --list`.
 
 ## Testing
 
-`task test` runs every app's suite in parallel, and each app has its
-own task: `task test:api`, `task test:web`, `task test:cli`.
+`task test` runs every suite in parallel: `task test:api`,
+`task test:web`, `task test:cli`, and `task test:shell` are the
+individual tasks.
+
+### Shell scripts
+
+`task test:shell` runs the [bats](https://github.com/bats-core/bats-core)
+suite in [`test/`](test/) against the helper scripts under `scripts/`
+(starting with [`scripts/db_backup.sh`](scripts/db_backup.sh)). The
+tests are hermetic — they stub `docker`, `fly`, and friends onto `PATH`,
+so they need no running Postgres, Fly login, or network, and run
+anywhere `bats-core` is installed (`brew bundle` provisions it). They
+run in CI and on demand, but deliberately not in the git hooks, to keep
+the commit loop fast.
 
 ### The API suite needs a running Postgres
 

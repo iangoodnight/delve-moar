@@ -19,6 +19,7 @@ brew "pnpm"
 # ── Shell tooling ─────────────────────────────────────────────────────────────
 brew "shfmt"       # shell formatter (pre-commit + CI)
 brew "shellcheck"  # shell linter (pre-commit + CI)
+brew "bats-core"   # shell unit-test runner (task test:shell + CI)
 
 # ── Go tooling ────────────────────────────────────────────────────────────────
 brew "golangci-lint"  # Go linter (pre-commit + CI)
