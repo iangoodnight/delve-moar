@@ -3,6 +3,7 @@
 import logging
 
 import pytest
+import sentry_sdk
 
 from app import observability
 from app.config import settings
@@ -12,7 +13,7 @@ def test_init_is_noop_without_dsn(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(settings, "sentry_dsn", "")
     calls: list[dict[str, object]] = []
     monkeypatch.setattr(
-        observability.sentry_sdk,
+        sentry_sdk,
         "init",
         lambda **kwargs: calls.append(kwargs),
     )
@@ -32,7 +33,7 @@ def test_init_configures_sdk_when_dsn_set(
     monkeypatch.setattr(settings, "sentry_traces_sample_rate", 0.25)
     calls: list[dict[str, object]] = []
     monkeypatch.setattr(
-        observability.sentry_sdk,
+        sentry_sdk,
         "init",
         lambda **kwargs: calls.append(kwargs),
     )
@@ -59,7 +60,7 @@ def test_environment_override_wins_over_env(
     monkeypatch.setattr(settings, "env", "production")
     calls: list[dict[str, object]] = []
     monkeypatch.setattr(
-        observability.sentry_sdk,
+        sentry_sdk,
         "init",
         lambda **kwargs: calls.append(kwargs),
     )
