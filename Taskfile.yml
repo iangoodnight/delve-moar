@@ -62,9 +62,13 @@ tasks:
     dir: "{{.CLI_DIR}}"
     cmd: go test -race ./...
 
+  test:shell:
+    desc: Run shell-script unit tests (bats)
+    cmd: bats test/
+
   test:
     desc: Run all tests in parallel
-    deps: [test:api, test:web, test:cli]
+    deps: [test:api, test:web, test:cli, test:shell]
 
   # ── Building ───────────────────────────────────────────────────────────────
 
