@@ -170,7 +170,13 @@ And in **Settings > Secrets and variables > Actions** (repo-level):
 
 ## Observability
 
+Quick log and health surfaces:
+
 - **Fly logs**: `fly logs -a delvemoar-api`
 - **Fly dashboard**: <https://fly.io/apps/delvemoar-api>
 - **Vercel logs**: Vercel dashboard > project > Deployments > Functions
 - **Health check**: `curl https://api.delvemoar.com/health`
+
+For error tracking, uptime checks, Postgres metrics, and alerting (Sentry
+plus Fly Grafana), and the production secrets that turn them on, see the
+[monitoring and alerting runbook](runbooks/monitoring.md).
