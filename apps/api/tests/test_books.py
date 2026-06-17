@@ -13,9 +13,52 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
-from app.models import Book
+from app.models import Book, Item, Monster, Spell
 
 BOOKS = "/v1/books"
+
+# resource path -> (ORM model, row factory keyed by index, detail count key)
+_CONTENT = {
+    "monsters": (
+        Monster,
+        lambda i: {
+            "slug": f"monster-{i}",
+            "source_namespace": "srd-5.1",
+            "name": f"Monster {i}",
+            "monster_type": "beast",
+            "challenge_rating": None,
+            "content": {},
+            "content_source": {},
+        },
+        "monsterCount",
+    ),
+    "spells": (
+        Spell,
+        lambda i: {
+            "slug": f"spell-{i}",
+            "source_namespace": "srd-5.1",
+            "name": f"Spell {i}",
+            "level": 1,
+            "school": "evocation",
+            "content": {},
+            "content_source": {},
+        },
+        "spellCount",
+    ),
+    "items": (
+        Item,
+        lambda i: {
+            "slug": f"item-{i}",
+            "source_namespace": "srd-5.1",
+            "name": f"Item {i}",
+            "item_category": "weapon",
+            "rarity": None,
+            "content": {},
+            "content_source": {},
+        },
+        "itemCount",
+    ),
+}
 
 
 def _csrf_header(client: AsyncClient) -> dict[str, str]:
@@ -244,3 +287,137 @@ async def test_invalid_order_by_422(db_client: AsyncClient) -> None:
     await _signup(db_client, "badsort")
     resp = await db_client.get(BOOKS, params={"order_by": "bogus:asc"})
     assert resp.status_code == 422
+
+
+async def _seed_content(
+    db_session: AsyncSession, resource: str, index: int
+) -> uuid.UUID:
+    """Insert one SRD content row of the given resource type."""
+    model, factory, _ = _CONTENT[resource]
+    row = model(**factory(index))
+    db_session.add(row)
+    await db_session.flush()
+    await db_session.refresh(row)
+    return row.id
+
+
+async def _new_book(db_client: AsyncClient, name: str = "Curated") -> str:
+    """Create a book and return its id."""
+    resp = await db_client.post(
+        BOOKS, json={"name": name}, headers=_csrf_header(db_client)
+    )
+    assert resp.status_code == 201
+    return resp.json()["id"]
+
+
+@pytest.mark.parametrize("resource", ["monsters", "spells", "items"])
+async def test_add_list_remove_content(
+    db_session: AsyncSession, db_client: AsyncClient, resource: str
+) -> None:
+    content_id = await _seed_content(db_session, resource, 1)
+    await _signup(db_client, f"curator{resource[:1]}")
+    book_id = await _new_book(db_client)
+    member = f"{BOOKS}/{book_id}/{resource}/{content_id}"
+    count_key = _CONTENT[resource][2]
+
+    added = await db_client.put(member, headers=_csrf_header(db_client))
+    assert added.status_code == 204
+    # Adding again is idempotent.
+    again = await db_client.put(member, headers=_csrf_header(db_client))
+    assert again.status_code == 204
+
+    listed = await db_client.get(f"{BOOKS}/{book_id}/{resource}")
+    assert listed.status_code == 200
+    assert len(listed.json()["data"]) == 1
+
+    detail = await db_client.get(f"{BOOKS}/{book_id}")
+    assert detail.json()[count_key] == 1
+
+    removed = await db_client.delete(member, headers=_csrf_header(db_client))
+    assert removed.status_code == 204
+    # Removing again is idempotent.
+    again = await db_client.delete(member, headers=_csrf_header(db_client))
+    assert again.status_code == 204
+    detail = await db_client.get(f"{BOOKS}/{book_id}")
+    assert detail.json()[count_key] == 0
+
+
+async def test_add_missing_content_404(
+    db_client: AsyncClient,
+) -> None:
+    await _signup(db_client, "addmissing")
+    book_id = await _new_book(db_client)
+    resp = await db_client.put(
+        f"{BOOKS}/{book_id}/monsters/{uuid.uuid4()}",
+        headers=_csrf_header(db_client),
+    )
+    assert resp.status_code == 404
+
+
+async def test_add_content_requires_csrf(
+    db_session: AsyncSession, db_client: AsyncClient
+) -> None:
+    content_id = await _seed_content(db_session, "monsters", 1)
+    await _signup(db_client, "addnocsrf")
+    book_id = await _new_book(db_client)
+    resp = await db_client.put(f"{BOOKS}/{book_id}/monsters/{content_id}")
+    assert resp.status_code == 403
+
+
+async def test_add_to_system_book_forbidden(
+    db_session: AsyncSession, db_client: AsyncClient
+) -> None:
+    book = await _seed_system_book(db_session)
+    content_id = await _seed_content(db_session, "monsters", 1)
+    await _signup(db_client, "sysadder")
+    resp = await db_client.put(
+        f"{BOOKS}/{book.id}/monsters/{content_id}",
+        headers=_csrf_header(db_client),
+    )
+    assert resp.status_code == 403
+
+
+async def test_list_contents_of_hidden_book_404(
+    db_client: AsyncClient,
+) -> None:
+    await _signup(db_client, "contentowner")
+    book_id = await _new_book(db_client)
+    await _signup(db_client, "contentintruder")
+    resp = await db_client.get(f"{BOOKS}/{book_id}/monsters")
+    assert resp.status_code == 404
+
+
+async def test_book_contents_search_and_order(
+    db_session: AsyncSession, db_client: AsyncClient
+) -> None:
+    fire = await _seed_content(db_session, "monsters", 1)
+    frost = Monster(
+        slug="monster-2",
+        source_namespace="srd-5.1",
+        name="Frost Worm",
+        monster_type="beast",
+        content={},
+        content_source={},
+    )
+    db_session.add(frost)
+    await db_session.flush()
+    await _signup(db_client, "contentsearch")
+    book_id = await _new_book(db_client)
+    headers = _csrf_header(db_client)
+    await db_client.put(f"{BOOKS}/{book_id}/monsters/{fire}", headers=headers)
+    await db_client.put(
+        f"{BOOKS}/{book_id}/monsters/{frost.id}", headers=headers
+    )
+
+    found = await db_client.get(
+        f"{BOOKS}/{book_id}/monsters", params={"search": "frost"}
+    )
+    assert [m["name"] for m in found.json()["data"]] == ["Frost Worm"]
+
+    ordered = await db_client.get(
+        f"{BOOKS}/{book_id}/monsters", params={"order_by": "name:desc"}
+    )
+    assert [m["name"] for m in ordered.json()["data"]] == [
+        "Monster 1",
+        "Frost Worm",
+    ]
