@@ -93,3 +93,4 @@ status updates as part of the lifecycle above).
 | [0010](0010-authentication.md) | Authentication: roll our own with argon2id and server-side sessions | accepted |
 | [0011](0011-campaign-model.md) | Campaign model: user-owned content, many-to-many to campaigns | accepted |
 | [0012](0012-visibility-and-sharing.md) | Visibility and sharing: private by default, campaign-based sharing, link sharing as a stretch | accepted |
+| [0013](0013-stateful-side-effecting-hooks.md) | Stateful, side-effecting hooks are single-consumer; URL filters are pure adapters | accepted |
