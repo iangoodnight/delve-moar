@@ -115,11 +115,15 @@ homebrew read query.
 
 ## Links
 
-- [#153](https://github.com/iangoodnight/delve-moar/issues/153) — Phase
+- [#153](https://github.com/iangoodnight/delve-moar/issues/153): Phase
   1b scope
-- ADR [0010](0010-authentication.md) — establishes the `user_id` and the
+- ADR [0010](0010-authentication.md): establishes the `user_id` and the
   identity seam this model's authorization rule depends on
-- ADR [0012](0012-visibility-and-sharing.md) — the sharing model that
+- ADR [0012](0012-visibility-and-sharing.md): the sharing model that
   builds directly on campaign membership defined here
+- ADR [0014](0014-book-model.md): revises the content-to-campaign
+  attachment defined here. Content now reaches campaigns through books
+  (content-to-book plus campaign-to-book); ownership and the single
+  policy module are unchanged.
 - Resolves the "Campaign model" question in the Phase 1b incubator
   section of `planning/roadmap-notes.md`

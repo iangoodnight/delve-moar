@@ -94,3 +94,4 @@ status updates as part of the lifecycle above).
 | [0011](0011-campaign-model.md) | Campaign model: user-owned content, many-to-many to campaigns | accepted |
 | [0012](0012-visibility-and-sharing.md) | Visibility and sharing: private by default, campaign-based sharing, link sharing as a stretch | accepted |
 | [0013](0013-stateful-side-effecting-hooks.md) | Stateful, side-effecting hooks are single-consumer; URL filters are pure adapters | accepted |
+| [0014](0014-book-model.md) | Book model: content collections, SRD as a system book | accepted |
