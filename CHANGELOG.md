@@ -62,6 +62,15 @@ For the per-PR convention and the manual release ritual, see the
   returns visitors to where they were headed once they sign in.
   Server errors surface inline on the relevant field, or as a toast
   when they do not map to one.
+- Books, owner-defined collections of content (ADR 0014). A book groups
+  monsters, spells, and items, and the SRD catalog is now itself a
+  system book. The `/v1/books` API lets a signed-in user create, list,
+  rename, and delete their own books, browse the public SRD book, and
+  curate content into a book (add or remove monsters, spells, and items;
+  the same content can belong to many books). Listing a book's contents
+  supports the same search and ordering as the catalog endpoints. Reads
+  are scoped to the owner or public books; writes are owner-only and the
+  SRD book is read-only. The browser UI follows in a later change.
 
 ### Changed
 
