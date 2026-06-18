@@ -19,7 +19,7 @@ export const getItemV1ItemsSlugGetQueryParamsSchema = z.object({
 /**
  * @description Successful Response
  */
-export const getItemV1ItemsSlugGet200Schema = z.lazy(() => itemDetailSchema).describe("Full item details, used in detail endpoints.\n\nAttributes:\n    content: The full item data as ingested from the source, with all\n        original fields and structure preserved.\n    content_source: Metadata about the source of the item data, such as\n        the original URL or source file name.")
+export const getItemV1ItemsSlugGet200Schema = z.lazy(() => itemDetailSchema).describe("Full item details, used in detail endpoints.")
 
 /**
  * @description Item not found

@@ -9,6 +9,6 @@ import { z } from "zod/v4";
  * @description Payload to authenticate with a username-or-email and password.\n\n``identifier`` accepts either the account\'s username or its email; the\npresence of ``@`` disambiguates (usernames cannot contain ``@``).
  */
 export const loginRequestSchema = z.object({
-    "identifier": z.string().min(1).max(255),
-"password": z.string().min(1).max(128)
+    "identifier": z.string().min(1).max(255).describe("Account username or email."),
+"password": z.string().min(1).max(128).describe("Account password.")
     }).describe("Payload to authenticate with a username-or-email and password.\n\n``identifier`` accepts either the account's username or its email; the\npresence of ``@`` disambiguates (usernames cannot contain ``@``).")

@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from pydantic import field_validator
+from pydantic import Field, field_validator
 
 from app.schemas.base import AppSchema
 from app.schemas.content_source import ContentSource
@@ -10,19 +10,16 @@ from app.schemas.spell_content import SrdSpellContent
 
 
 class SpellSummary(AppSchema):
-    """Summary info for a spell, used in list endpoints.
+    """Summary info for a spell, used in list endpoints."""
 
-    Attributes:
-        slug: Unique identifier for the spell, used in URLs.
-        name: The spell's name.
-        level: The spell's level as a display string (e.g. "Cantrip", "1st").
-        school: The spell's school of magic (e.g. "evocation").
-    """
-
-    slug: str
-    name: str
-    level: str
-    school: str | None
+    slug: str = Field(description="URL-safe unique identifier.")
+    name: str = Field(description="The spell's name.")
+    level: str = Field(
+        description="Level as a display string (e.g. 'Cantrip', '1st')."
+    )
+    school: str | None = Field(
+        description="School of magic (e.g. 'evocation')."
+    )
 
     @field_validator("level", mode="before")
     @classmethod
@@ -61,5 +58,9 @@ class SpellSummary(AppSchema):
 class SpellDetail(SpellSummary):
     """Full spell details, used in the detail endpoint."""
 
-    content: SrdSpellContent
-    content_source: ContentSource
+    content: SrdSpellContent = Field(
+        description="Full source payload, with all original fields preserved."
+    )
+    content_source: ContentSource = Field(
+        description="Provenance and licensing metadata for the entry."
+    )

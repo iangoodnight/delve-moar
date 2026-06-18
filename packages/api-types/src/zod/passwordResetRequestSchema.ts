@@ -9,5 +9,5 @@ import { z } from "zod/v4";
  * @description Payload to request a password-reset email.\n\n``identifier`` is the account\'s username or email (same matching as\nlogin). The response is identical whether or not an account matches, so\nit never reveals which addresses are registered.
  */
 export const passwordResetRequestSchema = z.object({
-    "identifier": z.string().min(1).max(255)
+    "identifier": z.string().min(1).max(255).describe("Account username or email.")
     }).describe("Payload to request a password-reset email.\n\n``identifier`` is the account's username or email (same matching as\nlogin). The response is identical whether or not an account matches, so\nit never reveals which addresses are registered.")

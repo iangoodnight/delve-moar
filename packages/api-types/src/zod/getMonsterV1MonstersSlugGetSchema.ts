@@ -19,7 +19,7 @@ export const getMonsterV1MonstersSlugGetQueryParamsSchema = z.object({
 /**
  * @description Successful Response
  */
-export const getMonsterV1MonstersSlugGet200Schema = z.lazy(() => monsterDetailSchema).describe("Full monster details, used in detail endpoints.\n\nAttributes:\n    content: The full monster data as ingested from the source, with all\n        original fields and structure preserved.\n    content_source: Metadata about the source of the monster data, such as\n        the original URL or source file name.")
+export const getMonsterV1MonstersSlugGet200Schema = z.lazy(() => monsterDetailSchema).describe("Full monster details, used in detail endpoints.")
 
 /**
  * @description Monster not found

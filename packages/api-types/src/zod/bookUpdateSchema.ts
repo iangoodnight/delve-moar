@@ -9,6 +9,6 @@ import { z } from "zod/v4";
  * @description Payload to update a book. Only the provided fields are changed.
  */
 export const bookUpdateSchema = z.object({
-    "name": z.string().min(1).max(255).nullish(),
-"description": z.string().max(2000).nullish()
+    "name": z.string().min(1).max(255).describe("New display name for the book.").nullish(),
+"description": z.string().max(2000).describe("New description for the book.").nullish()
     }).describe("Payload to update a book. Only the provided fields are changed.")

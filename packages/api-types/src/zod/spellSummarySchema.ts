@@ -6,11 +6,11 @@
 import { z } from "zod/v4";
 
 /**
- * @description Summary info for a spell, used in list endpoints.\n\nAttributes:\n    slug: Unique identifier for the spell, used in URLs.\n    name: The spell\'s name.\n    level: The spell\'s level as a display string (e.g. \"Cantrip\", \"1st\").\n    school: The spell\'s school of magic (e.g. \"evocation\").
+ * @description Summary info for a spell, used in list endpoints.
  */
 export const spellSummarySchema = z.object({
-    "slug": z.string(),
-"name": z.string(),
-"level": z.string(),
-"school": z.nullable(z.string())
-    }).describe("Summary info for a spell, used in list endpoints.\n\nAttributes:\n    slug: Unique identifier for the spell, used in URLs.\n    name: The spell's name.\n    level: The spell's level as a display string (e.g. \"Cantrip\", \"1st\").\n    school: The spell's school of magic (e.g. \"evocation\").")
+    "slug": z.string().describe("URL-safe unique identifier."),
+"name": z.string().describe("The spell's name."),
+"level": z.string().describe("Level as a display string (e.g. 'Cantrip', '1st')."),
+"school": z.nullable(z.string().describe("School of magic (e.g. 'evocation')."))
+    }).describe("Summary info for a spell, used in list endpoints.")

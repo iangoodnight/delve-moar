@@ -270,6 +270,20 @@ The web TypeScript types in `packages/api-types/` and the Go client in
 not hand-written. If you find yourself editing those files, regenerate them
 with `task gen:types` instead.
 
+### Endpoint docstrings render in Swagger
+
+A FastAPI route handler's docstring becomes the endpoint *description* in
+`openapi.json` and the Swagger UI, where it is the public API
+documentation. Swagger collapses single line breaks, so the Google-style
+`Args:`/`Returns:`/`Raises:` sections we use elsewhere render as an
+unreadable run-on. Keep route-handler docstrings to a short prose
+description (one line, or a summary plus a paragraph) and put the detail
+into FastAPI's native, properly-rendered tools: `summary=`,
+`Query(description=...)`, `Path(...)`, Pydantic `Field(description=...)`,
+and the `responses=` map. Internal helper functions (those not exposed as
+endpoints) keep full Google-style docstrings. The docstring is still
+required (`ruff` pydocstyle), but a one-line summary satisfies it.
+
 ## Web architectural boundaries
 
 `apps/web` follows a [bulletproof-react](https://github.com/alan2207/bulletproof-react)

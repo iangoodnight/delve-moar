@@ -12,6 +12,6 @@ export const paginatedResultsetSpellSummarySchema = z.object({
                 return metadataEnvelopeSchema.describe("Envelopes a paginated resultset with metadata.")
               },
 get "data"(){
-                return z.array(spellSummarySchema.describe("Summary info for a spell, used in list endpoints.\n\nAttributes:\n    slug: Unique identifier for the spell, used in URLs.\n    name: The spell's name.\n    level: The spell's level as a display string (e.g. \"Cantrip\", \"1st\").\n    school: The spell's school of magic (e.g. \"evocation\")."))
+                return z.array(spellSummarySchema.describe("Summary info for a spell, used in list endpoints.")).describe("The records on this page.")
               }
     })

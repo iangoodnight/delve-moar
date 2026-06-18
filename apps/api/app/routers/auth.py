@@ -210,21 +210,7 @@ async def signup(
     db: DbSession,
     background_tasks: BackgroundTasks,
 ) -> UserResponse:
-    """Create a new account, start a session, and send a verification email.
-
-    Args:
-        payload: Username, email, and password for the new account.
-        response: Response used to set the session and CSRF cookies.
-        db: Database session.
-        background_tasks: Used to send the verification email off the
-            response path.
-
-    Returns:
-        The created user (with ``email_verified`` false until they confirm).
-
-    Raises:
-        AppError: 409 if the username or email is already registered.
-    """
+    """Create an account, start a session, and email a verification link."""
     user = User(
         username=payload.username,
         email=payload.email.lower(),
@@ -263,22 +249,11 @@ async def signup(
 async def login(
     payload: LoginRequest, response: Response, db: DbSession
 ) -> UserResponse:
-    """Authenticate with a username-or-email and password, start a session.
+    """Log in with a username or email and password.
 
-    The ``identifier`` is matched against email when it contains ``@`` and
-    against username otherwise; both lookups are case-insensitive since both
-    fields are stored lowercase.
-
-    Args:
-        payload: Identifier (username or email) and password.
-        response: Response used to set the session and CSRF cookies.
-        db: Database session.
-
-    Returns:
-        The authenticated user.
-
-    Raises:
-        AppError: 401 if the identifier or password is incorrect.
+    The identifier matches email when it contains "@" and username
+    otherwise; both are case-insensitive. Sets the session and CSRF
+    cookies.
     """
     identifier = payload.identifier.lower()
     field = User.email if "@" in identifier else User.username
@@ -316,15 +291,7 @@ async def logout(
         Query(description="Revoke all of this user's sessions, not just this."),
     ] = False,
 ) -> None:
-    """Revoke the current session (or all the user's) and clear cookies.
-
-    Args:
-        request: Request carrying the session cookie.
-        response: Response used to clear the cookies.
-        db: Database session.
-        user: The authenticated user; also enforces a valid session.
-        everywhere: When true, revoke every session for the user.
-    """
+    """Revoke the current session (or all sessions) and clear the cookies."""
     if everywhere:
         await revoke_all_for_user(db, user.id)
     else:
@@ -346,14 +313,7 @@ async def logout(
     },
 )
 async def me(user: CurrentUser) -> UserResponse:
-    """Return the currently authenticated user.
-
-    Args:
-        user: The authenticated user, resolved from the session cookie.
-
-    Returns:
-        The current user.
-    """
+    """Return the currently authenticated user."""
     return UserResponse.from_user(user)
 
 
@@ -371,15 +331,8 @@ async def me(user: CurrentUser) -> UserResponse:
 async def verify_email(payload: VerifyEmailRequest, db: DbSession) -> None:
     """Mark a user's email as verified using a verification token.
 
-    Unauthenticated: possession of the emailed token is the proof. The token
-    is single-use; any siblings are retired on success.
-
-    Args:
-        payload: The verification token.
-        db: Database session.
-
-    Raises:
-        AppError: 400 if the token is invalid, expired, or already used.
+    Unauthenticated: possession of the emailed token is the proof, and
+    the token is single-use.
     """
     user = await consume_token(
         db, payload.token, EmailTokenPurpose.EMAIL_VERIFICATION
@@ -418,13 +371,8 @@ async def resend_verification(
 ) -> None:
     """Send a fresh verification email to the signed-in user.
 
-    A no-op (still ``204``) when the account is already verified. Takes no
-    email input, so it cannot be used to probe account existence.
-
-    Args:
-        db: Database session.
-        user: The authenticated user.
-        background_tasks: Used to send the email off the response path.
+    A no-op (still 204) when already verified. Takes no email input, so
+    it cannot be used to probe account existence.
     """
     if user.email_verified_at is not None:
         return
@@ -451,16 +399,8 @@ async def request_password_reset(
 ) -> MessageResponse:
     """Email a password-reset link if the identifier matches an account.
 
-    The response is identical whether or not an account matched, so it never
-    discloses which usernames or emails are registered.
-
-    Args:
-        payload: The account's username or email.
-        db: Database session.
-        background_tasks: Used to send the email off the response path.
-
-    Returns:
-        A generic acknowledgement, regardless of whether an account matched.
+    The response is identical whether or not an account matched, so it
+    never discloses which usernames or emails are registered.
     """
     identifier = payload.identifier.lower()
     field = User.email if "@" in identifier else User.username
@@ -497,18 +437,11 @@ async def confirm_password_reset(
 ) -> None:
     """Set a new password using a reset token and sign the user out.
 
-    On success the password is rehashed, every reset token is retired, and
-    all of the user's sessions are revoked so a thief who held an old session
-    is locked out. Receiving the reset email proves control of the address,
-    so an unverified account is verified at the same time. Does not log the
-    user in; they sign in fresh with the new password.
-
-    Args:
-        payload: The reset token and the new password.
-        db: Database session.
-
-    Raises:
-        AppError: 400 if the token is invalid, expired, or already used.
+    On success the password is rehashed, every reset token is retired,
+    and all of the user's sessions are revoked, so a thief holding an old
+    session is locked out. Receiving the reset email proves control of
+    the address, so an unverified account is verified at the same time.
+    The user is not logged in; they sign in fresh with the new password.
     """
     user = await consume_token(
         db, payload.token, EmailTokenPurpose.PASSWORD_RESET

@@ -9,5 +9,5 @@ import { z } from "zod/v4";
  * @description A generic, non-revealing acknowledgement message.
  */
 export const messageResponseSchema = z.object({
-    "message": z.string()
+    "message": z.string().describe("Human-readable acknowledgement message.")
     }).describe("A generic, non-revealing acknowledgement message.")

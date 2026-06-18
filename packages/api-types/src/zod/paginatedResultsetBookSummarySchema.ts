@@ -12,6 +12,6 @@ export const paginatedResultsetBookSummarySchema = z.object({
                 return metadataEnvelopeSchema.describe("Envelopes a paginated resultset with metadata.")
               },
 get "data"(){
-                return z.array(bookSummarySchema.describe("A book as shown in list views.\n\n``owner`` is the public author projection (username only) for a\nuser-owned book, or null for a system book such as the SRD catalog.\n``isSystem`` books are read-only; ``isPublic`` books are readable by\nanyone."))
+                return z.array(bookSummarySchema.describe("A book as shown in list views.")).describe("The records on this page.")
               }
     })

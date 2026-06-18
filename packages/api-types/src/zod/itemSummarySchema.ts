@@ -6,11 +6,11 @@
 import { z } from "zod/v4";
 
 /**
- * @description Summary info for an item, used in list endpoints.\n\nAttributes:\n    slug: Unique identifier for the item, used in URLs.\n    name: The item\'s name.\n    item_category: The category of the item (e.g. \"Weapon\", \"Potion\"),\n        if available. This is not guaranteed to be present for all items, as\n        it depends on the source data.\n    rarity: The rarity of the item (e.g. \"Common\", \"Rare\"), if available.
+ * @description Summary info for an item, used in list endpoints.
  */
 export const itemSummarySchema = z.object({
-    "slug": z.string(),
-"name": z.string(),
-"itemCategory": z.nullable(z.string()),
-"rarity": z.nullable(z.string())
-    }).describe("Summary info for an item, used in list endpoints.\n\nAttributes:\n    slug: Unique identifier for the item, used in URLs.\n    name: The item's name.\n    item_category: The category of the item (e.g. \"Weapon\", \"Potion\"),\n        if available. This is not guaranteed to be present for all items, as\n        it depends on the source data.\n    rarity: The rarity of the item (e.g. \"Common\", \"Rare\"), if available.")
+    "slug": z.string().describe("URL-safe unique identifier."),
+"name": z.string().describe("The item's name."),
+"itemCategory": z.nullable(z.string().describe("Category (e.g. 'weapon', 'potion'), if available.")),
+"rarity": z.nullable(z.string().describe("Rarity (e.g. 'rare'); null for mundane items."))
+    }).describe("Summary info for an item, used in list endpoints.")

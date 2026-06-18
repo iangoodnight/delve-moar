@@ -7,18 +7,18 @@ import { authorSchema } from "./authorSchema.ts";
 import { z } from "zod/v4";
 
 /**
- * @description A book as shown in list views.\n\n``owner`` is the public author projection (username only) for a\nuser-owned book, or null for a system book such as the SRD catalog.\n``isSystem`` books are read-only; ``isPublic`` books are readable by\nanyone.
+ * @description A book as shown in list views.
  */
 export const bookSummarySchema = z.object({
-    "id": z.uuid(),
-"name": z.string(),
-"slug": z.nullable(z.string()),
-"description": z.nullable(z.string()),
-"isPublic": z.boolean(),
-"isSystem": z.boolean(),
+    "id": z.uuid().describe("Unique identifier for the book."),
+"name": z.string().describe("Display name of the book."),
+"slug": z.nullable(z.string().describe("Stable handle for system books; null for user books.")),
+"description": z.nullable(z.string().describe("Longer description, if any.")),
+"isPublic": z.boolean().describe("Whether the book is readable by anyone."),
+"isSystem": z.boolean().describe("Whether this is a read-only system book (e.g. the SRD)."),
 get "owner"(){
                return authorSchema.describe("Public author projection -- how a user is shown to *other* users.\n\nThe only user data exposed when homebrew is published (#185, consumed by\n#177+). Deliberately carries ``username`` alone: it is a unique,\nimmutable, stable public handle in Phase 1b, so neither the private\nemail nor the internal user id ever needs to leave the owner's own view.\nAdding fields later (e.g. a stable public id, should usernames ever\nbecome mutable) is an additive, non-breaking change.").nullable()
               },
-"createdAt": z.iso.datetime(),
-"updatedAt": z.iso.datetime()
-    }).describe("A book as shown in list views.\n\n``owner`` is the public author projection (username only) for a\nuser-owned book, or null for a system book such as the SRD catalog.\n``isSystem`` books are read-only; ``isPublic`` books are readable by\nanyone.")
+"createdAt": z.iso.datetime().describe("When the book was created."),
+"updatedAt": z.iso.datetime().describe("When the book was last updated.")
+    }).describe("A book as shown in list views.")

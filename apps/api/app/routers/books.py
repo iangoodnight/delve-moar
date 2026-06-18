@@ -180,19 +180,7 @@ async def list_books(
     ordering: BookOrdering,
     search: BookSearch,
 ) -> PaginatedResultset[BookSummary]:
-    """List the user's own books plus the public system books.
-
-    Args:
-        request: Current request, used to build pagination links.
-        db: Database session.
-        user: The authenticated user.
-        params: Pagination parameters.
-        ordering: SQLAlchemy ordering expressions, injected by dependency.
-        search: Parsed search filter over name and description.
-
-    Returns:
-        A paginated resultset of book summaries.
-    """
+    """List the current user's books plus the public system books."""
     stmt = select(Book).where(
         or_(Book.owner_id == user.id, Book.is_public.is_(True))
     )
@@ -222,16 +210,7 @@ async def list_books(
 async def create_book(
     payload: BookCreate, db: DbSession, user: CurrentUser
 ) -> BookDetail:
-    """Create a new, empty book owned by the current user.
-
-    Args:
-        payload: The new book's name and optional description.
-        db: Database session.
-        user: The authenticated user, who becomes the owner.
-
-    Returns:
-        The created book (empty, so all content counts are zero).
-    """
+    """Create a new, empty book owned by the current user."""
     book = Book(
         owner_id=user.id, name=payload.name, description=payload.description
     )
@@ -256,19 +235,7 @@ async def create_book(
 async def get_book(
     book_id: uuid.UUID, db: DbSession, user: CurrentUser
 ) -> BookDetail:
-    """Return a single book the user may read, with content counts.
-
-    Args:
-        book_id: The book's id.
-        db: Database session.
-        user: The authenticated user.
-
-    Returns:
-        The book detail.
-
-    Raises:
-        AppError: 404 if the book does not exist or is not readable.
-    """
+    """Get a readable book (owner or public) with its content counts."""
     book = await _readable_or_404(db, book_id, user)
     return _detail(book, user, await _content_counts(db, book_id))
 
@@ -295,20 +262,7 @@ async def update_book(
     db: DbSession,
     user: CurrentUser,
 ) -> BookDetail:
-    """Update a book's name and/or description (owner-only).
-
-    Args:
-        book_id: The book's id.
-        payload: Fields to change; only provided fields are applied.
-        db: Database session.
-        user: The authenticated user, who must own the book.
-
-    Returns:
-        The updated book detail.
-
-    Raises:
-        AppError: 404 if not readable, 403 if not the user's to change.
-    """
+    """Update a book's name and/or description (owner-only)."""
     book = await _writable_or_error(db, book_id, user)
     for field, value in payload.model_dump(exclude_unset=True).items():
         setattr(book, field, value)
@@ -338,16 +292,8 @@ async def delete_book(
 ) -> None:
     """Delete a book and its content memberships (owner-only).
 
-    The content itself is untouched; only the collection and its join
-    rows are removed (FK cascade).
-
-    Args:
-        book_id: The book's id.
-        db: Database session.
-        user: The authenticated user, who must own the book.
-
-    Raises:
-        AppError: 404 if not readable, 403 if not the user's to delete.
+    The owned content itself is untouched; only the collection and its
+    join rows are removed.
     """
     book = await _writable_or_error(db, book_id, user)
     await db.delete(book)

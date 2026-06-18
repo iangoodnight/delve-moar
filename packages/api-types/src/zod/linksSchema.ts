@@ -6,9 +6,9 @@
 import { z } from "zod/v4";
 
 /**
- * @description Prev/next navigation links for a paginated resultset.\n\nAttributes:\n    prev: Absolute URL for the previous page, or null on the first page.\n    next: Absolute URL for the next page, or null on the last page.
+ * @description Prev/next navigation links for a paginated resultset.
  */
 export const linksSchema = z.object({
-    "prev": z.nullable(z.string()),
-"next": z.nullable(z.string())
-    }).describe("Prev/next navigation links for a paginated resultset.\n\nAttributes:\n    prev: Absolute URL for the previous page, or null on the first page.\n    next: Absolute URL for the next page, or null on the last page.")
+    "prev": z.nullable(z.string().describe("URL of the previous page, or null on the first page.")),
+"next": z.nullable(z.string().describe("URL of the next page, or null on the last page."))
+    }).describe("Prev/next navigation links for a paginated resultset.")

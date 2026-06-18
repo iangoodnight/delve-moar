@@ -9,6 +9,6 @@ import { z } from "zod/v4";
  * @description Payload to set a new password using a reset token.
  */
 export const passwordResetConfirmRequestSchema = z.object({
-    "token": z.string().min(1),
-"password": z.string().min(8).max(128)
+    "token": z.string().min(1).describe("Password-reset token from the email link."),
+"password": z.string().min(8).max(128).describe("Account password (8-128 characters).")
     }).describe("Payload to set a new password using a reset token.")
