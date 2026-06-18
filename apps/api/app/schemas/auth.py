@@ -75,14 +75,21 @@ Username = Annotated[
 # Shared password constraints for any endpoint that *sets* a password
 # (signup, password reset). Login does not reuse this -- it accepts whatever
 # was stored so older/shorter passwords still authenticate.
-Password = Annotated[str, Field(min_length=8, max_length=128)]
+Password = Annotated[
+    str,
+    Field(
+        min_length=8,
+        max_length=128,
+        description="Account password (8-128 characters).",
+    ),
+]
 
 
 class SignupRequest(AppSchema):
     """Payload to create a new account."""
 
     username: Username
-    email: EmailStr
+    email: EmailStr = Field(description="Account email address (kept private).")
     password: Password
 
 
@@ -93,14 +100,22 @@ class LoginRequest(AppSchema):
     presence of ``@`` disambiguates (usernames cannot contain ``@``).
     """
 
-    identifier: str = Field(min_length=1, max_length=255)
-    password: str = Field(min_length=1, max_length=128)
+    identifier: str = Field(
+        min_length=1,
+        max_length=255,
+        description="Account username or email.",
+    )
+    password: str = Field(
+        min_length=1, max_length=128, description="Account password."
+    )
 
 
 class VerifyEmailRequest(AppSchema):
     """Payload to confirm an email address with a verification token."""
 
-    token: str = Field(min_length=1)
+    token: str = Field(
+        min_length=1, description="Verification token from the email link."
+    )
 
 
 class PasswordResetRequest(AppSchema):
@@ -111,20 +126,26 @@ class PasswordResetRequest(AppSchema):
     it never reveals which addresses are registered.
     """
 
-    identifier: str = Field(min_length=1, max_length=255)
+    identifier: str = Field(
+        min_length=1,
+        max_length=255,
+        description="Account username or email.",
+    )
 
 
 class PasswordResetConfirmRequest(AppSchema):
     """Payload to set a new password using a reset token."""
 
-    token: str = Field(min_length=1)
+    token: str = Field(
+        min_length=1, description="Password-reset token from the email link."
+    )
     password: Password
 
 
 class MessageResponse(AppSchema):
     """A generic, non-revealing acknowledgement message."""
 
-    message: str
+    message: str = Field(description="Human-readable acknowledgement message.")
 
 
 class UserResponse(AppSchema):
@@ -135,11 +156,13 @@ class UserResponse(AppSchema):
     ``Author`` projection instead.
     """
 
-    id: uuid.UUID
-    username: str
-    email: EmailStr
-    email_verified: bool
-    created_at: datetime
+    id: uuid.UUID = Field(description="The account's unique identifier.")
+    username: str = Field(description="The account's public handle.")
+    email: EmailStr = Field(description="The account's private email address.")
+    email_verified: bool = Field(
+        description="Whether the email has been verified."
+    )
+    created_at: datetime = Field(description="When the account was created.")
 
     @classmethod
     def from_user(cls, user: "User") -> Self:
@@ -172,7 +195,7 @@ class Author(AppSchema):
     become mutable) is an additive, non-breaking change.
     """
 
-    username: str
+    username: str = Field(description="The user's public handle.")
 
     @classmethod
     def from_user(cls, user: "User") -> Self:
