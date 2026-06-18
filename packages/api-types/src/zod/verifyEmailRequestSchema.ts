@@ -9,5 +9,5 @@ import { z } from "zod/v4";
  * @description Payload to confirm an email address with a verification token.
  */
 export const verifyEmailRequestSchema = z.object({
-    "token": z.string().min(1)
+    "token": z.string().min(1).describe("Verification token from the email link.")
     }).describe("Payload to confirm an email address with a verification token.")

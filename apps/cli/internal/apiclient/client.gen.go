@@ -53,25 +53,44 @@ type ArmorClassEntry struct {
 // Adding fields later (e.g. a stable public id, should usernames ever
 // become mutable) is an additive, non-breaking change.
 type Author struct {
+	// Username The user's public handle.
 	Username string `json:"username"`
 }
 
 // BookCreate Payload to create a book.
 type BookCreate struct {
+	// Description Optional longer description of the book.
 	Description *string `json:"description,omitempty"`
-	Name        string  `json:"name"`
+
+	// Name Display name for the book.
+	Name string `json:"name"`
 }
 
 // BookDetail A single book with the count of content it holds, by resource type.
 type BookDetail struct {
-	CreatedAt    time.Time          `json:"createdAt"`
-	Description  *string            `json:"description"`
-	Id           openapi_types.UUID `json:"id"`
-	IsPublic     bool               `json:"isPublic"`
-	IsSystem     bool               `json:"isSystem"`
-	ItemCount    int                `json:"itemCount"`
-	MonsterCount int                `json:"monsterCount"`
-	Name         string             `json:"name"`
+	// CreatedAt When the book was created.
+	CreatedAt time.Time `json:"createdAt"`
+
+	// Description Longer description, if any.
+	Description *string `json:"description"`
+
+	// Id Unique identifier for the book.
+	Id openapi_types.UUID `json:"id"`
+
+	// IsPublic Whether the book is readable by anyone.
+	IsPublic bool `json:"isPublic"`
+
+	// IsSystem Whether this is a read-only system book (e.g. the SRD).
+	IsSystem bool `json:"isSystem"`
+
+	// ItemCount Number of items in the book.
+	ItemCount int `json:"itemCount"`
+
+	// MonsterCount Number of monsters in the book.
+	MonsterCount int `json:"monsterCount"`
+
+	// Name Display name of the book.
+	Name string `json:"name"`
 
 	// Owner Public author projection -- how a user is shown to *other* users.
 	//
@@ -81,25 +100,37 @@ type BookDetail struct {
 	// email nor the internal user id ever needs to leave the owner's own view.
 	// Adding fields later (e.g. a stable public id, should usernames ever
 	// become mutable) is an additive, non-breaking change.
-	Owner      Author    `json:"owner"`
-	Slug       *string   `json:"slug"`
-	SpellCount int       `json:"spellCount"`
-	UpdatedAt  time.Time `json:"updatedAt"`
+	Owner Author `json:"owner"`
+
+	// Slug Stable handle for system books; null for user books.
+	Slug *string `json:"slug"`
+
+	// SpellCount Number of spells in the book.
+	SpellCount int `json:"spellCount"`
+
+	// UpdatedAt When the book was last updated.
+	UpdatedAt time.Time `json:"updatedAt"`
 }
 
 // BookSummary A book as shown in list views.
-//
-// “owner“ is the public author projection (username only) for a
-// user-owned book, or null for a system book such as the SRD catalog.
-// “isSystem“ books are read-only; “isPublic“ books are readable by
-// anyone.
 type BookSummary struct {
-	CreatedAt   time.Time          `json:"createdAt"`
-	Description *string            `json:"description"`
-	Id          openapi_types.UUID `json:"id"`
-	IsPublic    bool               `json:"isPublic"`
-	IsSystem    bool               `json:"isSystem"`
-	Name        string             `json:"name"`
+	// CreatedAt When the book was created.
+	CreatedAt time.Time `json:"createdAt"`
+
+	// Description Longer description, if any.
+	Description *string `json:"description"`
+
+	// Id Unique identifier for the book.
+	Id openapi_types.UUID `json:"id"`
+
+	// IsPublic Whether the book is readable by anyone.
+	IsPublic bool `json:"isPublic"`
+
+	// IsSystem Whether this is a read-only system book (e.g. the SRD).
+	IsSystem bool `json:"isSystem"`
+
+	// Name Display name of the book.
+	Name string `json:"name"`
 
 	// Owner Public author projection -- how a user is shown to *other* users.
 	//
@@ -109,15 +140,22 @@ type BookSummary struct {
 	// email nor the internal user id ever needs to leave the owner's own view.
 	// Adding fields later (e.g. a stable public id, should usernames ever
 	// become mutable) is an additive, non-breaking change.
-	Owner     Author    `json:"owner"`
-	Slug      *string   `json:"slug"`
+	Owner Author `json:"owner"`
+
+	// Slug Stable handle for system books; null for user books.
+	Slug *string `json:"slug"`
+
+	// UpdatedAt When the book was last updated.
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 
 // BookUpdate Payload to update a book. Only the provided fields are changed.
 type BookUpdate struct {
+	// Description New description for the book.
 	Description *string `json:"description,omitempty"`
-	Name        *string `json:"name,omitempty"`
+
+	// Name New display name for the book.
+	Name *string `json:"name,omitempty"`
 }
 
 // ContentSource SRD content source attribution.
@@ -178,13 +216,6 @@ type HealthResponse struct {
 }
 
 // ItemDetail Full item details, used in detail endpoints.
-//
-// Attributes:
-//
-//	content: The full item data as ingested from the source, with all
-//	    original fields and structure preserved.
-//	content_source: Metadata about the source of the item data, such as
-//	    the original URL or source file name.
 type ItemDetail struct {
 	// Content SRD item content payload.
 	Content SrdItemContent `json:"content"`
@@ -199,37 +230,41 @@ type ItemDetail struct {
 	//     data_provider: Origin of the seed data (e.g. "5e-bits/5e-database").
 	//     data_provider_url: URL to the data provider's source repo.
 	ContentSource ContentSource `json:"contentSource"`
-	ItemCategory  *string       `json:"itemCategory"`
-	Name          string        `json:"name"`
-	Rarity        *string       `json:"rarity"`
-	Slug          string        `json:"slug"`
+
+	// ItemCategory Category (e.g. 'weapon', 'potion'), if available.
+	ItemCategory *string `json:"itemCategory"`
+
+	// Name The item's name.
+	Name string `json:"name"`
+
+	// Rarity Rarity (e.g. 'rare'); null for mundane items.
+	Rarity *string `json:"rarity"`
+
+	// Slug URL-safe unique identifier.
+	Slug string `json:"slug"`
 }
 
 // ItemSummary Summary info for an item, used in list endpoints.
-//
-// Attributes:
-//
-//	slug: Unique identifier for the item, used in URLs.
-//	name: The item's name.
-//	item_category: The category of the item (e.g. "Weapon", "Potion"),
-//	    if available. This is not guaranteed to be present for all items, as
-//	    it depends on the source data.
-//	rarity: The rarity of the item (e.g. "Common", "Rare"), if available.
 type ItemSummary struct {
+	// ItemCategory Category (e.g. 'weapon', 'potion'), if available.
 	ItemCategory *string `json:"itemCategory"`
-	Name         string  `json:"name"`
-	Rarity       *string `json:"rarity"`
-	Slug         string  `json:"slug"`
+
+	// Name The item's name.
+	Name string `json:"name"`
+
+	// Rarity Rarity (e.g. 'rare'); null for mundane items.
+	Rarity *string `json:"rarity"`
+
+	// Slug URL-safe unique identifier.
+	Slug string `json:"slug"`
 }
 
 // Links Prev/next navigation links for a paginated resultset.
-//
-// Attributes:
-//
-//	prev: Absolute URL for the previous page, or null on the first page.
-//	next: Absolute URL for the next page, or null on the last page.
 type Links struct {
+	// Next URL of the next page, or null on the last page.
 	Next *string `json:"next"`
+
+	// Prev URL of the previous page, or null on the first page.
 	Prev *string `json:"prev"`
 }
 
@@ -238,22 +273,22 @@ type Links struct {
 // “identifier“ accepts either the account's username or its email; the
 // presence of “@“ disambiguates (usernames cannot contain “@“).
 type LoginRequest struct {
+	// Identifier Account username or email.
 	Identifier string `json:"identifier"`
-	Password   string `json:"password"`
+
+	// Password Account password.
+	Password string `json:"password"`
 }
 
 // MessageResponse A generic, non-revealing acknowledgement message.
 type MessageResponse struct {
+	// Message Human-readable acknowledgement message.
 	Message string `json:"message"`
 }
 
 // MetadataEnvelope Envelopes a paginated resultset with metadata.
 type MetadataEnvelope struct {
 	// Links Prev/next navigation links for a paginated resultset.
-	//
-	// Attributes:
-	//     prev: Absolute URL for the previous page, or null on the first page.
-	//     next: Absolute URL for the next page, or null on the last page.
 	Links Links `json:"links"`
 
 	// Resultset Metadata about a paginated resultset.
@@ -261,14 +296,8 @@ type MetadataEnvelope struct {
 }
 
 // MonsterDetail Full monster details, used in detail endpoints.
-//
-// Attributes:
-//
-//	content: The full monster data as ingested from the source, with all
-//	    original fields and structure preserved.
-//	content_source: Metadata about the source of the monster data, such as
-//	    the original URL or source file name.
 type MonsterDetail struct {
+	// ChallengeRating Challenge rating as a display string (e.g. '1/2', '5').
 	ChallengeRating string `json:"challengeRating"`
 
 	// Content SRD monster content payload.
@@ -284,29 +313,35 @@ type MonsterDetail struct {
 	//     data_provider: Origin of the seed data (e.g. "5e-bits/5e-database").
 	//     data_provider_url: URL to the data provider's source repo.
 	ContentSource ContentSource `json:"contentSource"`
-	MonsterType   *string       `json:"monsterType"`
-	Name          string        `json:"name"`
-	Slug          string        `json:"slug"`
+
+	// MonsterType Type or category (e.g. 'dragon').
+	MonsterType *string `json:"monsterType"`
+
+	// Name The monster's name.
+	Name string `json:"name"`
+
+	// Slug URL-safe unique identifier.
+	Slug string `json:"slug"`
 }
 
 // MonsterSummary Summary info for a monster, used in list endpoints.
-//
-// Attributes:
-//
-//	slug: Unique identifier for the monster, used in URLs.
-//	name: The monster's name.
-//	monster_type: The type or category of the monster (e.g. "Dragon").
-//	challenge_rating: The monster's challenge rating as a display string
-//	    (e.g. "1/2", "5", "10").
 type MonsterSummary struct {
-	ChallengeRating string  `json:"challengeRating"`
-	MonsterType     *string `json:"monsterType"`
-	Name            string  `json:"name"`
-	Slug            string  `json:"slug"`
+	// ChallengeRating Challenge rating as a display string (e.g. '1/2', '5').
+	ChallengeRating string `json:"challengeRating"`
+
+	// MonsterType Type or category (e.g. 'dragon').
+	MonsterType *string `json:"monsterType"`
+
+	// Name The monster's name.
+	Name string `json:"name"`
+
+	// Slug URL-safe unique identifier.
+	Slug string `json:"slug"`
 }
 
 // PaginatedResultsetBookSummary defines model for PaginatedResultset_BookSummary_.
 type PaginatedResultsetBookSummary struct {
+	// Data The records on this page.
 	Data []BookSummary `json:"data"`
 
 	// Metadata Envelopes a paginated resultset with metadata.
@@ -315,6 +350,7 @@ type PaginatedResultsetBookSummary struct {
 
 // PaginatedResultsetItemSummary defines model for PaginatedResultset_ItemSummary_.
 type PaginatedResultsetItemSummary struct {
+	// Data The records on this page.
 	Data []ItemSummary `json:"data"`
 
 	// Metadata Envelopes a paginated resultset with metadata.
@@ -323,6 +359,7 @@ type PaginatedResultsetItemSummary struct {
 
 // PaginatedResultsetMonsterSummary defines model for PaginatedResultset_MonsterSummary_.
 type PaginatedResultsetMonsterSummary struct {
+	// Data The records on this page.
 	Data []MonsterSummary `json:"data"`
 
 	// Metadata Envelopes a paginated resultset with metadata.
@@ -331,6 +368,7 @@ type PaginatedResultsetMonsterSummary struct {
 
 // PaginatedResultsetSpellSummary defines model for PaginatedResultset_SpellSummary_.
 type PaginatedResultsetSpellSummary struct {
+	// Data The records on this page.
 	Data []SpellSummary `json:"data"`
 
 	// Metadata Envelopes a paginated resultset with metadata.
@@ -339,8 +377,11 @@ type PaginatedResultsetSpellSummary struct {
 
 // PasswordResetConfirmRequest Payload to set a new password using a reset token.
 type PasswordResetConfirmRequest struct {
+	// Password Account password (8-128 characters).
 	Password string `json:"password"`
-	Token    string `json:"token"`
+
+	// Token Password-reset token from the email link.
+	Token string `json:"token"`
 }
 
 // PasswordResetRequest Payload to request a password-reset email.
@@ -349,6 +390,7 @@ type PasswordResetConfirmRequest struct {
 // login). The response is identical whether or not an account matches, so
 // it never reveals which addresses are registered.
 type PasswordResetRequest struct {
+	// Identifier Account username or email.
 	Identifier string `json:"identifier"`
 }
 
@@ -369,8 +411,13 @@ type Range struct {
 
 // ResultsetMeta Metadata about a paginated resultset.
 type ResultsetMeta struct {
-	Count  int `json:"count"`
-	Limit  int `json:"limit"`
+	// Count Total records matching the query, across all pages.
+	Count int `json:"count"`
+
+	// Limit Number of records in this page.
+	Limit int `json:"limit"`
+
+	// Offset Offset of this page.
 	Offset int `json:"offset"`
 }
 
@@ -386,8 +433,11 @@ type Senses struct {
 
 // SignupRequest Payload to create a new account.
 type SignupRequest struct {
-	Email    openapi_types.Email `json:"email"`
-	Password string              `json:"password"`
+	// Email Account email address (kept private).
+	Email openapi_types.Email `json:"email"`
+
+	// Password Account password (8-128 characters).
+	Password string `json:"password"`
 
 	// Username Public handle. Lowercase letters, digits, hyphen, and underscore only; 3-30 characters.
 	Username string `json:"username"`
@@ -419,25 +469,33 @@ type SpellDetail struct {
 	//     data_provider: Origin of the seed data (e.g. "5e-bits/5e-database").
 	//     data_provider_url: URL to the data provider's source repo.
 	ContentSource ContentSource `json:"contentSource"`
-	Level         string        `json:"level"`
-	Name          string        `json:"name"`
-	School        *string       `json:"school"`
-	Slug          string        `json:"slug"`
+
+	// Level Level as a display string (e.g. 'Cantrip', '1st').
+	Level string `json:"level"`
+
+	// Name The spell's name.
+	Name string `json:"name"`
+
+	// School School of magic (e.g. 'evocation').
+	School *string `json:"school"`
+
+	// Slug URL-safe unique identifier.
+	Slug string `json:"slug"`
 }
 
 // SpellSummary Summary info for a spell, used in list endpoints.
-//
-// Attributes:
-//
-//	slug: Unique identifier for the spell, used in URLs.
-//	name: The spell's name.
-//	level: The spell's level as a display string (e.g. "Cantrip", "1st").
-//	school: The spell's school of magic (e.g. "evocation").
 type SpellSummary struct {
-	Level  string  `json:"level"`
-	Name   string  `json:"name"`
+	// Level Level as a display string (e.g. 'Cantrip', '1st').
+	Level string `json:"level"`
+
+	// Name The spell's name.
+	Name string `json:"name"`
+
+	// School School of magic (e.g. 'evocation').
 	School *string `json:"school"`
-	Slug   string  `json:"slug"`
+
+	// Slug URL-safe unique identifier.
+	Slug string `json:"slug"`
 }
 
 // SrdItemContent SRD item content payload.
@@ -542,11 +600,20 @@ type SrdSpellContent struct {
 // “/me“). “email“ appears here and nowhere else; other users see the
 // “Author“ projection instead.
 type UserResponse struct {
-	CreatedAt     time.Time           `json:"createdAt"`
-	Email         openapi_types.Email `json:"email"`
-	EmailVerified bool                `json:"emailVerified"`
-	Id            openapi_types.UUID  `json:"id"`
-	Username      string              `json:"username"`
+	// CreatedAt When the account was created.
+	CreatedAt time.Time `json:"createdAt"`
+
+	// Email The account's private email address.
+	Email openapi_types.Email `json:"email"`
+
+	// EmailVerified Whether the email has been verified.
+	EmailVerified bool `json:"emailVerified"`
+
+	// Id The account's unique identifier.
+	Id openapi_types.UUID `json:"id"`
+
+	// Username The account's public handle.
+	Username string `json:"username"`
 }
 
 // ValidationError defines model for ValidationError.
@@ -571,6 +638,7 @@ type ValidationError_Loc_Item struct {
 
 // VerifyEmailRequest Payload to confirm an email address with a verification token.
 type VerifyEmailRequest struct {
+	// Token Verification token from the email link.
 	Token string `json:"token"`
 }
 

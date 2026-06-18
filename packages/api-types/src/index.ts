@@ -35,20 +35,7 @@ export interface paths {
         put?: never;
         /**
          * Create an account
-         * @description Create a new account, start a session, and send a verification email.
-         *
-         *     Args:
-         *         payload: Username, email, and password for the new account.
-         *         response: Response used to set the session and CSRF cookies.
-         *         db: Database session.
-         *         background_tasks: Used to send the verification email off the
-         *             response path.
-         *
-         *     Returns:
-         *         The created user (with ``email_verified`` false until they confirm).
-         *
-         *     Raises:
-         *         AppError: 409 if the username or email is already registered.
+         * @description Create an account, start a session, and email a verification link.
          */
         post: operations["signup_v1_auth_signup_post"];
         delete?: never;
@@ -68,22 +55,11 @@ export interface paths {
         put?: never;
         /**
          * Log in
-         * @description Authenticate with a username-or-email and password, start a session.
+         * @description Log in with a username or email and password.
          *
-         *     The ``identifier`` is matched against email when it contains ``@`` and
-         *     against username otherwise; both lookups are case-insensitive since both
-         *     fields are stored lowercase.
-         *
-         *     Args:
-         *         payload: Identifier (username or email) and password.
-         *         response: Response used to set the session and CSRF cookies.
-         *         db: Database session.
-         *
-         *     Returns:
-         *         The authenticated user.
-         *
-         *     Raises:
-         *         AppError: 401 if the identifier or password is incorrect.
+         *     The identifier matches email when it contains "@" and username
+         *     otherwise; both are case-insensitive. Sets the session and CSRF
+         *     cookies.
          */
         post: operations["login_v1_auth_login_post"];
         delete?: never;
@@ -103,14 +79,7 @@ export interface paths {
         put?: never;
         /**
          * Log out
-         * @description Revoke the current session (or all the user's) and clear cookies.
-         *
-         *     Args:
-         *         request: Request carrying the session cookie.
-         *         response: Response used to clear the cookies.
-         *         db: Database session.
-         *         user: The authenticated user; also enforces a valid session.
-         *         everywhere: When true, revoke every session for the user.
+         * @description Revoke the current session (or all sessions) and clear the cookies.
          */
         post: operations["logout_v1_auth_logout_post"];
         delete?: never;
@@ -129,12 +98,6 @@ export interface paths {
         /**
          * Get the current user
          * @description Return the currently authenticated user.
-         *
-         *     Args:
-         *         user: The authenticated user, resolved from the session cookie.
-         *
-         *     Returns:
-         *         The current user.
          */
         get: operations["me_v1_auth_me_get"];
         put?: never;
@@ -158,15 +121,8 @@ export interface paths {
          * Confirm an email address
          * @description Mark a user's email as verified using a verification token.
          *
-         *     Unauthenticated: possession of the emailed token is the proof. The token
-         *     is single-use; any siblings are retired on success.
-         *
-         *     Args:
-         *         payload: The verification token.
-         *         db: Database session.
-         *
-         *     Raises:
-         *         AppError: 400 if the token is invalid, expired, or already used.
+         *     Unauthenticated: possession of the emailed token is the proof, and
+         *     the token is single-use.
          */
         post: operations["verify_email_v1_auth_verify_email_post"];
         delete?: never;
@@ -188,13 +144,8 @@ export interface paths {
          * Resend the verification email
          * @description Send a fresh verification email to the signed-in user.
          *
-         *     A no-op (still ``204``) when the account is already verified. Takes no
-         *     email input, so it cannot be used to probe account existence.
-         *
-         *     Args:
-         *         db: Database session.
-         *         user: The authenticated user.
-         *         background_tasks: Used to send the email off the response path.
+         *     A no-op (still 204) when already verified. Takes no email input, so
+         *     it cannot be used to probe account existence.
          */
         post: operations["resend_verification_v1_auth_resend_verification_post"];
         delete?: never;
@@ -216,16 +167,8 @@ export interface paths {
          * Request a password reset
          * @description Email a password-reset link if the identifier matches an account.
          *
-         *     The response is identical whether or not an account matched, so it never
-         *     discloses which usernames or emails are registered.
-         *
-         *     Args:
-         *         payload: The account's username or email.
-         *         db: Database session.
-         *         background_tasks: Used to send the email off the response path.
-         *
-         *     Returns:
-         *         A generic acknowledgement, regardless of whether an account matched.
+         *     The response is identical whether or not an account matched, so it
+         *     never discloses which usernames or emails are registered.
          */
         post: operations["request_password_reset_v1_auth_password_reset_post"];
         delete?: never;
@@ -247,18 +190,11 @@ export interface paths {
          * Set a new password with a reset token
          * @description Set a new password using a reset token and sign the user out.
          *
-         *     On success the password is rehashed, every reset token is retired, and
-         *     all of the user's sessions are revoked so a thief who held an old session
-         *     is locked out. Receiving the reset email proves control of the address,
-         *     so an unverified account is verified at the same time. Does not log the
-         *     user in; they sign in fresh with the new password.
-         *
-         *     Args:
-         *         payload: The reset token and the new password.
-         *         db: Database session.
-         *
-         *     Raises:
-         *         AppError: 400 if the token is invalid, expired, or already used.
+         *     On success the password is rehashed, every reset token is retired,
+         *     and all of the user's sessions are revoked, so a thief holding an old
+         *     session is locked out. Receiving the reset email proves control of
+         *     the address, so an unverified account is verified at the same time.
+         *     The user is not logged in; they sign in fresh with the new password.
          */
         post: operations["confirm_password_reset_v1_auth_password_reset_confirm_post"];
         delete?: never;
@@ -276,32 +212,13 @@ export interface paths {
         };
         /**
          * List books
-         * @description List the user's own books plus the public system books.
-         *
-         *     Args:
-         *         request: Current request, used to build pagination links.
-         *         db: Database session.
-         *         user: The authenticated user.
-         *         params: Pagination parameters.
-         *         ordering: SQLAlchemy ordering expressions, injected by dependency.
-         *         search: Parsed search filter over name and description.
-         *
-         *     Returns:
-         *         A paginated resultset of book summaries.
+         * @description List the current user's books plus the public system books.
          */
         get: operations["list_books_v1_books_get"];
         put?: never;
         /**
          * Create a book
          * @description Create a new, empty book owned by the current user.
-         *
-         *     Args:
-         *         payload: The new book's name and optional description.
-         *         db: Database session.
-         *         user: The authenticated user, who becomes the owner.
-         *
-         *     Returns:
-         *         The created book (empty, so all content counts are zero).
          */
         post: operations["create_book_v1_books_post"];
         delete?: never;
@@ -319,18 +236,7 @@ export interface paths {
         };
         /**
          * Get a book
-         * @description Return a single book the user may read, with content counts.
-         *
-         *     Args:
-         *         book_id: The book's id.
-         *         db: Database session.
-         *         user: The authenticated user.
-         *
-         *     Returns:
-         *         The book detail.
-         *
-         *     Raises:
-         *         AppError: 404 if the book does not exist or is not readable.
+         * @description Get a readable book (owner or public) with its content counts.
          */
         get: operations["get_book_v1_books__book_id__get"];
         put?: never;
@@ -339,16 +245,8 @@ export interface paths {
          * Delete a book
          * @description Delete a book and its content memberships (owner-only).
          *
-         *     The content itself is untouched; only the collection and its join
-         *     rows are removed (FK cascade).
-         *
-         *     Args:
-         *         book_id: The book's id.
-         *         db: Database session.
-         *         user: The authenticated user, who must own the book.
-         *
-         *     Raises:
-         *         AppError: 404 if not readable, 403 if not the user's to delete.
+         *     The owned content itself is untouched; only the collection and its
+         *     join rows are removed.
          */
         delete: operations["delete_book_v1_books__book_id__delete"];
         options?: never;
@@ -356,18 +254,6 @@ export interface paths {
         /**
          * Update a book
          * @description Update a book's name and/or description (owner-only).
-         *
-         *     Args:
-         *         book_id: The book's id.
-         *         payload: Fields to change; only provided fields are applied.
-         *         db: Database session.
-         *         user: The authenticated user, who must own the book.
-         *
-         *     Returns:
-         *         The updated book detail.
-         *
-         *     Raises:
-         *         AppError: 404 if not readable, 403 if not the user's to change.
          */
         patch: operations["update_book_v1_books__book_id__patch"];
         trace?: never;
@@ -513,27 +399,7 @@ export interface paths {
         };
         /**
          * List items
-         * @description Return a paginated list of items with optional filters.
-         *
-         *     Args:
-         *         request: Current HTTP request, used to build pagination links.
-         *         session: Database session, injected by dependency.
-         *         params: Pagination parameters, injected by dependency.
-         *         ordering: SQLAlchemy ordering expressions, injected by dependency.
-         *         search: Parsed search filter, injected by dependency.
-         *         item_category: Optional exact match for the item_category field.
-         *         rarity: Optional exact match for the rarity field. Set to 'none' to
-         *             filter for items with no rarity (equipment).
-         *
-         *     Returns:
-         *         A paginated list of items matching the filters, with summary information
-         *         and pagination metadata.
-         *
-         *     Example:
-         *         GET /v1/items?search=sword&item_category=weapon&rarity=rare&limit=2
-         *         GET /v1/items?item_category=potion&rarity=none
-         *         GET /v1/items?order_by=name:asc&limit=5&offset=10
-         *         GET /v1/items?order_by=rarity:desc,name:asc
+         * @description List items with optional category and rarity filters.
          */
         get: operations["list_items_v1_items_get"];
         put?: never;
@@ -553,22 +419,7 @@ export interface paths {
         };
         /**
          * Get item details
-         * @description Return full details for a single item by slug and namespace.
-         *
-         *     Args:
-         *         slug: The unique slug identifier for the item.
-         *         session: Database session, injected by dependency.
-         *         namespace: The source namespace to look up the item in.
-         *
-         *     Returns:
-         *         The full details of the item, including all original content fields.
-         *
-         *     Raises:
-         *         AppError: With status 404 if no item is found.
-         *
-         *     Example:
-         *         GET /v1/items/flame-tongue?namespace=srd-5.1
-         *         GET /v1/items/amulet-of-health?namespace=user:1234
+         * @description Get a single item by slug within a source namespace.
          */
         get: operations["get_item_v1_items__slug__get"];
         put?: never;
@@ -588,27 +439,7 @@ export interface paths {
         };
         /**
          * List monsters
-         * @description Return a paginated list of monsters with optional filters.
-         *
-         *     Args:
-         *         request: Current HTTP request, used to build pagination links.
-         *         session: Database session, injected by dependency.
-         *         params: Pagination parameters, injected by dependency.
-         *         ordering: SQLAlchemy ordering expressions, injected by dependency.
-         *         search: Parsed search filter, injected by dependency.
-         *         monster_type: Optional exact match for the monster_type field.
-         *         cr_min: Inclusive minimum challenge rating filter.
-         *         cr_max: Inclusive maximum challenge rating filter.
-         *
-         *     Returns:
-         *         A paginated resultset containing monster summaries and pagination
-         *         metadata.
-         *
-         *     Example:
-         *         GET /v1/monsters?search=dragon&limit=5&offset=10
-         *         GET /v1/monsters?type=undead&cr_min=1&cr_max=5
-         *         GET /v1/monsters?cr_max=0.25&order_by=name:asc
-         *         GET /v1/monsters?order_by=challenge_rating:desc,name:asc
+         * @description List monsters with optional type and challenge-rating filters.
          */
         get: operations["list_monsters_v1_monsters_get"];
         put?: never;
@@ -628,22 +459,7 @@ export interface paths {
         };
         /**
          * Get monster
-         * @description Return full details for a single monster by slug.
-         *
-         *     Args:
-         *         slug: The URL-safe unique identifier for the monster.
-         *         session: Database session, injected by dependency.
-         *         namespace: The source namespace to look in (default: srd-5.1).
-         *
-         *     Returns:
-         *         The full monster details, including all original content fields.
-         *
-         *     Raises:
-         *         AppError: With status 404 if no monster is found.
-         *
-         *     Example:
-         *         GET /v1/monsters/tarrasque
-         *         GET /v1/monsters/giant-spider?namespace=user:1234
+         * @description Get a single monster by slug within a source namespace.
          */
         get: operations["get_monster_v1_monsters__slug__get"];
         put?: never;
@@ -663,27 +479,7 @@ export interface paths {
         };
         /**
          * List spells
-         * @description Return a paginated list of spells with optional filters.
-         *
-         *     Args:
-         *         request: Current HTTP request, used to build pagination links.
-         *         session: Database session, injected by dependency.
-         *         params: Pagination parameters, injected by dependency.
-         *         ordering: SQLAlchemy ordering expressions, injected by dependency.
-         *         search: Parsed search filter, injected by dependency.
-         *         school: Optional exact match for spell school.
-         *         level_min: Optional minimum spell level (inclusive).
-         *         level_max: Optional maximum spell level (inclusive).
-         *
-         *     Returns:
-         *         A paginated resultset containing spell summaries that match the
-         *         provided filters.
-         *
-         *     Example:
-         *         GET /v1/spells?search=fire&level_min=1&level_max=3&school=evocation
-         *         GET /v1/spells?level_max=0
-         *         GET /v1/spells?order_by=name:asc
-         *         GET /v1/spells?order_by=level:desc,name:asc&limit=5&offset=10
+         * @description List spells with optional school and level-range filters.
          */
         get: operations["list_spells_v1_spells_get"];
         put?: never;
@@ -703,22 +499,7 @@ export interface paths {
         };
         /**
          * Get spell
-         * @description Return full details for a single spell by slug.
-         *
-         *     Args:
-         *         slug: The URL-safe unique identifier for the spell.
-         *         session: Database session, injected by dependency.
-         *         namespace: The source namespace to look in (default: srd-5.1).
-         *
-         *     Returns:
-         *         The full spell details, including all original content fields.
-         *
-         *     Raises:
-         *         AppError: With status 404 if no spell is found.
-         *
-         *     Example:
-         *         GET /v1/spells/fireball
-         *         GET /v1/spells/fireball?namespace=user:1234
+         * @description Get a single spell by slug within a source namespace.
          */
         get: operations["get_spell_v1_spells__slug__get"];
         put?: never;
@@ -788,7 +569,10 @@ export interface components {
          *     become mutable) is an additive, non-breaking change.
          */
         Author: {
-            /** Username */
+            /**
+             * Username
+             * @description The user's public handle.
+             */
             username: string;
         };
         /**
@@ -796,9 +580,15 @@ export interface components {
          * @description Payload to create a book.
          */
         BookCreate: {
-            /** Name */
+            /**
+             * Name
+             * @description Display name for the book.
+             */
             name: string;
-            /** Description */
+            /**
+             * Description
+             * @description Optional longer description of the book.
+             */
             description?: string | null;
         };
         /**
@@ -809,70 +599,112 @@ export interface components {
             /**
              * Id
              * Format: uuid
+             * @description Unique identifier for the book.
              */
             id: string;
-            /** Name */
+            /**
+             * Name
+             * @description Display name of the book.
+             */
             name: string;
-            /** Slug */
+            /**
+             * Slug
+             * @description Stable handle for system books; null for user books.
+             */
             slug: string | null;
-            /** Description */
+            /**
+             * Description
+             * @description Longer description, if any.
+             */
             description: string | null;
-            /** Ispublic */
+            /**
+             * Ispublic
+             * @description Whether the book is readable by anyone.
+             */
             isPublic: boolean;
-            /** Issystem */
+            /**
+             * Issystem
+             * @description Whether this is a read-only system book (e.g. the SRD).
+             */
             isSystem: boolean;
+            /** @description Public author projection, or null for a system book. */
             owner: components["schemas"]["Author"];
             /**
              * Createdat
              * Format: date-time
+             * @description When the book was created.
              */
             createdAt: string;
             /**
              * Updatedat
              * Format: date-time
+             * @description When the book was last updated.
              */
             updatedAt: string;
-            /** Monstercount */
+            /**
+             * Monstercount
+             * @description Number of monsters in the book.
+             */
             monsterCount: number;
-            /** Spellcount */
+            /**
+             * Spellcount
+             * @description Number of spells in the book.
+             */
             spellCount: number;
-            /** Itemcount */
+            /**
+             * Itemcount
+             * @description Number of items in the book.
+             */
             itemCount: number;
         };
         /**
          * BookSummary
          * @description A book as shown in list views.
-         *
-         *     ``owner`` is the public author projection (username only) for a
-         *     user-owned book, or null for a system book such as the SRD catalog.
-         *     ``isSystem`` books are read-only; ``isPublic`` books are readable by
-         *     anyone.
          */
         BookSummary: {
             /**
              * Id
              * Format: uuid
+             * @description Unique identifier for the book.
              */
             id: string;
-            /** Name */
+            /**
+             * Name
+             * @description Display name of the book.
+             */
             name: string;
-            /** Slug */
+            /**
+             * Slug
+             * @description Stable handle for system books; null for user books.
+             */
             slug: string | null;
-            /** Description */
+            /**
+             * Description
+             * @description Longer description, if any.
+             */
             description: string | null;
-            /** Ispublic */
+            /**
+             * Ispublic
+             * @description Whether the book is readable by anyone.
+             */
             isPublic: boolean;
-            /** Issystem */
+            /**
+             * Issystem
+             * @description Whether this is a read-only system book (e.g. the SRD).
+             */
             isSystem: boolean;
+            /** @description Public author projection, or null for a system book. */
             owner: components["schemas"]["Author"];
             /**
              * Createdat
              * Format: date-time
+             * @description When the book was created.
              */
             createdAt: string;
             /**
              * Updatedat
              * Format: date-time
+             * @description When the book was last updated.
              */
             updatedAt: string;
         };
@@ -881,9 +713,15 @@ export interface components {
          * @description Payload to update a book. Only the provided fields are changed.
          */
         BookUpdate: {
-            /** Name */
+            /**
+             * Name
+             * @description New display name for the book.
+             */
             name?: string | null;
-            /** Description */
+            /**
+             * Description
+             * @description New description for the book.
+             */
             description?: string | null;
         };
         /**
@@ -973,59 +811,73 @@ export interface components {
         /**
          * ItemDetail
          * @description Full item details, used in detail endpoints.
-         *
-         *     Attributes:
-         *         content: The full item data as ingested from the source, with all
-         *             original fields and structure preserved.
-         *         content_source: Metadata about the source of the item data, such as
-         *             the original URL or source file name.
          */
         ItemDetail: {
-            /** Slug */
+            /**
+             * Slug
+             * @description URL-safe unique identifier.
+             */
             slug: string;
-            /** Name */
+            /**
+             * Name
+             * @description The item's name.
+             */
             name: string;
-            /** Itemcategory */
+            /**
+             * Itemcategory
+             * @description Category (e.g. 'weapon', 'potion'), if available.
+             */
             itemCategory: string | null;
-            /** Rarity */
+            /**
+             * Rarity
+             * @description Rarity (e.g. 'rare'); null for mundane items.
+             */
             rarity: string | null;
+            /** @description Full source payload, with all original fields preserved. */
             content: components["schemas"]["SrdItemContent"];
+            /** @description Provenance and licensing metadata for the entry. */
             contentSource: components["schemas"]["ContentSource"];
         };
         /**
          * ItemSummary
          * @description Summary info for an item, used in list endpoints.
-         *
-         *     Attributes:
-         *         slug: Unique identifier for the item, used in URLs.
-         *         name: The item's name.
-         *         item_category: The category of the item (e.g. "Weapon", "Potion"),
-         *             if available. This is not guaranteed to be present for all items, as
-         *             it depends on the source data.
-         *         rarity: The rarity of the item (e.g. "Common", "Rare"), if available.
          */
         ItemSummary: {
-            /** Slug */
+            /**
+             * Slug
+             * @description URL-safe unique identifier.
+             */
             slug: string;
-            /** Name */
+            /**
+             * Name
+             * @description The item's name.
+             */
             name: string;
-            /** Itemcategory */
+            /**
+             * Itemcategory
+             * @description Category (e.g. 'weapon', 'potion'), if available.
+             */
             itemCategory: string | null;
-            /** Rarity */
+            /**
+             * Rarity
+             * @description Rarity (e.g. 'rare'); null for mundane items.
+             */
             rarity: string | null;
         };
         /**
          * Links
          * @description Prev/next navigation links for a paginated resultset.
-         *
-         *     Attributes:
-         *         prev: Absolute URL for the previous page, or null on the first page.
-         *         next: Absolute URL for the next page, or null on the last page.
          */
         Links: {
-            /** Prev */
+            /**
+             * Prev
+             * @description URL of the previous page, or null on the first page.
+             */
             prev: string | null;
-            /** Next */
+            /**
+             * Next
+             * @description URL of the next page, or null on the last page.
+             */
             next: string | null;
         };
         /**
@@ -1036,9 +888,15 @@ export interface components {
          *     presence of ``@`` disambiguates (usernames cannot contain ``@``).
          */
         LoginRequest: {
-            /** Identifier */
+            /**
+             * Identifier
+             * @description Account username or email.
+             */
             identifier: string;
-            /** Password */
+            /**
+             * Password
+             * @description Account password.
+             */
             password: string;
         };
         /**
@@ -1046,7 +904,10 @@ export interface components {
          * @description A generic, non-revealing acknowledgement message.
          */
         MessageResponse: {
-            /** Message */
+            /**
+             * Message
+             * @description Human-readable acknowledgement message.
+             */
             message: string;
         };
         /**
@@ -1054,74 +915,105 @@ export interface components {
          * @description Envelopes a paginated resultset with metadata.
          */
         MetadataEnvelope: {
+            /** @description Pagination counters. */
             resultset: components["schemas"]["ResultsetMeta"];
+            /** @description Prev/next navigation links. */
             links: components["schemas"]["Links"];
         };
         /**
          * MonsterDetail
          * @description Full monster details, used in detail endpoints.
-         *
-         *     Attributes:
-         *         content: The full monster data as ingested from the source, with all
-         *             original fields and structure preserved.
-         *         content_source: Metadata about the source of the monster data, such as
-         *             the original URL or source file name.
          */
         MonsterDetail: {
-            /** Slug */
+            /**
+             * Slug
+             * @description URL-safe unique identifier.
+             */
             slug: string;
-            /** Name */
+            /**
+             * Name
+             * @description The monster's name.
+             */
             name: string;
-            /** Monstertype */
+            /**
+             * Monstertype
+             * @description Type or category (e.g. 'dragon').
+             */
             monsterType: string | null;
-            /** Challengerating */
+            /**
+             * Challengerating
+             * @description Challenge rating as a display string (e.g. '1/2', '5').
+             */
             challengeRating: string;
+            /** @description Full source payload, with all original fields preserved. */
             content: components["schemas"]["SrdMonsterContent"];
+            /** @description Provenance and licensing metadata for the entry. */
             contentSource: components["schemas"]["ContentSource"];
         };
         /**
          * MonsterSummary
          * @description Summary info for a monster, used in list endpoints.
-         *
-         *     Attributes:
-         *         slug: Unique identifier for the monster, used in URLs.
-         *         name: The monster's name.
-         *         monster_type: The type or category of the monster (e.g. "Dragon").
-         *         challenge_rating: The monster's challenge rating as a display string
-         *             (e.g. "1/2", "5", "10").
          */
         MonsterSummary: {
-            /** Slug */
+            /**
+             * Slug
+             * @description URL-safe unique identifier.
+             */
             slug: string;
-            /** Name */
+            /**
+             * Name
+             * @description The monster's name.
+             */
             name: string;
-            /** Monstertype */
+            /**
+             * Monstertype
+             * @description Type or category (e.g. 'dragon').
+             */
             monsterType: string | null;
-            /** Challengerating */
+            /**
+             * Challengerating
+             * @description Challenge rating as a display string (e.g. '1/2', '5').
+             */
             challengeRating: string;
         };
         /** PaginatedResultset[BookSummary] */
         PaginatedResultset_BookSummary_: {
+            /** @description Pagination metadata and links. */
             metadata: components["schemas"]["MetadataEnvelope"];
-            /** Data */
+            /**
+             * Data
+             * @description The records on this page.
+             */
             data: components["schemas"]["BookSummary"][];
         };
         /** PaginatedResultset[ItemSummary] */
         PaginatedResultset_ItemSummary_: {
+            /** @description Pagination metadata and links. */
             metadata: components["schemas"]["MetadataEnvelope"];
-            /** Data */
+            /**
+             * Data
+             * @description The records on this page.
+             */
             data: components["schemas"]["ItemSummary"][];
         };
         /** PaginatedResultset[MonsterSummary] */
         PaginatedResultset_MonsterSummary_: {
+            /** @description Pagination metadata and links. */
             metadata: components["schemas"]["MetadataEnvelope"];
-            /** Data */
+            /**
+             * Data
+             * @description The records on this page.
+             */
             data: components["schemas"]["MonsterSummary"][];
         };
         /** PaginatedResultset[SpellSummary] */
         PaginatedResultset_SpellSummary_: {
+            /** @description Pagination metadata and links. */
             metadata: components["schemas"]["MetadataEnvelope"];
-            /** Data */
+            /**
+             * Data
+             * @description The records on this page.
+             */
             data: components["schemas"]["SpellSummary"][];
         };
         /**
@@ -1129,9 +1021,15 @@ export interface components {
          * @description Payload to set a new password using a reset token.
          */
         PasswordResetConfirmRequest: {
-            /** Token */
+            /**
+             * Token
+             * @description Password-reset token from the email link.
+             */
             token: string;
-            /** Password */
+            /**
+             * Password
+             * @description Account password (8-128 characters).
+             */
             password: string;
         };
         /**
@@ -1143,7 +1041,10 @@ export interface components {
          *     it never reveals which addresses are registered.
          */
         PasswordResetRequest: {
-            /** Identifier */
+            /**
+             * Identifier
+             * @description Account username or email.
+             */
             identifier: string;
         };
         /**
@@ -1174,11 +1075,20 @@ export interface components {
          * @description Metadata about a paginated resultset.
          */
         ResultsetMeta: {
-            /** Count */
+            /**
+             * Count
+             * @description Total records matching the query, across all pages.
+             */
             count: number;
-            /** Offset */
+            /**
+             * Offset
+             * @description Offset of this page.
+             */
             offset: number;
-            /** Limit */
+            /**
+             * Limit
+             * @description Number of records in this page.
+             */
             limit: number;
         };
         /**
@@ -1212,9 +1122,13 @@ export interface components {
             /**
              * Email
              * Format: email
+             * @description Account email address (kept private).
              */
             email: string;
-            /** Password */
+            /**
+             * Password
+             * @description Account password (8-128 characters).
+             */
             password: string;
         };
         /**
@@ -1242,35 +1156,55 @@ export interface components {
          * @description Full spell details, used in the detail endpoint.
          */
         SpellDetail: {
-            /** Slug */
+            /**
+             * Slug
+             * @description URL-safe unique identifier.
+             */
             slug: string;
-            /** Name */
+            /**
+             * Name
+             * @description The spell's name.
+             */
             name: string;
-            /** Level */
+            /**
+             * Level
+             * @description Level as a display string (e.g. 'Cantrip', '1st').
+             */
             level: string;
-            /** School */
+            /**
+             * School
+             * @description School of magic (e.g. 'evocation').
+             */
             school: string | null;
+            /** @description Full source payload, with all original fields preserved. */
             content: components["schemas"]["SrdSpellContent"];
+            /** @description Provenance and licensing metadata for the entry. */
             contentSource: components["schemas"]["ContentSource"];
         };
         /**
          * SpellSummary
          * @description Summary info for a spell, used in list endpoints.
-         *
-         *     Attributes:
-         *         slug: Unique identifier for the spell, used in URLs.
-         *         name: The spell's name.
-         *         level: The spell's level as a display string (e.g. "Cantrip", "1st").
-         *         school: The spell's school of magic (e.g. "evocation").
          */
         SpellSummary: {
-            /** Slug */
+            /**
+             * Slug
+             * @description URL-safe unique identifier.
+             */
             slug: string;
-            /** Name */
+            /**
+             * Name
+             * @description The spell's name.
+             */
             name: string;
-            /** Level */
+            /**
+             * Level
+             * @description Level as a display string (e.g. 'Cantrip', '1st').
+             */
             level: string;
-            /** School */
+            /**
+             * School
+             * @description School of magic (e.g. 'evocation').
+             */
             school: string | null;
         };
         /**
@@ -1429,20 +1363,29 @@ export interface components {
             /**
              * Id
              * Format: uuid
+             * @description The account's unique identifier.
              */
             id: string;
-            /** Username */
+            /**
+             * Username
+             * @description The account's public handle.
+             */
             username: string;
             /**
              * Email
              * Format: email
+             * @description The account's private email address.
              */
             email: string;
-            /** Emailverified */
+            /**
+             * Emailverified
+             * @description Whether the email has been verified.
+             */
             emailVerified: boolean;
             /**
              * Createdat
              * Format: date-time
+             * @description When the account was created.
              */
             createdAt: string;
         };
@@ -1464,7 +1407,10 @@ export interface components {
          * @description Payload to confirm an email address with a verification token.
          */
         VerifyEmailRequest: {
-            /** Token */
+            /**
+             * Token
+             * @description Verification token from the email link.
+             */
             token: string;
         };
     };

@@ -9,6 +9,6 @@ import { z } from "zod/v4";
  * @description Payload to create a book.
  */
 export const bookCreateSchema = z.object({
-    "name": z.string().min(1).max(255),
-"description": z.string().max(2000).nullish()
+    "name": z.string().min(1).max(255).describe("Display name for the book."),
+"description": z.string().max(2000).describe("Optional longer description of the book.").nullish()
     }).describe("Payload to create a book.")

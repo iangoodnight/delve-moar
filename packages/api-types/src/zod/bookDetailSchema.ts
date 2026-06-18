@@ -10,18 +10,18 @@ import { z } from "zod/v4";
  * @description A single book with the count of content it holds, by resource type.
  */
 export const bookDetailSchema = z.object({
-    "id": z.uuid(),
-"name": z.string(),
-"slug": z.nullable(z.string()),
-"description": z.nullable(z.string()),
-"isPublic": z.boolean(),
-"isSystem": z.boolean(),
+    "id": z.uuid().describe("Unique identifier for the book."),
+"name": z.string().describe("Display name of the book."),
+"slug": z.nullable(z.string().describe("Stable handle for system books; null for user books.")),
+"description": z.nullable(z.string().describe("Longer description, if any.")),
+"isPublic": z.boolean().describe("Whether the book is readable by anyone."),
+"isSystem": z.boolean().describe("Whether this is a read-only system book (e.g. the SRD)."),
 get "owner"(){
                return authorSchema.describe("Public author projection -- how a user is shown to *other* users.\n\nThe only user data exposed when homebrew is published (#185, consumed by\n#177+). Deliberately carries ``username`` alone: it is a unique,\nimmutable, stable public handle in Phase 1b, so neither the private\nemail nor the internal user id ever needs to leave the owner's own view.\nAdding fields later (e.g. a stable public id, should usernames ever\nbecome mutable) is an additive, non-breaking change.").nullable()
               },
-"createdAt": z.iso.datetime(),
-"updatedAt": z.iso.datetime(),
-"monsterCount": z.int(),
-"spellCount": z.int(),
-"itemCount": z.int()
+"createdAt": z.iso.datetime().describe("When the book was created."),
+"updatedAt": z.iso.datetime().describe("When the book was last updated."),
+"monsterCount": z.int().describe("Number of monsters in the book."),
+"spellCount": z.int().describe("Number of spells in the book."),
+"itemCount": z.int().describe("Number of items in the book.")
     }).describe("A single book with the count of content it holds, by resource type.")
