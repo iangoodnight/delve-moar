@@ -65,28 +65,7 @@ async def list_monsters(
         Query(ge=0, description="Inclusive maximum challenge rating."),
     ] = None,
 ) -> PaginatedResultset[MonsterSummary]:
-    """Return a paginated list of monsters with optional filters.
-
-    Args:
-        request: Current HTTP request, used to build pagination links.
-        session: Database session, injected by dependency.
-        params: Pagination parameters, injected by dependency.
-        ordering: SQLAlchemy ordering expressions, injected by dependency.
-        search: Parsed search filter, injected by dependency.
-        monster_type: Optional exact match for the monster_type field.
-        cr_min: Inclusive minimum challenge rating filter.
-        cr_max: Inclusive maximum challenge rating filter.
-
-    Returns:
-        A paginated resultset containing monster summaries and pagination
-        metadata.
-
-    Example:
-        GET /v1/monsters?search=dragon&limit=5&offset=10
-        GET /v1/monsters?type=undead&cr_min=1&cr_max=5
-        GET /v1/monsters?cr_max=0.25&order_by=name:asc
-        GET /v1/monsters?order_by=challenge_rating:desc,name:asc
-    """
+    """List monsters with optional type and challenge-rating filters."""
     stmt = select(Monster).where(Monster.source_namespace == SRD_NAMESPACE)
 
     if search.where is not None:
@@ -136,23 +115,7 @@ async def get_monster(
         ),
     ] = SRD_NAMESPACE,
 ) -> MonsterDetail:
-    """Return full details for a single monster by slug.
-
-    Args:
-        slug: The URL-safe unique identifier for the monster.
-        session: Database session, injected by dependency.
-        namespace: The source namespace to look in (default: srd-5.1).
-
-    Returns:
-        The full monster details, including all original content fields.
-
-    Raises:
-        AppError: With status 404 if no monster is found.
-
-    Example:
-        GET /v1/monsters/tarrasque
-        GET /v1/monsters/giant-spider?namespace=user:1234
-    """
+    """Get a single monster by slug within a source namespace."""
     result = await session.scalar(
         select(Monster).where(
             Monster.slug == slug,

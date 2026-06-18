@@ -66,28 +66,7 @@ async def list_items(
         ),
     ] = None,
 ) -> PaginatedResultset[ItemSummary]:
-    """Return a paginated list of items with optional filters.
-
-    Args:
-        request: Current HTTP request, used to build pagination links.
-        session: Database session, injected by dependency.
-        params: Pagination parameters, injected by dependency.
-        ordering: SQLAlchemy ordering expressions, injected by dependency.
-        search: Parsed search filter, injected by dependency.
-        item_category: Optional exact match for the item_category field.
-        rarity: Optional exact match for the rarity field. Set to 'none' to
-            filter for items with no rarity (equipment).
-
-    Returns:
-        A paginated list of items matching the filters, with summary information
-        and pagination metadata.
-
-    Example:
-        GET /v1/items?search=sword&item_category=weapon&rarity=rare&limit=2
-        GET /v1/items?item_category=potion&rarity=none
-        GET /v1/items?order_by=name:asc&limit=5&offset=10
-        GET /v1/items?order_by=rarity:desc,name:asc
-    """
+    """List items with optional category and rarity filters."""
     stmt = select(Item).where(Item.source_namespace == SRD_NAMESPACE)
 
     if search.where is not None:
@@ -137,23 +116,7 @@ async def get_item(
         ),
     ] = SRD_NAMESPACE,
 ) -> ItemDetail:
-    """Return full details for a single item by slug and namespace.
-
-    Args:
-        slug: The unique slug identifier for the item.
-        session: Database session, injected by dependency.
-        namespace: The source namespace to look up the item in.
-
-    Returns:
-        The full details of the item, including all original content fields.
-
-    Raises:
-        AppError: With status 404 if no item is found.
-
-    Example:
-        GET /v1/items/flame-tongue?namespace=srd-5.1
-        GET /v1/items/amulet-of-health?namespace=user:1234
-    """
+    """Get a single item by slug within a source namespace."""
     result = await session.scalar(
         select(Item).where(
             Item.slug == slug,

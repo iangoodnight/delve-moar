@@ -71,28 +71,7 @@ async def list_spells(
         ),
     ] = None,
 ) -> PaginatedResultset[SpellSummary]:
-    """Return a paginated list of spells with optional filters.
-
-    Args:
-        request: Current HTTP request, used to build pagination links.
-        session: Database session, injected by dependency.
-        params: Pagination parameters, injected by dependency.
-        ordering: SQLAlchemy ordering expressions, injected by dependency.
-        search: Parsed search filter, injected by dependency.
-        school: Optional exact match for spell school.
-        level_min: Optional minimum spell level (inclusive).
-        level_max: Optional maximum spell level (inclusive).
-
-    Returns:
-        A paginated resultset containing spell summaries that match the
-        provided filters.
-
-    Example:
-        GET /v1/spells?search=fire&level_min=1&level_max=3&school=evocation
-        GET /v1/spells?level_max=0
-        GET /v1/spells?order_by=name:asc
-        GET /v1/spells?order_by=level:desc,name:asc&limit=5&offset=10
-    """
+    """List spells with optional school and level-range filters."""
     stmt = select(Spell).where(Spell.source_namespace == SRD_NAMESPACE)
 
     if search.where is not None:
@@ -142,23 +121,7 @@ async def get_spell(
         ),
     ] = SRD_NAMESPACE,
 ) -> SpellDetail:
-    """Return full details for a single spell by slug.
-
-    Args:
-        slug: The URL-safe unique identifier for the spell.
-        session: Database session, injected by dependency.
-        namespace: The source namespace to look in (default: srd-5.1).
-
-    Returns:
-        The full spell details, including all original content fields.
-
-    Raises:
-        AppError: With status 404 if no spell is found.
-
-    Example:
-        GET /v1/spells/fireball
-        GET /v1/spells/fireball?namespace=user:1234
-    """
+    """Get a single spell by slug within a source namespace."""
     result = await session.scalar(
         select(Spell).where(
             Spell.slug == slug,
