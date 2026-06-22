@@ -14,13 +14,28 @@ For deeper material (architecture, recipes, glossary), see
 Install the required tools (macOS with Homebrew):
 
 ```bash
-brew bundle          # installs everything listed in Brewfile
+brew bundle          # installs the tools listed in Brewfile
 ```
 
-Or install manually: Node.js 24 (`.nvmrc`), pnpm 9+, Python 3.12 +
-[uv](https://docs.astral.sh/uv/), Go 1.23+, Docker + Docker Compose,
-[go-task](https://taskfile.dev), [pre-commit](https://pre-commit.com),
-`golangci-lint`, `shellcheck`, `shfmt`.
+`brew bundle` does **not** install Docker or Node; provision those
+two separately:
+
+- **Docker Desktop** is required for `task dev` and `task db:up`
+  (both run `docker compose`). Install
+  [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+  and make sure it is running before either task.
+- **Node.js** is pinned to the major in [`.nvmrc`](.nvmrc) (currently
+  24). Use a version manager that honors `.nvmrc`
+  ([fnm](https://github.com/Schniz/fnm) or
+  [nvm](https://github.com/nvm-sh/nvm)) and run `fnm use` / `nvm use`
+  in the repo root. The Brewfile intentionally does not manage Node,
+  so a Homebrew install cannot drift from the pinned major.
+
+Or install everything manually: Node.js 24 (`.nvmrc`), pnpm 10+,
+Python 3.12 + [uv](https://docs.astral.sh/uv/), Go 1.26+, Docker +
+Docker Compose, [go-task](https://taskfile.dev),
+[pre-commit](https://pre-commit.com), `golangci-lint`, `shellcheck`,
+`shfmt`.
 
 Then from the repo root:
 
