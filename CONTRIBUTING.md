@@ -191,6 +191,62 @@ If your PR changes the DB schema:
 - Add the Alembic migration in the same PR.
 - Mention any data backfill or downtime risk in the PR body.
 
+## Reviewing a pull request
+
+Reviewing is as much a part of the workflow as authoring. A reviewer
+confirms the mechanics CI cannot fully judge, makes the calls tooling
+does not catch, and guards what user data the change stores or
+exposes. Approve and merge only when CI is green and the review is
+satisfied.
+
+### Mechanics to confirm
+
+- **CI is green** on the latest push: lint, tests, and the
+  `gen-types-check` type-generation diff job.
+- **CODEOWNERS approval** is present for the paths the PR touches.
+  Merge only once checks are green and the review is approved.
+- **Conventional-commit title and scope.** Squash-merge feature and
+  fix PRs into `dev`; a `dev` to `main` release PR uses a merge commit
+  or rebase, never a squash (see
+  [Cutting a release](#cutting-a-release-manual)).
+- **API changes:** `task gen:types` was run and the regenerated files
+  (`packages/api-types/` and the Go client in
+  `apps/cli/internal/apiclient/`) are committed in the same PR, and
+  the drift check passes.
+- **Schema changes:** an Alembic migration is included, and any
+  backfill or downtime risk is called out in the PR body.
+- **Changelog:** a user-visible change has an entry under
+  `[Unreleased]`, or the "no entry needed" box is honestly checked.
+- **Tests:** new or changed behavior is covered by tests.
+
+### Judgement calls CI cannot catch
+
+Some conventions are not (fully) machine-enforced. Check these by
+hand, and link the relevant record when you flag one:
+
+- **Web architectural boundaries** beyond what ESLint enforces, per
+  [web features layout](docs/architecture/web-features-layout.md).
+- **Coverage qualifying criteria** for pass-through wrappers, per
+  [ADR 0008](docs/decisions/0008-frontend-coverage-policy.md).
+- **Typography token ordering** caveats, per
+  [ADR 0007](docs/decisions/0007-web-typography-system.md).
+- **Owner-only write rule** for resources, per
+  [ADR 0011](docs/decisions/0011-campaign-model.md).
+
+### Privacy and data-exposure review
+
+When a PR introduces or alters what user data is stored or exposed (a
+new table or field on a user-facing entity, a new response schema, or
+a new public projection), run a data-minimization and exposure pass
+before approving:
+
+- Is anything collected that the feature does not need?
+- Is internal identity kept separate from public presentation?
+- Is PII such as email kept out of public projections?
+- Is there a deletion or retention consideration to record?
+
+Raise anything that fails these checks on the PR.
+
 ## Changelog
 
 DelveMoar keeps a single root [`CHANGELOG.md`](CHANGELOG.md) in the
