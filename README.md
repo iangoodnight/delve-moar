@@ -3,7 +3,7 @@
 A homebrew-first TTRPG utility suite for game masters: catalog,
 encounter builder, and character tools, all self-hosted and SRD-powered.
 
-> **Status**: Phase 1a (SRD catalog, read-only) complete — v0.1.0. Phase 1b
+> **Status**: Phase 1a (SRD catalog, read-only) complete, v0.1.2. Phase 1b
 > (homebrew authoring) is next. See the [roadmap](docs/roadmap.md) for what
 > comes next.
 
