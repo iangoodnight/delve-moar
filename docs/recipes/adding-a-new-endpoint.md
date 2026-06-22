@@ -279,59 +279,148 @@ For the full pipeline, see
 ## Step 7: consume from the web app
 
 The web app uses [TanStack Query](https://tanstack.com/query) over a
-typed wrapper around the generated client. A typical pattern:
+typed wrapper around the generated client. Mirror an existing
+resource: the `spells` feature (`apps/web/src/features/spells/`) is
+the closest match for a paginated list.
 
-Inside a feature, e.g. `apps/web/src/features/conditions/`:
+### The data layer
+
+Inside the feature, a query-options factory is the unit of data
+access (not bare `useQuery` calls scattered through components). For a
+paginated list, mirror `features/spells/api/get-spells.ts`:
 
 ```ts
-// api/get-conditions.ts
-import { useQuery } from '@tanstack/react-query'
+// apps/web/src/features/conditions/api/get-conditions.ts
+import type { components } from '@delve-moar/api-types';
+import { infiniteQueryOptions } from '@tanstack/react-query';
 
-import type { components } from '@delve-moar/api-types'
+import { apiClient } from '@/lib/api-client';
 
-import { apiClient } from '@/lib/api-client'
+export type ConditionSummary =
+  components['schemas']['ConditionSummary'];
+export type ConditionListResponse =
+  components['schemas']['PaginatedResultset_ConditionSummary_'];
 
-type ConditionSummary = components['schemas']['ConditionSummary']
-type ConditionListResponse = components['schemas']['PaginatedResultset_ConditionSummary_']
+export interface ConditionFilters {
+  // `| undefined` required for `exactOptionalPropertyTypes: true`
+  search?: string | undefined;
+}
 
-export function useConditions(page = 1) {
-  return useQuery({
-    queryKey: ['conditions', { page }],
-    queryFn: async (): Promise<ConditionListResponse> => {
-      const res = await apiClient.get('/v1/conditions', { params: { page } })
-      return res.data
+const LIMIT = 20;
+
+function getConditions(
+  filters: ConditionFilters,
+  offset = 0,
+): Promise<ConditionListResponse> {
+  return apiClient.get<ConditionListResponse>('/v1/conditions', {
+    params: {
+      ...(filters.search && { search: filters.search }),
+      limit: LIMIT,
+      offset,
     },
-  })
+  });
+}
+
+export function getConditionsInfiniteQueryOptions(
+  filters: ConditionFilters,
+) {
+  return infiniteQueryOptions({
+    queryKey: ['conditions', 'list', filters] as const,
+    queryFn: ({ pageParam }) => getConditions(filters, pageParam),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => {
+      const { count, limit, offset } = lastPage.metadata.resultset;
+      return offset + limit < count ? offset + limit : undefined;
+    },
+  });
 }
 ```
 
-And a page component, e.g.
-`apps/web/src/pages/conditions-list-page.tsx`:
+Notice the conventions: `apiClient.get<T>()` returns typed data
+directly (no `res.data` unwrap); pagination is offset/limit driven by
+`metadata.resultset`, not a `page` number; and filter fields are
+typed `| undefined` for `exactOptionalPropertyTypes`. Re-export from a
+barrel so consumers import from `@/features/<x>/api`:
+
+```ts
+// apps/web/src/features/conditions/api/index.ts
+export type {
+  ConditionFilters,
+  ConditionSummary,
+} from './get-conditions';
+export { getConditionsInfiniteQueryOptions } from './get-conditions';
+```
+
+### Register the route
+
+There is no `src/pages/` directory. A route is its own lazy module
+under `src/app/routes/<resource>/`, plus two registrations.
+
+Add the path to `src/config/paths.ts`:
+
+```ts
+conditions: {
+  displayName: 'Conditions',
+  path: '/conditions',
+  getHref: () => '/conditions',
+},
+```
+
+Add a lazy child to the `AppRoot` children in `src/app/router.tsx`:
 
 ```tsx
-import { useConditions } from '@/features/conditions/api/get-conditions'
+{
+  path: paths.conditions.path,
+  HydrateFallback: DefaultHydrateFallback,
+  lazy: () =>
+    import('./routes/conditions/conditions').then(convert(queryClient)),
+},
+```
 
-export function ConditionsListPage() {
-  const { data, isLoading, isError } = useConditions()
+### The route module
 
-  if (isLoading) return <p>Loading...</p>
-  if (isError || !data) return <p>Failed to load conditions.</p>
+The module is the route's default export and consumes the feature's
+query options. A compact version (a real feature splits the list into
+presentational components under `features/conditions/components/`, as
+`spells` does):
+
+```tsx
+// apps/web/src/app/routes/conditions/conditions.tsx
+import { useInfiniteQuery } from '@tanstack/react-query';
+
+import { Head } from '@/components/seo/head';
+import { Column } from '@/components/ui/layout';
+import { H1 } from '@/components/ui/typography';
+import { getConditionsInfiniteQueryOptions } from '@/features/conditions/api';
+
+export default function Conditions() {
+  const { data, isError, isLoading } = useInfiniteQuery(
+    getConditionsInfiniteQueryOptions({}),
+  );
+
+  const conditions = data?.pages.flatMap((page) => page.data) ?? [];
 
   return (
-    <ul>
-      {data.data.map((condition) => (
-        <li key={condition.id}>{condition.name}</li>
-      ))}
-    </ul>
-  )
+    <Column gap="4">
+      <Head description="Browse SRD conditions." title="Conditions" />
+      <H1>Conditions</H1>
+      {isLoading && <p>Loading...</p>}
+      {isError && <p>Failed to load conditions.</p>}
+      <ul>
+        {conditions.map((condition) => (
+          <li key={condition.slug}>{condition.name}</li>
+        ))}
+      </ul>
+    </Column>
+  );
 }
 ```
 
 Two things to notice:
 
-- The component imports from `@/features/conditions/...` and from
-  `@/lib/...`, but never from another feature. That is the bulletproof
-  boundary in action; see
+- The module imports from `@/features/conditions/...`, `@/lib/...`,
+  and shared `@/components/...`, but never from another feature. That
+  is the bulletproof boundary in action; see
   [architecture/web-features-layout.md](../architecture/web-features-layout.md).
 - Types come from the generated `@delve-moar/api-types` package, not
   from hand-written interfaces. If the API shape changes and you forget
@@ -352,8 +441,9 @@ would address each:
 - **CLI.** If conditions should be browsable from the CLI too, add a
   `conditions` subcommand under `apps/cli/cmd/` that uses the regenerated
   Go client.
-- **Routing.** Add the page to `apps/web/src/app/router.tsx` and link it
-  from the navigation shell.
+- **Navigation link.** Step 7 registered the route; surfacing it in
+  the primary navigation shell (the header and mobile menu) is a
+  separate edit.
 
 ## Where to look next
 
