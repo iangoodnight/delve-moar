@@ -161,6 +161,32 @@ lift it. Three good destinations, in order of preference:
 Reaching across features (or worse, copy-pasting) is the failure mode
 this layout exists to prevent.
 
+## UI primitives: import through re-exports
+
+Feature and route code consume Radix Themes components and sonner toasts
+through the project's own wrappers, never the upstream packages directly.
+This keeps theming, token overrides, and toast configuration in one place
+and lets an implementation change without touching every call site.
+
+ESLint enforces it with `no-restricted-imports` (issue #208):
+
+- `@radix-ui/*` may be imported only by the re-export barrels and Radix
+  wrappers under `src/components/**`, plus the two app-root files that set
+  up the theme: `src/app/provider.tsx` (the `<Theme>` shell) and
+  `src/main.tsx` (the `styles.css` side-effect). Everywhere else, import
+  the primitive from a `@/components/ui/*` barrel; add a barrel if one
+  does not exist yet.
+- `sonner` may be imported only by `src/lib/notifications/notify.ts` (the
+  notify seam) and `src/components/ui/toaster/app-toaster.tsx`, which owns
+  sonner's presentation config. Everywhere else, raise toasts through the
+  `notify` seam.
+
+The app root is carved out rather than routed through a re-exported
+`Theme`/`ThemePanel` because the `@radix-ui/themes/styles.css` side-effect
+import has no barrel equivalent. The carve-out is scoped to those two
+files, not all of `src/app/**`: route modules under `src/app/routes/`
+have no reason to import Radix directly either.
+
 ## Where to put new code
 
 A rough decision tree for new files:
@@ -220,6 +246,9 @@ So:
   `function foo() {}` instead of `const foo = () => {}`. Arrow functions
   inside expressions are fine.
 - **`react-hooks/recommended`** and **`jsx-a11y/strict`** are both on.
+- **`no-restricted-imports` (Radix + sonner)**: feature and route code
+  import Radix and sonner through re-exports, not the upstream packages.
+  See [UI primitives: import through re-exports](#ui-primitives-import-through-re-exports).
 
 The full list lives in `apps/web/eslint.config.js`. Run `pnpm lint` (or
 `task lint:web`) to check.
@@ -227,9 +256,10 @@ The full list lives in `apps/web/eslint.config.js`. Run `pnpm lint` (or
 ## Tests
 
 Files matching `**/*.test.{ts,tsx}` get a blanket exemption from
-`boundaries/no-unknown` and `boundaries/dependencies`. This is intentional:
-test files often need to reach into private layers of whatever they are
-testing.
+`boundaries/no-unknown`, `boundaries/dependencies`, and the Radix/sonner
+import guard. This is intentional: test files often need to reach into
+private layers of whatever they are testing, and test render helpers wrap
+components in `<Theme>` imported directly from `@radix-ui/themes`.
 
 Test files live next to the code they test, inside a `__tests__/`
 directory:

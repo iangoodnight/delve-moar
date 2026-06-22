@@ -64,6 +64,36 @@ const SHARED_LAYERS = [
   'constants',
 ];
 
+// ---------------------------------------------------------------------------
+// UI-primitive import guard (issue #208)
+//
+// Feature and route code consume Radix and sonner through re-export barrels,
+// never the upstream packages directly. Enforced as a layered set of
+// no-restricted-imports overrides (last-match-wins per rule id):
+//
+//   1. base: ban @radix-ui/* and sonner everywhere under src (tests exempt)
+//   2. radix carve-out: the re-export barrels / wrappers under components/**
+//      plus the app-root importers (provider + entry) may import @radix-ui/*;
+//      sonner stays banned there.
+//   3. sonner carve-out: the notify seam and the AppToaster that owns sonner's
+//      config may import sonner; @radix-ui/* stays banned there.
+//
+// Radix is NOT carved out for all of app/** on purpose: route modules under
+// app/routes/ have no direct Radix imports today, so keeping the carve-out to
+// the two real app-root files prevents drift. styles.css is a side-effect
+// import a barrel cannot replace, which is why this is a carve-out rather than
+// a Theme/ThemePanel re-export.
+// ---------------------------------------------------------------------------
+const RADIX_IMPORT_MESSAGE =
+  'Import Radix primitives from a @/components/ui/* re-export, not @radix-ui directly. Add a barrel under src/components/ui/ if one does not exist yet. See docs/architecture/web-features-layout.md.';
+const SONNER_IMPORT_MESSAGE =
+  'Do not import sonner directly. Use the @/lib/notifications notify seam for toasts (AppToaster owns sonner config). See docs/architecture/web-features-layout.md.';
+const RADIX_RESTRICTED = {
+  group: ['@radix-ui/**'],
+  message: RADIX_IMPORT_MESSAGE,
+};
+const SONNER_RESTRICTED = { group: ['sonner'], message: SONNER_IMPORT_MESSAGE };
+
 export default tseslint.config(
   // IGNORED PATHS
   { ignores: ['dist/**', 'coverage/**', 'storybook-static/**'] }, // TYPESCRIPT
@@ -244,6 +274,36 @@ export default tseslint.config(
     rules: {
       'boundaries/no-unknown': 'off',
       'boundaries/dependencies': 'off',
+    },
+  }, // UI-PRIMITIVE IMPORT GUARD (#208)
+  {
+    files: ['src/**/*.{ts,tsx}'],
+    ignores: ['**/*.test.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        { patterns: [RADIX_RESTRICTED, SONNER_RESTRICTED] },
+      ],
+    },
+  },
+  {
+    files: [
+      'src/components/**/*.{ts,tsx}',
+      'src/app/provider.tsx',
+      'src/main.tsx',
+    ],
+    ignores: ['**/*.test.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': ['error', { patterns: [SONNER_RESTRICTED] }],
+    },
+  },
+  {
+    files: [
+      'src/lib/notifications/notify.ts',
+      'src/components/ui/toaster/app-toaster.tsx',
+    ],
+    rules: {
+      'no-restricted-imports': ['error', { patterns: [RADIX_RESTRICTED] }],
     },
   }, // FILE NAMING
   {
