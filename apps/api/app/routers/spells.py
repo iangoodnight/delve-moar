@@ -1,15 +1,29 @@
 """Spell list and detail endpoints."""
 
+import uuid
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, Query, Request, status
 from sqlalchemy import select
 
+from app.auth.dependencies import OptionalCurrentUser
+from app.books_access import (
+    assert_books_readable,
+    attach_book_memberships,
+    book_memberships_for,
+)
 from app.constants import SRD_NAMESPACE
 from app.db import DbSession
-from app.dependencies import Pagination, SearchFilter, ordering_dep, search_dep
+from app.dependencies import (
+    INCLUDE_BOOK_MEMBERSHIPS,
+    Include,
+    Pagination,
+    SearchFilter,
+    ordering_dep,
+    search_dep,
+)
 from app.exceptions import get_or_404
-from app.models import Spell
+from app.models import BookSpell, Spell
 from app.schemas.errors import ErrorResponse
 from app.schemas.pagination import PaginatedResultset
 from app.schemas.spells import SpellDetail, SpellSummary
@@ -47,9 +61,11 @@ MAX_SPELL_LEVEL = 9
 async def list_spells(
     request: Request,
     session: DbSession,
+    user: OptionalCurrentUser,
     params: Pagination,
     ordering: SpellOrdering,
     search: SpellSearch,
+    include: Include,
     school: Annotated[
         str | None,
         Query(description="Exact match on spell school (e.g. 'evocation')."),
@@ -70,8 +86,17 @@ async def list_spells(
             description="Inclusive maximum spell level (0-9).",
         ),
     ] = None,
+    book: Annotated[
+        list[uuid.UUID] | None,
+        Query(
+            description=(
+                "Filter to spells in any of these books (repeat for "
+                "multiple). Each must be a book you can read, else 404."
+            ),
+        ),
+    ] = None,
 ) -> PaginatedResultset[SpellSummary]:
-    """List spells with optional school and level-range filters."""
+    """List spells with optional school, level-range, and book filters."""
     stmt = select(Spell).where(Spell.source_namespace == SRD_NAMESPACE)
 
     if search.where is not None:
@@ -82,6 +107,13 @@ async def list_spells(
         stmt = stmt.where(Spell.level >= level_min)
     if level_max is not None:
         stmt = stmt.where(Spell.level <= level_max)
+    if book:
+        await assert_books_readable(session, book, user)
+        stmt = stmt.where(
+            Spell.id.in_(
+                select(BookSpell.spell_id).where(BookSpell.book_id.in_(book))
+            )
+        )
 
     total, rows = await fetch_page(
         session,
@@ -89,8 +121,13 @@ async def list_spells(
         ordering=[*search.order_priority, *ordering],
         params=params,
     )
+    data = [SpellSummary.model_validate(row) for row in rows]
+    if INCLUDE_BOOK_MEMBERSHIPS in include and user is not None:
+        await attach_book_memberships(
+            session, user, rows, data, BookSpell, BookSpell.spell_id
+        )
     return paginate(
-        data=[SpellSummary.model_validate(row) for row in rows],
+        data=data,
         total=total,
         params=params,
         links=build_links(request, total, params.offset, params.limit),
@@ -111,6 +148,8 @@ async def list_spells(
 async def get_spell(
     slug: str,
     session: DbSession,
+    user: OptionalCurrentUser,
+    include: Include,
     namespace: Annotated[
         str,
         Query(
@@ -131,4 +170,10 @@ async def get_spell(
     spell = get_or_404(
         result, resource="spell", identifier=f"{namespace}:{slug}"
     )
-    return SpellDetail.model_validate(spell)
+    detail = SpellDetail.model_validate(spell)
+    if INCLUDE_BOOK_MEMBERSHIPS in include and user is not None:
+        memberships = await book_memberships_for(
+            session, user, [spell.id], BookSpell, BookSpell.spell_id
+        )
+        detail.book_memberships = memberships.get(spell.id, [])
+    return detail

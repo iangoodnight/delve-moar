@@ -56,6 +56,31 @@ def _pagination(
 
 Pagination = Annotated[PaginationParams, Depends(_pagination)]
 
+# Optional response expansions requested via ``?include=a,b``. Each route
+# decides which keys it honours; unknown keys are ignored.
+INCLUDE_BOOK_MEMBERSHIPS = "book_memberships"
+
+
+def _include(
+    include: Annotated[
+        str | None,
+        Query(
+            description=(
+                "Comma-separated optional response expansions. "
+                f"Supported: '{INCLUDE_BOOK_MEMBERSHIPS}' annotates each entry "
+                "with the signed-in user's own books that contain it."
+            ),
+        ),
+    ] = None,
+) -> set[str]:
+    """Parse the ``include`` query parameter into a set of expansion keys."""
+    return {
+        token.strip() for token in (include or "").split(",") if token.strip()
+    }
+
+
+Include = Annotated[set[str], Depends(_include)]
+
 
 def ordering_dep(
     columns: dict[str, InstrumentedAttribute[Any]],

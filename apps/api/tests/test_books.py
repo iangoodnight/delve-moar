@@ -157,6 +157,27 @@ async def test_list_includes_own_and_public_books(
     assert {"Mine", "SRD 5.1"} <= names
 
 
+async def test_list_scope_owned_excludes_public_books(
+    db_session: AsyncSession, db_client: AsyncClient
+) -> None:
+    await _seed_system_book(db_session)
+    await _signup(db_client, "owneronly")
+    await db_client.post(
+        BOOKS, json={"name": "Mine"}, headers=_csrf_header(db_client)
+    )
+
+    resp = await db_client.get(BOOKS, params={"scope": "owned"})
+    assert resp.status_code == 200
+    names = {b["name"] for b in resp.json()["data"]}
+    assert names == {"Mine"}
+
+
+async def test_list_invalid_scope_422(db_client: AsyncClient) -> None:
+    await _signup(db_client, "badscope")
+    resp = await db_client.get(BOOKS, params={"scope": "everything"})
+    assert resp.status_code == 422
+
+
 async def test_get_book(db_client: AsyncClient) -> None:
     await _signup(db_client, "getter")
     created = await db_client.post(

@@ -3,6 +3,7 @@
 from pydantic import Field
 
 from app.schemas.base import AppSchema
+from app.schemas.book_membership import BookMembership
 from app.schemas.content_source import ContentSource
 from app.schemas.item_content import SrdItemContent
 
@@ -17,6 +18,14 @@ class ItemSummary(AppSchema):
     )
     rarity: str | None = Field(
         description="Rarity (e.g. 'rare'); null for mundane items."
+    )
+    book_memberships: list[BookMembership] | None = Field(
+        default=None,
+        description=(
+            "The signed-in user's own books that contain this entry. Present "
+            "only when requested via include=book_memberships; omitted for "
+            "anonymous requests."
+        ),
     )
 
 

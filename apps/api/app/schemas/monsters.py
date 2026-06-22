@@ -6,6 +6,7 @@ from pydantic import Field, field_validator
 
 from app.display import cr_display
 from app.schemas.base import AppSchema
+from app.schemas.book_membership import BookMembership
 from app.schemas.content_source import ContentSource
 from app.schemas.monster_content import SrdMonsterContent
 
@@ -20,6 +21,14 @@ class MonsterSummary(AppSchema):
     )
     challenge_rating: str = Field(
         description="Challenge rating as a display string (e.g. '1/2', '5')."
+    )
+    book_memberships: list[BookMembership] | None = Field(
+        default=None,
+        description=(
+            "The signed-in user's own books that contain this entry. Present "
+            "only when requested via include=book_memberships; omitted for "
+            "anonymous requests."
+        ),
     )
 
     @field_validator("challenge_rating", mode="before")
