@@ -1,4 +1,8 @@
-# Brewfile — install required developer tools with `brew bundle`.
+# Brewfile: install required developer tools with `brew bundle`.
+#
+# Docker and Node are NOT installed here: install Docker Desktop
+# separately, and manage Node with fnm/nvm honoring .nvmrc. See
+# CONTRIBUTING.md "Local setup".
 #
 # Developer setup (all contributors):
 #   brew bundle --file Brewfile

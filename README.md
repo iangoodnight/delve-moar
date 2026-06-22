@@ -20,13 +20,20 @@ produces both the web's TypeScript types and the CLI's Go HTTP client.
 
 ## Quick start
 
+> **Heads up:** `brew bundle` does not install Docker or Node.
+> Install [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+> first (it is required for `task dev`), and use a Node version
+> manager (fnm or nvm) that honors `.nvmrc` for the pinned Node
+> major. Everything else comes from `brew bundle`. Full list in
+> [`CONTRIBUTING.md`](CONTRIBUTING.md#local-setup).
+
 ```sh
 git clone git@github.com:iangoodnight/delve-moar.git
 cd delve-moar
 cp .env.example .env
-brew bundle         # install required tools (macOS)
+brew bundle         # required tools (macOS); not Docker or Node, see above
 task setup:dev      # git hooks, oapi-codegen, pnpm install
-task dev        # docker compose: postgres, api, web
+task dev            # docker compose: postgres, api, web
 ```
 
 API at `http://localhost:8000`, web app at `http://localhost:5173`.
