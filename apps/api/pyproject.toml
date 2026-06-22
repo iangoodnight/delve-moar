@@ -13,6 +13,10 @@ dependencies = [
     "limits>=5.8.0",
     "aiosmtplib>=5.1.0",
     "sentry-sdk[fastapi]>=2.20",
+    # Used by the SRD seed script (scripts/seed_srd.py), which runs inside the
+    # deployed image; declared directly rather than leaning on
+    # fastapi[standard]'s transitive httpx.
+    "httpx>=0.28",
 ]
 
 [dependency-groups]
@@ -21,7 +25,6 @@ dev = [
     "mypy>=1.15",
     "pytest>=8.0",
     "pytest-asyncio>=0.25",
-    "httpx>=0.28",
     "pytest-cov>=7.1.0",
 ]
 

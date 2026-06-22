@@ -33,6 +33,10 @@ COPY app/ ./app/
 COPY alembic.ini ./
 COPY alembic/ ./alembic/
 
+# scripts/ ships in the image so the SRD seed (and other ops scripts) can run
+# inside the deployed container via `fly ssh`, instead of from a local tunnel.
+COPY scripts/ ./scripts/
+
 EXPOSE 8000
 
 # In docker-compose dev mode the app/ directory is volume-mounted over this
