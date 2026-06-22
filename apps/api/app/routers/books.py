@@ -7,13 +7,14 @@ path arrives with #176/#172.
 """
 
 import uuid
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 
-from fastapi import APIRouter, Depends, Request, status
-from sqlalchemy import func, or_, select
+from fastapi import APIRouter, Depends, Query, Request, status
+from sqlalchemy import func, select
 from sqlalchemy.orm import InstrumentedAttribute
 
 from app.auth.dependencies import CurrentUser, require_csrf
+from app.books_access import readable_books_predicate
 from app.config import settings
 from app.db import DbSession
 from app.dependencies import (
@@ -179,11 +180,21 @@ async def list_books(
     params: Pagination,
     ordering: BookOrdering,
     search: BookSearch,
+    scope: Annotated[
+        Literal["all", "owned"],
+        Query(
+            description=(
+                "Which books to include: 'all' (your books plus public "
+                "books) or 'owned' (only books you created)."
+            ),
+        ),
+    ] = "all",
 ) -> PaginatedResultset[BookSummary]:
-    """List the current user's books plus the public system books."""
-    stmt = select(Book).where(
-        or_(Book.owner_id == user.id, Book.is_public.is_(True))
-    )
+    """List the user's books, optionally scoped to only the ones they own."""
+    if scope == "owned":
+        stmt = select(Book).where(Book.owner_id == user.id)
+    else:
+        stmt = select(Book).where(readable_books_predicate(user))
     if search.where is not None:
         stmt = stmt.where(search.where)
     total, rows = await fetch_page(

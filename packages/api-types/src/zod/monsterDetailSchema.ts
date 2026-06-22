@@ -3,6 +3,7 @@
 * Do not edit manually.
 */
 
+import { bookMembershipSchema } from "./bookMembershipSchema.ts";
 import { contentSourceSchema } from "./contentSourceSchema.ts";
 import { srdMonsterContentSchema } from "./srdMonsterContentSchema.ts";
 import { z } from "zod/v4";
@@ -15,6 +16,9 @@ export const monsterDetailSchema = z.object({
 "name": z.string().describe("The monster's name."),
 "monsterType": z.nullable(z.string().describe("Type or category (e.g. 'dragon').")),
 "challengeRating": z.string().describe("Challenge rating as a display string (e.g. '1/2', '5')."),
+get "bookMemberships"(){
+                return z.array(bookMembershipSchema.describe("A book owned by the requesting user that contains this content.")).describe("The signed-in user's own books that contain this entry. Present only when requested via include=book_memberships; omitted for anonymous requests.").nullish()
+              },
 get "content"(){
                 return srdMonsterContentSchema.describe("SRD monster content payload.")
               },

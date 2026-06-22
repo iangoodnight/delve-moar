@@ -11,10 +11,12 @@ export const listMonstersV1MonstersGetQueryParamsSchema = z.object({
     "type": z.string().describe("Exact match on monster type (e.g. 'undead').").nullish(),
 "cr_min": z.union([z.coerce.number(), z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/)]).describe("Inclusive minimum challenge rating.").nullish(),
 "cr_max": z.union([z.coerce.number(), z.string().regex(/^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$/)]).describe("Inclusive maximum challenge rating.").nullish(),
+"book": z.array(z.uuid()).describe("Filter to monsters in any of these books (repeat for multiple). Each must be a book you can read, else 404.").nullish(),
 "limit": z.coerce.number().int().min(1).max(100).default(20),
 "offset": z.coerce.number().int().min(0).default(0),
 "order_by": z.string().describe("Comma-separated sort fields in column:direction format. Direction is 'asc' or 'desc' (case-insensitive); omitting direction defaults to 'asc'. Valid columns: challenge_rating, monster_type, name.").nullish(),
-"search": z.string().describe("Case-insensitive substring search. Matches against name, monster_type. Results are relevance-ordered: earlier columns rank higher than later ones.").nullish()
+"search": z.string().describe("Case-insensitive substring search. Matches against name, monster_type. Results are relevance-ordered: earlier columns rank higher than later ones.").nullish(),
+"include": z.string().describe("Comma-separated optional response expansions. Supported: 'book_memberships' annotates each entry with the signed-in user's own books that contain it.").nullish()
     })
 
 /**

@@ -15,6 +15,24 @@ from app.models import User
 CSRF_HEADER_NAME = "X-CSRF-Token"
 
 
+async def get_optional_user(request: Request, db: DbSession) -> User | None:
+    """Resolve the user from the session cookie, or ``None`` if unauthenticated.
+
+    The unauthenticated counterpart to ``get_current_user``: it never raises,
+    so public endpoints (e.g. SRD browse) can personalize their response when a
+    session is present and fall back to the anonymous view otherwise.
+
+    Args:
+        request: The incoming request, carrying the session cookie.
+        db: Active database session.
+
+    Returns:
+        The authenticated ``User``, or ``None`` when no valid session exists.
+    """
+    token = request.cookies.get(settings.session_cookie_name)
+    return await resolve_session(db, token) if token else None
+
+
 async def get_current_user(request: Request, db: DbSession) -> User:
     """Resolve the authenticated user from the session cookie.
 
@@ -32,8 +50,7 @@ async def get_current_user(request: Request, db: DbSession) -> User:
     Raises:
         AppError: 401 if the session cookie is missing, unknown, or expired.
     """
-    token = request.cookies.get(settings.session_cookie_name)
-    user = await resolve_session(db, token) if token else None
+    user = await get_optional_user(request, db)
     if user is None:
         raise AppError(
             status=status.HTTP_401_UNAUTHORIZED,
@@ -46,6 +63,7 @@ async def get_current_user(request: Request, db: DbSession) -> User:
 
 
 CurrentUser = Annotated[User, Depends(get_current_user)]
+OptionalCurrentUser = Annotated[User | None, Depends(get_optional_user)]
 
 
 async def require_csrf(request: Request) -> None:

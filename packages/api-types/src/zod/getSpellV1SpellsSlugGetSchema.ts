@@ -13,7 +13,8 @@ export const getSpellV1SpellsSlugGetPathParamsSchema = z.object({
     })
 
 export const getSpellV1SpellsSlugGetQueryParamsSchema = z.object({
-    "namespace": z.string().default("srd-5.1").describe("Source namespace to search in. Defaults to the SRD 5.1 namespace. Use 'user:{user_id}' for homebrew content.")
+    "namespace": z.string().default("srd-5.1").describe("Source namespace to search in. Defaults to the SRD 5.1 namespace. Use 'user:{user_id}' for homebrew content."),
+"include": z.string().describe("Comma-separated optional response expansions. Supported: 'book_memberships' annotates each entry with the signed-in user's own books that contain it.").nullish()
     })
 
 /**

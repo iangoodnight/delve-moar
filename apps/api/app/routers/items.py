@@ -1,15 +1,29 @@
 """Item list and detail endpoints."""
 
+import uuid
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, Query, Request, status
 from sqlalchemy import select
 
+from app.auth.dependencies import OptionalCurrentUser
+from app.books_access import (
+    assert_books_readable,
+    attach_book_memberships,
+    book_memberships_for,
+)
 from app.constants import SRD_NAMESPACE
 from app.db import DbSession
-from app.dependencies import Pagination, SearchFilter, ordering_dep, search_dep
+from app.dependencies import (
+    INCLUDE_BOOK_MEMBERSHIPS,
+    Include,
+    Pagination,
+    SearchFilter,
+    ordering_dep,
+    search_dep,
+)
 from app.exceptions import get_or_404
-from app.models import Item
+from app.models import BookItem, Item
 from app.schemas.errors import ErrorResponse
 from app.schemas.items import ItemDetail, ItemSummary
 from app.schemas.pagination import PaginatedResultset
@@ -45,9 +59,11 @@ ItemSearch = Annotated[SearchFilter, Depends(_ITEM_SEARCH)]
 async def list_items(
     request: Request,
     session: DbSession,
+    user: OptionalCurrentUser,
     params: Pagination,
     ordering: ItemOrdering,
     search: ItemSearch,
+    include: Include,
     item_category: Annotated[
         str | None,
         Query(
@@ -65,8 +81,17 @@ async def list_items(
             "rarity (equipment).",
         ),
     ] = None,
+    book: Annotated[
+        list[uuid.UUID] | None,
+        Query(
+            description=(
+                "Filter to items in any of these books (repeat for "
+                "multiple). Each must be a book you can read, else 404."
+            ),
+        ),
+    ] = None,
 ) -> PaginatedResultset[ItemSummary]:
-    """List items with optional category and rarity filters."""
+    """List items with optional category, rarity, and book filters."""
     stmt = select(Item).where(Item.source_namespace == SRD_NAMESPACE)
 
     if search.where is not None:
@@ -78,6 +103,13 @@ async def list_items(
             stmt = stmt.where(Item.rarity.is_(None))
         else:
             stmt = stmt.where(Item.rarity == rarity)
+    if book:
+        await assert_books_readable(session, book, user)
+        stmt = stmt.where(
+            Item.id.in_(
+                select(BookItem.item_id).where(BookItem.book_id.in_(book))
+            )
+        )
 
     total, rows = await fetch_page(
         session,
@@ -85,8 +117,13 @@ async def list_items(
         ordering=[*search.order_priority, *ordering],
         params=params,
     )
+    data = [ItemSummary.model_validate(row) for row in rows]
+    if INCLUDE_BOOK_MEMBERSHIPS in include and user is not None:
+        await attach_book_memberships(
+            session, user, rows, data, BookItem, BookItem.item_id
+        )
     return paginate(
-        data=[ItemSummary.model_validate(row) for row in rows],
+        data=data,
         total=total,
         params=params,
         links=build_links(request, total, params.offset, params.limit),
@@ -107,6 +144,8 @@ async def list_items(
 async def get_item(
     slug: str,
     session: DbSession,
+    user: OptionalCurrentUser,
+    include: Include,
     namespace: Annotated[
         str,
         Query(
@@ -128,4 +167,10 @@ async def get_item(
         resource="item",
         identifier=f"{namespace}:{slug}",
     )
-    return ItemDetail.model_validate(item)
+    detail = ItemDetail.model_validate(item)
+    if INCLUDE_BOOK_MEMBERSHIPS in include and user is not None:
+        memberships = await book_memberships_for(
+            session, user, [item.id], BookItem, BookItem.item_id
+        )
+        detail.book_memberships = memberships.get(item.id, [])
+    return detail

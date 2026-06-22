@@ -71,6 +71,15 @@ For the per-PR convention and the manual release ritual, see the
   supports the same search and ordering as the catalog endpoints. Reads
   are scoped to the owner or public books; writes are owner-only and the
   SRD book is read-only. The browser UI follows in a later change.
+- Book-aware browsing of the SRD catalog (ADR 0014, building on the
+  `/v1/books` API). The monster, spell, and item list endpoints accept a
+  repeatable `book` filter that narrows results to content in any of the
+  given books (each must be one you can read, else 404), and an
+  `include=book_memberships` option that annotates each entry with the
+  signed-in user's own books containing it (omitted for anonymous
+  requests). The `/v1/books` list accepts `scope=owned` to return only
+  the books you created. These power the upcoming book management UI's
+  filtering, "in your books" badges, and add-to-book controls.
 
 ### Changed
 

@@ -18,6 +18,24 @@ import (
 	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
+// Defines values for ListBooksV1BooksGetParamsScope.
+const (
+	All   ListBooksV1BooksGetParamsScope = "all"
+	Owned ListBooksV1BooksGetParamsScope = "owned"
+)
+
+// Valid indicates whether the value is a known member of the ListBooksV1BooksGetParamsScope enum.
+func (e ListBooksV1BooksGetParamsScope) Valid() bool {
+	switch e {
+	case All:
+		return true
+	case Owned:
+		return true
+	default:
+		return false
+	}
+}
+
 // ActionEntry An action-shaped entry (actions, special_abilities, reactions, etc.).
 //
 // We render `name` + `desc`; everything else (damage, dc, usage,
@@ -110,6 +128,18 @@ type BookDetail struct {
 
 	// UpdatedAt When the book was last updated.
 	UpdatedAt time.Time `json:"updatedAt"`
+}
+
+// BookMembership A book owned by the requesting user that contains this content.
+type BookMembership struct {
+	// Id Unique identifier for the book.
+	Id openapi_types.UUID `json:"id"`
+
+	// Name Display name of the book.
+	Name string `json:"name"`
+
+	// Slug Stable handle for system books; null for user books.
+	Slug *string `json:"slug"`
 }
 
 // BookSummary A book as shown in list views.
@@ -217,6 +247,9 @@ type HealthResponse struct {
 
 // ItemDetail Full item details, used in detail endpoints.
 type ItemDetail struct {
+	// BookMemberships The signed-in user's own books that contain this entry. Present only when requested via include=book_memberships; omitted for anonymous requests.
+	BookMemberships *[]BookMembership `json:"bookMemberships,omitempty"`
+
 	// Content SRD item content payload.
 	Content SrdItemContent `json:"content"`
 
@@ -246,6 +279,9 @@ type ItemDetail struct {
 
 // ItemSummary Summary info for an item, used in list endpoints.
 type ItemSummary struct {
+	// BookMemberships The signed-in user's own books that contain this entry. Present only when requested via include=book_memberships; omitted for anonymous requests.
+	BookMemberships *[]BookMembership `json:"bookMemberships,omitempty"`
+
 	// ItemCategory Category (e.g. 'weapon', 'potion'), if available.
 	ItemCategory *string `json:"itemCategory"`
 
@@ -297,6 +333,9 @@ type MetadataEnvelope struct {
 
 // MonsterDetail Full monster details, used in detail endpoints.
 type MonsterDetail struct {
+	// BookMemberships The signed-in user's own books that contain this entry. Present only when requested via include=book_memberships; omitted for anonymous requests.
+	BookMemberships *[]BookMembership `json:"bookMemberships,omitempty"`
+
 	// ChallengeRating Challenge rating as a display string (e.g. '1/2', '5').
 	ChallengeRating string `json:"challengeRating"`
 
@@ -326,6 +365,9 @@ type MonsterDetail struct {
 
 // MonsterSummary Summary info for a monster, used in list endpoints.
 type MonsterSummary struct {
+	// BookMemberships The signed-in user's own books that contain this entry. Present only when requested via include=book_memberships; omitted for anonymous requests.
+	BookMemberships *[]BookMembership `json:"bookMemberships,omitempty"`
+
 	// ChallengeRating Challenge rating as a display string (e.g. '1/2', '5').
 	ChallengeRating string `json:"challengeRating"`
 
@@ -456,6 +498,9 @@ type Speed struct {
 
 // SpellDetail Full spell details, used in the detail endpoint.
 type SpellDetail struct {
+	// BookMemberships The signed-in user's own books that contain this entry. Present only when requested via include=book_memberships; omitted for anonymous requests.
+	BookMemberships *[]BookMembership `json:"bookMemberships,omitempty"`
+
 	// Content SRD spell content payload.
 	Content SrdSpellContent `json:"content"`
 
@@ -485,6 +530,9 @@ type SpellDetail struct {
 
 // SpellSummary Summary info for a spell, used in list endpoints.
 type SpellSummary struct {
+	// BookMemberships The signed-in user's own books that contain this entry. Present only when requested via include=book_memberships; omitted for anonymous requests.
+	BookMemberships *[]BookMembership `json:"bookMemberships,omitempty"`
+
 	// Level Level as a display string (e.g. 'Cantrip', '1st').
 	Level string `json:"level"`
 
@@ -650,8 +698,10 @@ type LogoutV1AuthLogoutPostParams struct {
 
 // ListBooksV1BooksGetParams defines parameters for ListBooksV1BooksGet.
 type ListBooksV1BooksGetParams struct {
-	Limit  *int `form:"limit,omitempty" json:"limit,omitempty"`
-	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
+	// Scope Which books to include: 'all' (your books plus public books) or 'owned' (only books you created).
+	Scope  *ListBooksV1BooksGetParamsScope `form:"scope,omitempty" json:"scope,omitempty"`
+	Limit  *int                            `form:"limit,omitempty" json:"limit,omitempty"`
+	Offset *int                            `form:"offset,omitempty" json:"offset,omitempty"`
 
 	// OrderBy Comma-separated sort fields in column:direction format. Direction is 'asc' or 'desc' (case-insensitive); omitting direction defaults to 'asc'. Valid columns: created_at, name, updated_at.
 	OrderBy *string `form:"order_by,omitempty" json:"order_by,omitempty"`
@@ -659,6 +709,9 @@ type ListBooksV1BooksGetParams struct {
 	// Search Case-insensitive substring search. Matches against name, description. Results are relevance-ordered: earlier columns rank higher than later ones.
 	Search *string `form:"search,omitempty" json:"search,omitempty"`
 }
+
+// ListBooksV1BooksGetParamsScope defines parameters for ListBooksV1BooksGet.
+type ListBooksV1BooksGetParamsScope string
 
 // ListBookItemsV1BooksBookIdItemsGetParams defines parameters for ListBookItemsV1BooksBookIdItemsGet.
 type ListBookItemsV1BooksBookIdItemsGetParams struct {
@@ -703,20 +756,29 @@ type ListItemsV1ItemsGetParams struct {
 
 	// Rarity Exact match on item rarity (e.g. 'common'). This is not guaranteed to be present for all items, as it depends on the source data. Set to 'none' to filter for items with no rarity (equipment).
 	Rarity *string `form:"rarity,omitempty" json:"rarity,omitempty"`
-	Limit  *int    `form:"limit,omitempty" json:"limit,omitempty"`
-	Offset *int    `form:"offset,omitempty" json:"offset,omitempty"`
+
+	// Book Filter to items in any of these books (repeat for multiple). Each must be a book you can read, else 404.
+	Book   *[]openapi_types.UUID `form:"book,omitempty" json:"book,omitempty"`
+	Limit  *int                  `form:"limit,omitempty" json:"limit,omitempty"`
+	Offset *int                  `form:"offset,omitempty" json:"offset,omitempty"`
 
 	// OrderBy Comma-separated sort fields in column:direction format. Direction is 'asc' or 'desc' (case-insensitive); omitting direction defaults to 'asc'. Valid columns: item_category, name, rarity.
 	OrderBy *string `form:"order_by,omitempty" json:"order_by,omitempty"`
 
 	// Search Case-insensitive substring search. Matches against name, item_category. Results are relevance-ordered: earlier columns rank higher than later ones.
 	Search *string `form:"search,omitempty" json:"search,omitempty"`
+
+	// Include Comma-separated optional response expansions. Supported: 'book_memberships' annotates each entry with the signed-in user's own books that contain it.
+	Include *string `form:"include,omitempty" json:"include,omitempty"`
 }
 
 // GetItemV1ItemsSlugGetParams defines parameters for GetItemV1ItemsSlugGet.
 type GetItemV1ItemsSlugGetParams struct {
 	// Namespace The source namespace of the item, used to disambiguate items with the same slug from different sources. Known values: 'srd-5.1', 'srd-2024', 'user:{user_id}'.
 	Namespace *string `form:"namespace,omitempty" json:"namespace,omitempty"`
+
+	// Include Comma-separated optional response expansions. Supported: 'book_memberships' annotates each entry with the signed-in user's own books that contain it.
+	Include *string `form:"include,omitempty" json:"include,omitempty"`
 }
 
 // ListMonstersV1MonstersGetParams defines parameters for ListMonstersV1MonstersGet.
@@ -733,14 +795,20 @@ type ListMonstersV1MonstersGetParams struct {
 	CrMax *struct {
 		union json.RawMessage
 	} `form:"cr_max,omitempty" json:"cr_max,omitempty"`
-	Limit  *int `form:"limit,omitempty" json:"limit,omitempty"`
-	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
+
+	// Book Filter to monsters in any of these books (repeat for multiple). Each must be a book you can read, else 404.
+	Book   *[]openapi_types.UUID `form:"book,omitempty" json:"book,omitempty"`
+	Limit  *int                  `form:"limit,omitempty" json:"limit,omitempty"`
+	Offset *int                  `form:"offset,omitempty" json:"offset,omitempty"`
 
 	// OrderBy Comma-separated sort fields in column:direction format. Direction is 'asc' or 'desc' (case-insensitive); omitting direction defaults to 'asc'. Valid columns: challenge_rating, monster_type, name.
 	OrderBy *string `form:"order_by,omitempty" json:"order_by,omitempty"`
 
 	// Search Case-insensitive substring search. Matches against name, monster_type. Results are relevance-ordered: earlier columns rank higher than later ones.
 	Search *string `form:"search,omitempty" json:"search,omitempty"`
+
+	// Include Comma-separated optional response expansions. Supported: 'book_memberships' annotates each entry with the signed-in user's own books that contain it.
+	Include *string `form:"include,omitempty" json:"include,omitempty"`
 }
 
 // ListMonstersV1MonstersGetParamsCrMin0 defines parameters for ListMonstersV1MonstersGet.
@@ -759,6 +827,9 @@ type ListMonstersV1MonstersGetParamsCrMax1 = string
 type GetMonsterV1MonstersSlugGetParams struct {
 	// Namespace Source namespace to search in. Defaults to the SRD 5.1 namespace. Use 'user:{user_id}' for homebrew content.
 	Namespace *string `form:"namespace,omitempty" json:"namespace,omitempty"`
+
+	// Include Comma-separated optional response expansions. Supported: 'book_memberships' annotates each entry with the signed-in user's own books that contain it.
+	Include *string `form:"include,omitempty" json:"include,omitempty"`
 }
 
 // ListSpellsV1SpellsGetParams defines parameters for ListSpellsV1SpellsGet.
@@ -771,20 +842,29 @@ type ListSpellsV1SpellsGetParams struct {
 
 	// LevelMax Inclusive maximum spell level (0-9).
 	LevelMax *int `form:"level_max,omitempty" json:"level_max,omitempty"`
-	Limit    *int `form:"limit,omitempty" json:"limit,omitempty"`
-	Offset   *int `form:"offset,omitempty" json:"offset,omitempty"`
+
+	// Book Filter to spells in any of these books (repeat for multiple). Each must be a book you can read, else 404.
+	Book   *[]openapi_types.UUID `form:"book,omitempty" json:"book,omitempty"`
+	Limit  *int                  `form:"limit,omitempty" json:"limit,omitempty"`
+	Offset *int                  `form:"offset,omitempty" json:"offset,omitempty"`
 
 	// OrderBy Comma-separated sort fields in column:direction format. Direction is 'asc' or 'desc' (case-insensitive); omitting direction defaults to 'asc'. Valid columns: level, name, school.
 	OrderBy *string `form:"order_by,omitempty" json:"order_by,omitempty"`
 
 	// Search Case-insensitive substring search. Matches against name. Results are relevance-ordered: earlier columns rank higher than later ones.
 	Search *string `form:"search,omitempty" json:"search,omitempty"`
+
+	// Include Comma-separated optional response expansions. Supported: 'book_memberships' annotates each entry with the signed-in user's own books that contain it.
+	Include *string `form:"include,omitempty" json:"include,omitempty"`
 }
 
 // GetSpellV1SpellsSlugGetParams defines parameters for GetSpellV1SpellsSlugGet.
 type GetSpellV1SpellsSlugGetParams struct {
 	// Namespace Source namespace to search in. Defaults to the SRD 5.1 namespace. Use 'user:{user_id}' for homebrew content.
 	Namespace *string `form:"namespace,omitempty" json:"namespace,omitempty"`
+
+	// Include Comma-separated optional response expansions. Supported: 'book_memberships' annotates each entry with the signed-in user's own books that contain it.
+	Include *string `form:"include,omitempty" json:"include,omitempty"`
 }
 
 // LoginV1AuthLoginPostJSONRequestBody defines body for LoginV1AuthLoginPost for application/json ContentType.
@@ -3887,6 +3967,22 @@ func NewListBooksV1BooksGetRequest(server string, params *ListBooksV1BooksGetPar
 	if params != nil {
 		queryValues := queryURL.Query()
 
+		if params.Scope != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "scope", *params.Scope, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
 		if params.Limit != nil {
 
 			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "limit", *params.Limit, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
@@ -4729,6 +4825,22 @@ func NewListItemsV1ItemsGetRequest(server string, params *ListItemsV1ItemsGetPar
 
 		}
 
+		if params.Book != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "book", *params.Book, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "array", Format: ""}); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
 		if params.Limit != nil {
 
 			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "limit", *params.Limit, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
@@ -4793,6 +4905,22 @@ func NewListItemsV1ItemsGetRequest(server string, params *ListItemsV1ItemsGetPar
 
 		}
 
+		if params.Include != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "include", *params.Include, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
 		queryURL.RawQuery = queryValues.Encode()
 	}
 
@@ -4836,6 +4964,22 @@ func NewGetItemV1ItemsSlugGetRequest(server string, slug string, params *GetItem
 		if params.Namespace != nil {
 
 			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "namespace", *params.Namespace, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Include != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "include", *params.Include, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
 				return nil, err
 			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
 				return nil, err
@@ -4930,6 +5074,22 @@ func NewListMonstersV1MonstersGetRequest(server string, params *ListMonstersV1Mo
 
 		}
 
+		if params.Book != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "book", *params.Book, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "array", Format: ""}); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
 		if params.Limit != nil {
 
 			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "limit", *params.Limit, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
@@ -4994,6 +5154,22 @@ func NewListMonstersV1MonstersGetRequest(server string, params *ListMonstersV1Mo
 
 		}
 
+		if params.Include != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "include", *params.Include, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
 		queryURL.RawQuery = queryValues.Encode()
 	}
 
@@ -5037,6 +5213,22 @@ func NewGetMonsterV1MonstersSlugGetRequest(server string, slug string, params *G
 		if params.Namespace != nil {
 
 			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "namespace", *params.Namespace, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Include != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "include", *params.Include, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
 				return nil, err
 			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
 				return nil, err
@@ -5131,6 +5323,22 @@ func NewListSpellsV1SpellsGetRequest(server string, params *ListSpellsV1SpellsGe
 
 		}
 
+		if params.Book != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "book", *params.Book, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "array", Format: ""}); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
 		if params.Limit != nil {
 
 			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "limit", *params.Limit, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
@@ -5195,6 +5403,22 @@ func NewListSpellsV1SpellsGetRequest(server string, params *ListSpellsV1SpellsGe
 
 		}
 
+		if params.Include != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "include", *params.Include, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
 		queryURL.RawQuery = queryValues.Encode()
 	}
 
@@ -5238,6 +5462,22 @@ func NewGetSpellV1SpellsSlugGetRequest(server string, slug string, params *GetSp
 		if params.Namespace != nil {
 
 			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "namespace", *params.Namespace, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Include != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "include", *params.Include, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
 				return nil, err
 			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
 				return nil, err
