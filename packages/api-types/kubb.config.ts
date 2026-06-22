@@ -16,6 +16,7 @@ export default defineConfig({
   output: {
     path: 'src/zod',
     clean: true,
+    format: false, // our commit hooks handle the formatting
   },
   plugins: [
     pluginOas(),
