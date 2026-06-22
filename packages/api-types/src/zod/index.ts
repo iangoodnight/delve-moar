@@ -8,6 +8,7 @@ export { armorClassSchema } from "./armorClassSchema.ts";
 export { authorSchema } from "./authorSchema.ts";
 export { bookCreateSchema } from "./bookCreateSchema.ts";
 export { bookDetailSchema } from "./bookDetailSchema.ts";
+export { bookMembershipSchema } from "./bookMembershipSchema.ts";
 export { bookSummarySchema } from "./bookSummarySchema.ts";
 export { bookUpdateSchema } from "./bookUpdateSchema.ts";
 export { confirmPasswordResetV1AuthPasswordResetConfirmPost204Schema, confirmPasswordResetV1AuthPasswordResetConfirmPost400Schema, confirmPasswordResetV1AuthPasswordResetConfirmPost422Schema, confirmPasswordResetV1AuthPasswordResetConfirmPostMutationRequestSchema, confirmPasswordResetV1AuthPasswordResetConfirmPostMutationResponseSchema } from "./confirmPasswordResetV1AuthPasswordResetConfirmPostSchema.ts";

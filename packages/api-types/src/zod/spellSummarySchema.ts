@@ -3,6 +3,7 @@
 * Do not edit manually.
 */
 
+import { bookMembershipSchema } from "./bookMembershipSchema.ts";
 import { z } from "zod/v4";
 
 /**
@@ -12,5 +13,8 @@ export const spellSummarySchema = z.object({
     "slug": z.string().describe("URL-safe unique identifier."),
 "name": z.string().describe("The spell's name."),
 "level": z.string().describe("Level as a display string (e.g. 'Cantrip', '1st')."),
-"school": z.nullable(z.string().describe("School of magic (e.g. 'evocation')."))
+"school": z.nullable(z.string().describe("School of magic (e.g. 'evocation').")),
+get "bookMemberships"(){
+                return z.array(bookMembershipSchema.describe("A book owned by the requesting user that contains this content.")).describe("The signed-in user's own books that contain this entry. Present only when requested via include=book_memberships; omitted for anonymous requests.").nullish()
+              }
     }).describe("Summary info for a spell, used in list endpoints.")

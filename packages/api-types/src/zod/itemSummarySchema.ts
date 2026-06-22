@@ -3,6 +3,7 @@
 * Do not edit manually.
 */
 
+import { bookMembershipSchema } from "./bookMembershipSchema.ts";
 import { z } from "zod/v4";
 
 /**
@@ -12,5 +13,8 @@ export const itemSummarySchema = z.object({
     "slug": z.string().describe("URL-safe unique identifier."),
 "name": z.string().describe("The item's name."),
 "itemCategory": z.nullable(z.string().describe("Category (e.g. 'weapon', 'potion'), if available.")),
-"rarity": z.nullable(z.string().describe("Rarity (e.g. 'rare'); null for mundane items."))
+"rarity": z.nullable(z.string().describe("Rarity (e.g. 'rare'); null for mundane items.")),
+get "bookMemberships"(){
+                return z.array(bookMembershipSchema.describe("A book owned by the requesting user that contains this content.")).describe("The signed-in user's own books that contain this entry. Present only when requested via include=book_memberships; omitted for anonymous requests.").nullish()
+              }
     }).describe("Summary info for an item, used in list endpoints.")

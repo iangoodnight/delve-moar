@@ -212,7 +212,7 @@ export interface paths {
         };
         /**
          * List books
-         * @description List the current user's books plus the public system books.
+         * @description List the user's books, optionally scoped to only the ones they own.
          */
         get: operations["list_books_v1_books_get"];
         put?: never;
@@ -399,7 +399,7 @@ export interface paths {
         };
         /**
          * List items
-         * @description List items with optional category and rarity filters.
+         * @description List items with optional category, rarity, and book filters.
          */
         get: operations["list_items_v1_items_get"];
         put?: never;
@@ -439,7 +439,7 @@ export interface paths {
         };
         /**
          * List monsters
-         * @description List monsters with optional type and challenge-rating filters.
+         * @description List monsters with optional type, challenge-rating, and book filters.
          */
         get: operations["list_monsters_v1_monsters_get"];
         put?: never;
@@ -479,7 +479,7 @@ export interface paths {
         };
         /**
          * List spells
-         * @description List spells with optional school and level-range filters.
+         * @description List spells with optional school, level-range, and book filters.
          */
         get: operations["list_spells_v1_spells_get"];
         put?: never;
@@ -658,6 +658,28 @@ export interface components {
             itemCount: number;
         };
         /**
+         * BookMembership
+         * @description A book owned by the requesting user that contains this content.
+         */
+        BookMembership: {
+            /**
+             * Id
+             * Format: uuid
+             * @description Unique identifier for the book.
+             */
+            id: string;
+            /**
+             * Name
+             * @description Display name of the book.
+             */
+            name: string;
+            /**
+             * Slug
+             * @description Stable handle for system books; null for user books.
+             */
+            slug: string | null;
+        };
+        /**
          * BookSummary
          * @description A book as shown in list views.
          */
@@ -833,6 +855,11 @@ export interface components {
              * @description Rarity (e.g. 'rare'); null for mundane items.
              */
             rarity: string | null;
+            /**
+             * Bookmemberships
+             * @description The signed-in user's own books that contain this entry. Present only when requested via include=book_memberships; omitted for anonymous requests.
+             */
+            bookMemberships?: components["schemas"]["BookMembership"][] | null;
             /** @description Full source payload, with all original fields preserved. */
             content: components["schemas"]["SrdItemContent"];
             /** @description Provenance and licensing metadata for the entry. */
@@ -863,6 +890,11 @@ export interface components {
              * @description Rarity (e.g. 'rare'); null for mundane items.
              */
             rarity: string | null;
+            /**
+             * Bookmemberships
+             * @description The signed-in user's own books that contain this entry. Present only when requested via include=book_memberships; omitted for anonymous requests.
+             */
+            bookMemberships?: components["schemas"]["BookMembership"][] | null;
         };
         /**
          * Links
@@ -945,6 +977,11 @@ export interface components {
              * @description Challenge rating as a display string (e.g. '1/2', '5').
              */
             challengeRating: string;
+            /**
+             * Bookmemberships
+             * @description The signed-in user's own books that contain this entry. Present only when requested via include=book_memberships; omitted for anonymous requests.
+             */
+            bookMemberships?: components["schemas"]["BookMembership"][] | null;
             /** @description Full source payload, with all original fields preserved. */
             content: components["schemas"]["SrdMonsterContent"];
             /** @description Provenance and licensing metadata for the entry. */
@@ -975,6 +1012,11 @@ export interface components {
              * @description Challenge rating as a display string (e.g. '1/2', '5').
              */
             challengeRating: string;
+            /**
+             * Bookmemberships
+             * @description The signed-in user's own books that contain this entry. Present only when requested via include=book_memberships; omitted for anonymous requests.
+             */
+            bookMemberships?: components["schemas"]["BookMembership"][] | null;
         };
         /** PaginatedResultset[BookSummary] */
         PaginatedResultset_BookSummary_: {
@@ -1176,6 +1218,11 @@ export interface components {
              * @description School of magic (e.g. 'evocation').
              */
             school: string | null;
+            /**
+             * Bookmemberships
+             * @description The signed-in user's own books that contain this entry. Present only when requested via include=book_memberships; omitted for anonymous requests.
+             */
+            bookMemberships?: components["schemas"]["BookMembership"][] | null;
             /** @description Full source payload, with all original fields preserved. */
             content: components["schemas"]["SrdSpellContent"];
             /** @description Provenance and licensing metadata for the entry. */
@@ -1206,6 +1253,11 @@ export interface components {
              * @description School of magic (e.g. 'evocation').
              */
             school: string | null;
+            /**
+             * Bookmemberships
+             * @description The signed-in user's own books that contain this entry. Present only when requested via include=book_memberships; omitted for anonymous requests.
+             */
+            bookMemberships?: components["schemas"]["BookMembership"][] | null;
         };
         /**
          * SrdItemContent
@@ -1773,6 +1825,8 @@ export interface operations {
     list_books_v1_books_get: {
         parameters: {
             query?: {
+                /** @description Which books to include: 'all' (your books plus public books) or 'owned' (only books you created). */
+                scope?: "all" | "owned";
                 limit?: number;
                 offset?: number;
                 /** @description Comma-separated sort fields in column:direction format. Direction is 'asc' or 'desc' (case-insensitive); omitting direction defaults to 'asc'. Valid columns: created_at, name, updated_at. */
@@ -2415,12 +2469,16 @@ export interface operations {
                 item_category?: string | null;
                 /** @description Exact match on item rarity (e.g. 'common'). This is not guaranteed to be present for all items, as it depends on the source data. Set to 'none' to filter for items with no rarity (equipment). */
                 rarity?: string | null;
+                /** @description Filter to items in any of these books (repeat for multiple). Each must be a book you can read, else 404. */
+                book?: string[] | null;
                 limit?: number;
                 offset?: number;
                 /** @description Comma-separated sort fields in column:direction format. Direction is 'asc' or 'desc' (case-insensitive); omitting direction defaults to 'asc'. Valid columns: item_category, name, rarity. */
                 order_by?: string | null;
                 /** @description Case-insensitive substring search. Matches against name, item_category. Results are relevance-ordered: earlier columns rank higher than later ones. */
                 search?: string | null;
+                /** @description Comma-separated optional response expansions. Supported: 'book_memberships' annotates each entry with the signed-in user's own books that contain it. */
+                include?: string | null;
             };
             header?: never;
             path?: never;
@@ -2453,6 +2511,8 @@ export interface operations {
             query?: {
                 /** @description The source namespace of the item, used to disambiguate items with the same slug from different sources. Known values: 'srd-5.1', 'srd-2024', 'user:{user_id}'. */
                 namespace?: string;
+                /** @description Comma-separated optional response expansions. Supported: 'book_memberships' annotates each entry with the signed-in user's own books that contain it. */
+                include?: string | null;
             };
             header?: never;
             path: {
@@ -2500,12 +2560,16 @@ export interface operations {
                 cr_min?: (number | string) | null;
                 /** @description Inclusive maximum challenge rating. */
                 cr_max?: (number | string) | null;
+                /** @description Filter to monsters in any of these books (repeat for multiple). Each must be a book you can read, else 404. */
+                book?: string[] | null;
                 limit?: number;
                 offset?: number;
                 /** @description Comma-separated sort fields in column:direction format. Direction is 'asc' or 'desc' (case-insensitive); omitting direction defaults to 'asc'. Valid columns: challenge_rating, monster_type, name. */
                 order_by?: string | null;
                 /** @description Case-insensitive substring search. Matches against name, monster_type. Results are relevance-ordered: earlier columns rank higher than later ones. */
                 search?: string | null;
+                /** @description Comma-separated optional response expansions. Supported: 'book_memberships' annotates each entry with the signed-in user's own books that contain it. */
+                include?: string | null;
             };
             header?: never;
             path?: never;
@@ -2538,6 +2602,8 @@ export interface operations {
             query?: {
                 /** @description Source namespace to search in. Defaults to the SRD 5.1 namespace. Use 'user:{user_id}' for homebrew content. */
                 namespace?: string;
+                /** @description Comma-separated optional response expansions. Supported: 'book_memberships' annotates each entry with the signed-in user's own books that contain it. */
+                include?: string | null;
             };
             header?: never;
             path: {
@@ -2585,12 +2651,16 @@ export interface operations {
                 level_min?: number | null;
                 /** @description Inclusive maximum spell level (0-9). */
                 level_max?: number | null;
+                /** @description Filter to spells in any of these books (repeat for multiple). Each must be a book you can read, else 404. */
+                book?: string[] | null;
                 limit?: number;
                 offset?: number;
                 /** @description Comma-separated sort fields in column:direction format. Direction is 'asc' or 'desc' (case-insensitive); omitting direction defaults to 'asc'. Valid columns: level, name, school. */
                 order_by?: string | null;
                 /** @description Case-insensitive substring search. Matches against name. Results are relevance-ordered: earlier columns rank higher than later ones. */
                 search?: string | null;
+                /** @description Comma-separated optional response expansions. Supported: 'book_memberships' annotates each entry with the signed-in user's own books that contain it. */
+                include?: string | null;
             };
             header?: never;
             path?: never;
@@ -2623,6 +2693,8 @@ export interface operations {
             query?: {
                 /** @description Source namespace to search in. Defaults to the SRD 5.1 namespace. Use 'user:{user_id}' for homebrew content. */
                 namespace?: string;
+                /** @description Comma-separated optional response expansions. Supported: 'book_memberships' annotates each entry with the signed-in user's own books that contain it. */
+                include?: string | null;
             };
             header?: never;
             path: {

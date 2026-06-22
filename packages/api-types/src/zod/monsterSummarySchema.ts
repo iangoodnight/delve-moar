@@ -3,6 +3,7 @@
 * Do not edit manually.
 */
 
+import { bookMembershipSchema } from "./bookMembershipSchema.ts";
 import { z } from "zod/v4";
 
 /**
@@ -12,5 +13,8 @@ export const monsterSummarySchema = z.object({
     "slug": z.string().describe("URL-safe unique identifier."),
 "name": z.string().describe("The monster's name."),
 "monsterType": z.nullable(z.string().describe("Type or category (e.g. 'dragon').")),
-"challengeRating": z.string().describe("Challenge rating as a display string (e.g. '1/2', '5').")
+"challengeRating": z.string().describe("Challenge rating as a display string (e.g. '1/2', '5')."),
+get "bookMemberships"(){
+                return z.array(bookMembershipSchema.describe("A book owned by the requesting user that contains this content.")).describe("The signed-in user's own books that contain this entry. Present only when requested via include=book_memberships; omitted for anonymous requests.").nullish()
+              }
     }).describe("Summary info for a monster, used in list endpoints.")

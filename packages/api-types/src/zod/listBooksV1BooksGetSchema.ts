@@ -8,7 +8,8 @@ import { paginatedResultsetBookSummarySchema } from "./paginatedResultsetBookSum
 import { z } from "zod/v4";
 
 export const listBooksV1BooksGetQueryParamsSchema = z.object({
-    "limit": z.coerce.number().int().min(1).max(100).default(20),
+    "scope": z.enum(["all", "owned"]).default("all").describe("Which books to include: 'all' (your books plus public books) or 'owned' (only books you created)."),
+"limit": z.coerce.number().int().min(1).max(100).default(20),
 "offset": z.coerce.number().int().min(0).default(0),
 "order_by": z.string().describe("Comma-separated sort fields in column:direction format. Direction is 'asc' or 'desc' (case-insensitive); omitting direction defaults to 'asc'. Valid columns: created_at, name, updated_at.").nullish(),
 "search": z.string().describe("Case-insensitive substring search. Matches against name, description. Results are relevance-ordered: earlier columns rank higher than later ones.").nullish()
