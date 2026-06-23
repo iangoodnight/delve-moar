@@ -72,7 +72,7 @@ function stubMatchMedia(query: string): MediaQueryList {
     addListener: () => undefined,
     removeListener: () => undefined,
     dispatchEvent: () => false,
-  } as unknown as MediaQueryList;
+  };
 }
 
 Object.defineProperty(globalThis, 'matchMedia', {
