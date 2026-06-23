@@ -20,7 +20,7 @@ jobs:
       IMAGE: registry.fly.io/delvemoar-api:${{ github.sha }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: superfly/flyctl-actions/setup-flyctl@master
 
