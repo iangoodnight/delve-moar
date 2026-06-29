@@ -126,11 +126,35 @@ function createAppRouter(queryClient: QueryClientType) {
               lazy: () =>
                 import('./routes/auth/verify-email').then(convert(queryClient)),
             },
+          ],
+        },
+        {
+          // Account hub: protected section with a persistent side nav.
+          HydrateFallback: DefaultHydrateFallback,
+          lazy: () =>
+            import('./routes/account/account-layout').then(
+              convert(queryClient),
+            ),
+          children: [
             {
               path: paths.account.path,
               HydrateFallback: DefaultHydrateFallback,
               lazy: () =>
-                import('./routes/auth/account').then(convert(queryClient)),
+                import('./routes/account/profile').then(convert(queryClient)),
+            },
+            {
+              path: paths.accountBooks.path,
+              HydrateFallback: DefaultHydrateFallback,
+              lazy: () =>
+                import('./routes/account/books').then(convert(queryClient)),
+            },
+            {
+              path: paths.accountBookDetail.path,
+              HydrateFallback: DefaultHydrateFallback,
+              lazy: () =>
+                import('./routes/account/book-detail').then(
+                  convert(queryClient),
+                ),
             },
           ],
         },

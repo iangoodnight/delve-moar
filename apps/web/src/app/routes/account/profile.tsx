@@ -1,14 +1,11 @@
 import { Head } from '@/components/seo/head';
 import { AccountPanel } from '@/features/auth';
-import { ProtectedRoute } from '@/lib/auth';
 
-export default function Account() {
+export default function Profile() {
   return (
     <>
       <Head description="Manage your DelveMoar account." title="Your account" />
-      <ProtectedRoute>
-        <AccountPanel />
-      </ProtectedRoute>
+      <AccountPanel />
     </>
   );
 }

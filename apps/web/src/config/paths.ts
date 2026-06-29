@@ -66,4 +66,14 @@ export const paths = {
     path: '/account',
     getHref: () => '/account',
   },
+  accountBooks: {
+    displayName: 'My Books',
+    path: '/account/books',
+    getHref: () => '/account/books',
+  },
+  accountBookDetail: {
+    displayName: 'Book',
+    path: '/account/books/:bookId',
+    getHref: (bookId: string) => `/account/books/${bookId}`,
+  },
 };

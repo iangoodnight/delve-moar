@@ -86,6 +86,7 @@ export function AccountPanel() {
       <FormButton
         icon={<SignOutIcon aria-hidden="true" weight="bold" />}
         loading={logout.isPending}
+        mt="3"
         onClick={() => {
           logout.mutate(undefined, {
             onSuccess: () => {
