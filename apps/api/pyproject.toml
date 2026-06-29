@@ -7,7 +7,7 @@ dependencies = [
     "fastapi[standard]>=0.138.0",
     "sqlalchemy[asyncio]>=2.0.51",
     "asyncpg>=0.29",
-    "alembic>=1.13",
+    "alembic>=1.18.5",
     "pydantic-settings>=2.14.2",
     "argon2-cffi>=25.1.0",
     "limits>=5.8.0",
@@ -21,7 +21,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "ruff>=0.15.18",
+    "ruff>=0.15.20",
     "mypy>=2.1.0",
     "pytest>=9.1.1",
     "pytest-asyncio>=1.4.0",
