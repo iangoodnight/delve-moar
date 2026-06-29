@@ -4,15 +4,18 @@ import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Callout } from '@/components/ui/callout';
 import { Column, Grid, Row } from '@/components/ui/layout';
-import { Spinner } from '@/components/ui/loading';
 import { H1, Text } from '@/components/ui/typography';
 
 import { getOwnedBooksQueryOptions } from '../api/get-books';
 
 import { AddBookCard } from './add-book-card';
 import { BookCard } from './book-card';
+import { BookCardSkeleton } from './book-card-skeleton';
 import { BookFormDialog } from './book-form-dialog';
 import { BooksEmptyState } from './books-empty-state';
+
+const GRID_COLUMNS = { initial: '1', xs: '2', md: '3' } as const;
+const SKELETON_COUNT = 3;
 
 export function MyBooks() {
   const { data, error, isLoading, isError } = useQuery(
@@ -37,9 +40,11 @@ export function MyBooks() {
       </Text>
 
       {isLoading && (
-        <Row justify="center" py="6">
-          <Spinner size="3" />
-        </Row>
+        <Grid aria-busy="true" columns={GRID_COLUMNS} gap="4">
+          {Array.from({ length: SKELETON_COUNT }).map((_, index) => (
+            <BookCardSkeleton key={index} />
+          ))}
+        </Grid>
       )}
 
       {isError && (
@@ -53,7 +58,7 @@ export function MyBooks() {
       {!isLoading && !isError && books.length === 0 && <BooksEmptyState />}
 
       {books.length > 0 && (
-        <Grid columns={{ initial: '1', xs: '2', md: '3' }} gap="4">
+        <Grid columns={GRID_COLUMNS} gap="4">
           {books.map((book) => (
             <BookCard key={book.id} book={book} />
           ))}

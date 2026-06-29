@@ -6,6 +6,7 @@ import type { BookSummary } from '../api/get-books';
 
 import { AddBookCard } from './add-book-card';
 import { BookCard } from './book-card';
+import { BookCardSkeleton } from './book-card-skeleton';
 import { DEMO_BOOK, withQueryClient } from './book-story-helpers';
 
 const meta: Meta<typeof BookCard> = {
@@ -72,4 +73,9 @@ export const WithAddCard: Story = {
       <AddBookCard />
     </>
   ),
+};
+
+// The loading placeholder rendered while My Books fetches.
+export const Loading: Story = {
+  render: () => <BookCardSkeleton />,
 };
