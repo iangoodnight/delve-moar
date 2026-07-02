@@ -12,7 +12,8 @@ import { z } from "zod/v4";
  * @description Full spell details, used in the detail endpoint.
  */
 export const spellDetailSchema = z.object({
-    "slug": z.string().describe("URL-safe unique identifier."),
+    "id": z.uuid().describe("Unique identifier for the spell."),
+"slug": z.string().describe("URL-safe unique identifier."),
 "name": z.string().describe("The spell's name."),
 "level": z.string().describe("Level as a display string (e.g. 'Cantrip', '1st')."),
 "school": z.nullable(z.string().describe("School of magic (e.g. 'evocation').")),

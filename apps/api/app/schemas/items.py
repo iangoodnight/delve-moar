@@ -1,5 +1,7 @@
 """Item schemas for list and detail endpoints."""
 
+import uuid
+
 from pydantic import Field
 
 from app.schemas.base import AppSchema
@@ -11,6 +13,7 @@ from app.schemas.item_content import SrdItemContent
 class ItemSummary(AppSchema):
     """Summary info for an item, used in list endpoints."""
 
+    id: uuid.UUID = Field(description="Unique identifier for the item.")
     slug: str = Field(description="URL-safe unique identifier.")
     name: str = Field(description="The item's name.")
     item_category: str | None = Field(
