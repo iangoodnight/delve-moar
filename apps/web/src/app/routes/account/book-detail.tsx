@@ -1,13 +1,13 @@
 import { useParams } from 'react-router-dom';
 
 import { Head } from '@/components/seo/head';
-import { Badge } from '@/components/ui/badge';
 import { Callout } from '@/components/ui/callout';
 import { Box, Column, Row } from '@/components/ui/layout';
 import { Spinner } from '@/components/ui/loading';
 import { RouterLink } from '@/components/ui/navigation';
 import { H1, Text } from '@/components/ui/typography';
 import { paths } from '@/config/paths';
+import { BookContents } from '@/features/books';
 import { useBook } from '@/features/books/api';
 import { ApiError } from '@/lib/api-client';
 
@@ -45,16 +45,7 @@ export default function AccountBookDetail() {
           {book.description !== null && book.description !== '' && (
             <Text color="gray">{book.description}</Text>
           )}
-          <Row gap="2" wrap="wrap">
-            <Badge color="gray">{book.monsterCount} monsters</Badge>
-            <Badge color="gray">{book.spellCount} spells</Badge>
-            <Badge color="gray">{book.itemCount} items</Badge>
-          </Row>
-          <Callout.Root color="gray">
-            <Callout.Text>
-              Contents listing (by type, with search and sort) lands next.
-            </Callout.Text>
-          </Callout.Root>
+          <BookContents book={book} />
         </>
       )}
 
