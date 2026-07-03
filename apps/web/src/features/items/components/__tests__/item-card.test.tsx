@@ -9,6 +9,7 @@ import type { ItemSummary } from '@/features/items/api';
 import { ItemCard } from '../item-card';
 
 const LONGSWORD: ItemSummary = {
+  id: 'ea0afe28-bc4e-4cb5-970f-7cf7802590e9',
   slug: 'longsword',
   name: 'Longsword',
   itemCategory: 'weapon',
@@ -16,6 +17,7 @@ const LONGSWORD: ItemSummary = {
 };
 
 const AMULET: ItemSummary = {
+  id: '7c92eae3-6301-4775-b689-945bbbd65f41',
   slug: 'amulet-of-health',
   name: 'Amulet of Health',
   itemCategory: 'wondrous-items',
@@ -23,6 +25,7 @@ const AMULET: ItemSummary = {
 };
 
 const UNCATEGORIZED: ItemSummary = {
+  id: '3263ac39-797f-4d11-9346-553e750ed022',
   slug: 'mystery',
   name: 'Mystery',
   itemCategory: null,

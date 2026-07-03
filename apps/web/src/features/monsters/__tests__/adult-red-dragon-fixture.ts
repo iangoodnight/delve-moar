@@ -4,6 +4,7 @@
 import type { Monster } from '@/features/monsters/api';
 
 export const adultRedDragonMonster: Monster = {
+  id: '7c2ed6d9-fad8-45d1-b39c-840992fb36c3',
   slug: 'adult-red-dragon',
   name: 'Adult Red Dragon',
   monsterType: 'dragon',

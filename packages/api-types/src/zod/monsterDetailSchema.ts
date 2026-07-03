@@ -12,7 +12,8 @@ import { z } from "zod/v4";
  * @description Full monster details, used in detail endpoints.
  */
 export const monsterDetailSchema = z.object({
-    "slug": z.string().describe("URL-safe unique identifier."),
+    "id": z.uuid().describe("Unique identifier for the monster."),
+"slug": z.string().describe("URL-safe unique identifier."),
 "name": z.string().describe("The monster's name."),
 "monsterType": z.nullable(z.string().describe("Type or category (e.g. 'dragon').")),
 "challengeRating": z.string().describe("Challenge rating as a display string (e.g. '1/2', '5')."),

@@ -12,7 +12,11 @@ export type MonsterDetailResponse = components['schemas']['MonsterDetail'];
 export type Monster = MonsterDetailResponse;
 
 function getMonster(slug: string): Promise<Monster> {
-  return apiClient.get<Monster>(`/v1/monsters/${slug}`);
+  // book_memberships powers the add-to-book control; the API omits it for
+  // anonymous requests.
+  return apiClient.get<Monster>(`/v1/monsters/${slug}`, {
+    params: { include: 'book_memberships' },
+  });
 }
 
 export function getMonsterQueryOptions(slug: string) {

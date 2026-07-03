@@ -1,14 +1,3 @@
-// Categories come from the SRD `equipment_category.index` field, stored
-// verbatim by the seeder. Display labels are humanized for the dropdown.
-//
-// `rarityCapable` flags categories that can carry a non-null `rarity` in
-// the seed data. Mundane-only categories (adventuring-gear, tools, ...)
-// always have `rarity = null`, so filtering them by rarity yields an empty
-// resultset; the filter UI disables the rarity dropdown when one is picked
-// and clears any active rarity filter.
-//
-// Magic weapons and magic armor live under `weapon`/`armor` with a non-null
-// rarity, so those categories stay rarity-capable.
 export interface ItemCategoryOption {
   value: string;
   label: string;
@@ -46,4 +35,11 @@ export function isRarityCapable(category: string | undefined): boolean {
   return (
     ITEM_CATEGORIES.find((c) => c.value === category)?.rarityCapable ?? false
   );
+}
+
+export function getItemCategoryLabel(
+  category: string | null | undefined,
+): string {
+  if (!category) return 'Uncategorized';
+  return ITEM_CATEGORIES.find((c) => c.value === category)?.label ?? category;
 }

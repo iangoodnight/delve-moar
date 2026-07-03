@@ -1,5 +1,6 @@
 """Spell schemas for list and detail endpoints."""
 
+import uuid
 from typing import Any
 
 from pydantic import Field, field_validator
@@ -13,6 +14,7 @@ from app.schemas.spell_content import SrdSpellContent
 class SpellSummary(AppSchema):
     """Summary info for a spell, used in list endpoints."""
 
+    id: uuid.UUID = Field(description="Unique identifier for the spell.")
     slug: str = Field(description="URL-safe unique identifier.")
     name: str = Field(description="The spell's name.")
     level: str = Field(

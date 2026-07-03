@@ -80,6 +80,10 @@ For the per-PR convention and the manual release ritual, see the
   requests). The `/v1/books` list accepts `scope=owned` to return only
   the books you created. These power the upcoming book management UI's
   filtering, "in your books" badges, and add-to-book controls.
+- The monster, spell, and item summaries (and details) now include the
+  content item's `id` (its UUID). The add-to-book and remove-from-book
+  controls need this identifier because the membership endpoints key on
+  the content id, not the slug.
 
 ### Changed
 

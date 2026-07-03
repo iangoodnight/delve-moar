@@ -264,6 +264,9 @@ type ItemDetail struct {
 	//     data_provider_url: URL to the data provider's source repo.
 	ContentSource ContentSource `json:"contentSource"`
 
+	// Id Unique identifier for the item.
+	Id openapi_types.UUID `json:"id"`
+
 	// ItemCategory Category (e.g. 'weapon', 'potion'), if available.
 	ItemCategory *string `json:"itemCategory"`
 
@@ -281,6 +284,9 @@ type ItemDetail struct {
 type ItemSummary struct {
 	// BookMemberships The signed-in user's own books that contain this entry. Present only when requested via include=book_memberships; omitted for anonymous requests.
 	BookMemberships *[]BookMembership `json:"bookMemberships,omitempty"`
+
+	// Id Unique identifier for the item.
+	Id openapi_types.UUID `json:"id"`
 
 	// ItemCategory Category (e.g. 'weapon', 'potion'), if available.
 	ItemCategory *string `json:"itemCategory"`
@@ -353,6 +359,9 @@ type MonsterDetail struct {
 	//     data_provider_url: URL to the data provider's source repo.
 	ContentSource ContentSource `json:"contentSource"`
 
+	// Id Unique identifier for the monster.
+	Id openapi_types.UUID `json:"id"`
+
 	// MonsterType Type or category (e.g. 'dragon').
 	MonsterType *string `json:"monsterType"`
 
@@ -370,6 +379,9 @@ type MonsterSummary struct {
 
 	// ChallengeRating Challenge rating as a display string (e.g. '1/2', '5').
 	ChallengeRating string `json:"challengeRating"`
+
+	// Id Unique identifier for the monster.
+	Id openapi_types.UUID `json:"id"`
 
 	// MonsterType Type or category (e.g. 'dragon').
 	MonsterType *string `json:"monsterType"`
@@ -515,6 +527,9 @@ type SpellDetail struct {
 	//     data_provider_url: URL to the data provider's source repo.
 	ContentSource ContentSource `json:"contentSource"`
 
+	// Id Unique identifier for the spell.
+	Id openapi_types.UUID `json:"id"`
+
 	// Level Level as a display string (e.g. 'Cantrip', '1st').
 	Level string `json:"level"`
 
@@ -532,6 +547,9 @@ type SpellDetail struct {
 type SpellSummary struct {
 	// BookMemberships The signed-in user's own books that contain this entry. Present only when requested via include=book_memberships; omitted for anonymous requests.
 	BookMemberships *[]BookMembership `json:"bookMemberships,omitempty"`
+
+	// Id Unique identifier for the spell.
+	Id openapi_types.UUID `json:"id"`
 
 	// Level Level as a display string (e.g. 'Cantrip', '1st').
 	Level string `json:"level"`

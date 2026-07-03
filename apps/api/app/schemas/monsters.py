@@ -1,5 +1,6 @@
 """Monsters schemas."""
 
+import uuid
 from typing import Any
 
 from pydantic import Field, field_validator
@@ -14,6 +15,7 @@ from app.schemas.monster_content import SrdMonsterContent
 class MonsterSummary(AppSchema):
     """Summary info for a monster, used in list endpoints."""
 
+    id: uuid.UUID = Field(description="Unique identifier for the monster.")
     slug: str = Field(description="URL-safe unique identifier.")
     name: str = Field(description="The monster's name.")
     monster_type: str | None = Field(

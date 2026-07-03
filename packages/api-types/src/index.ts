@@ -836,6 +836,12 @@ export interface components {
          */
         ItemDetail: {
             /**
+             * Id
+             * Format: uuid
+             * @description Unique identifier for the item.
+             */
+            id: string;
+            /**
              * Slug
              * @description URL-safe unique identifier.
              */
@@ -870,6 +876,12 @@ export interface components {
          * @description Summary info for an item, used in list endpoints.
          */
         ItemSummary: {
+            /**
+             * Id
+             * Format: uuid
+             * @description Unique identifier for the item.
+             */
+            id: string;
             /**
              * Slug
              * @description URL-safe unique identifier.
@@ -958,6 +970,12 @@ export interface components {
          */
         MonsterDetail: {
             /**
+             * Id
+             * Format: uuid
+             * @description Unique identifier for the monster.
+             */
+            id: string;
+            /**
              * Slug
              * @description URL-safe unique identifier.
              */
@@ -992,6 +1010,12 @@ export interface components {
          * @description Summary info for a monster, used in list endpoints.
          */
         MonsterSummary: {
+            /**
+             * Id
+             * Format: uuid
+             * @description Unique identifier for the monster.
+             */
+            id: string;
             /**
              * Slug
              * @description URL-safe unique identifier.
@@ -1199,6 +1223,12 @@ export interface components {
          */
         SpellDetail: {
             /**
+             * Id
+             * Format: uuid
+             * @description Unique identifier for the spell.
+             */
+            id: string;
+            /**
              * Slug
              * @description URL-safe unique identifier.
              */
@@ -1233,6 +1263,12 @@ export interface components {
          * @description Summary info for a spell, used in list endpoints.
          */
         SpellSummary: {
+            /**
+             * Id
+             * Format: uuid
+             * @description Unique identifier for the spell.
+             */
+            id: string;
             /**
              * Slug
              * @description URL-safe unique identifier.

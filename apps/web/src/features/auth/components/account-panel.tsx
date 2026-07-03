@@ -25,7 +25,7 @@ export function AccountPanel() {
 
   return (
     <Column gap="4">
-      <H1>Your account</H1>
+      <H1>My profile</H1>
       <DataList.Root orientation={{ initial: 'vertical', xs: 'horizontal' }}>
         <DataList.Item>
           <DataList.Label>Username</DataList.Label>
@@ -86,6 +86,7 @@ export function AccountPanel() {
       <FormButton
         icon={<SignOutIcon aria-hidden="true" weight="bold" />}
         loading={logout.isPending}
+        mt="3"
         onClick={() => {
           logout.mutate(undefined, {
             onSuccess: () => {

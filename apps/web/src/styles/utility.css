@@ -21,3 +21,9 @@
 .text-transform-capitalize {
   text-transform: capitalize;
 }
+
+/* One H1 line tall, so an inline header action (paired with Flex align=center)
+   centers against the page title rather than the whole title/subtitle column. */
+.h1-line-min {
+  min-height: calc(var(--heading-size-h1) * var(--line-height-heading));
+}

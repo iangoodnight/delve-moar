@@ -1,0 +1,5 @@
+/* Fill the width-controlled wrapper instead of sizing to the selected label,
+   so the trigger does not jump width as the sort column changes. */
+.sort-trigger {
+  width: 100%;
+}

@@ -1,8 +1,8 @@
 import { useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
+import { isRarityCapable } from '@/constants/item-categories';
 import type { ItemFilters } from '@/features/items/api';
-import { isRarityCapable } from '@/features/items/constants';
 
 export function useItemFilters() {
   const [searchParams, setSearchParams] = useSearchParams();

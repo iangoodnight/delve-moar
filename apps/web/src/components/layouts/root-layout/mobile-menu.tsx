@@ -57,6 +57,14 @@ export function MobileMenu() {
                     </Link>
                   </Dialog.Close>
                   <Dialog.Close>
+                    <Link
+                      className={styles['link']}
+                      to={paths.accountBooks.getHref()}
+                    >
+                      My books
+                    </Link>
+                  </Dialog.Close>
+                  <Dialog.Close>
                     <button
                       className={styles['link']}
                       onClick={() => {

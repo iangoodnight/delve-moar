@@ -12,7 +12,11 @@ export type SpellDetailResponse = components['schemas']['SpellDetail'];
 export type Spell = SpellDetailResponse;
 
 function getSpell(slug: string): Promise<Spell> {
-  return apiClient.get<Spell>(`/v1/spells/${slug}`);
+  // book_memberships powers the add-to-book control; the API omits it for
+  // anonymous requests.
+  return apiClient.get<Spell>(`/v1/spells/${slug}`, {
+    params: { include: 'book_memberships' },
+  });
 }
 
 export function getSpellQueryOptions(slug: string) {

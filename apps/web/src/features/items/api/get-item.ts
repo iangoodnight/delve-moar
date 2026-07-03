@@ -13,7 +13,11 @@ export type ItemDetailResponse = components['schemas']['ItemDetail'];
 export type Item = ItemDetailResponse;
 
 function getItem(slug: string): Promise<Item> {
-  return apiClient.get<Item>(`/v1/items/${slug}`);
+  // book_memberships powers the add-to-book control; the API omits it for
+  // anonymous requests.
+  return apiClient.get<Item>(`/v1/items/${slug}`, {
+    params: { include: 'book_memberships' },
+  });
 }
 
 export function getItemQueryOptions(slug: string) {

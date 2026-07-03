@@ -4,8 +4,9 @@ import { Head } from '@/components/seo/head';
 import { SrdAttribution } from '@/components/srd';
 import { Callout } from '@/components/ui/callout';
 import { Box, Column } from '@/components/ui/layout';
-import { RouterLink } from '@/components/ui/navigation';
+import { ContentBackLink } from '@/components/ui/navigation';
 import { paths } from '@/config/paths';
+import { AddToBookControl } from '@/features/books';
 import { useMonster } from '@/features/monsters/api';
 import {
   MonsterDetailSkeleton,
@@ -49,12 +50,25 @@ export default function MonsterDetail() {
       )}
       {monster && (
         <>
-          <MonsterStatBlock monster={monster} />
+          <MonsterStatBlock
+            headerAction={
+              <AddToBookControl
+                key={monster.id}
+                contentId={monster.id}
+                contentType="monster"
+                memberships={monster.bookMemberships}
+              />
+            }
+            monster={monster}
+          />
           <SrdAttribution contentSource={monster.contentSource} />
         </>
       )}
       <Box py="4">
-        <RouterLink to={paths.monsters.path}>Back to Monsters</RouterLink>
+        <ContentBackLink
+          listHref={paths.monsters.path}
+          listLabel="Back to Monsters"
+        />
       </Box>
     </Column>
   );

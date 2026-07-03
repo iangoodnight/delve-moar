@@ -9,6 +9,7 @@ import type { MonsterSummary } from '@/features/monsters/api';
 import { MonsterCard } from '../monster-card';
 
 const ADULT_RED_DRAGON: MonsterSummary = {
+  id: 'c334f14c-dd9e-409a-b05a-aee853f6f6a5',
   slug: 'adult-red-dragon',
   name: 'Adult Red Dragon',
   monsterType: 'dragon',
@@ -16,6 +17,7 @@ const ADULT_RED_DRAGON: MonsterSummary = {
 };
 
 const UNTYPED: MonsterSummary = {
+  id: 'fec25bca-53fa-48d1-9259-972717c84052',
   slug: 'something-strange',
   name: 'Something Strange',
   monsterType: null,

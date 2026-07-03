@@ -1,5 +1,6 @@
 // Rarity values mirror what the seeder stores: lowercase strings matching
 // the SRD `rarity.name` field. Badge colors use the Radix accent palette.
+// Shared across features (items browse, books contents).
 export type ItemRarityValue =
   | 'common'
   | 'uncommon'

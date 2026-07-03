@@ -5,6 +5,7 @@
 import type { Item } from '@/features/items/api';
 
 export const amuletOfHealthItem: Item = {
+  id: 'eaf538fa-c6b9-4c2e-a5e3-7dd4f69e6092',
   slug: 'amulet-of-health',
   name: 'Amulet of Health',
   itemCategory: 'wondrous-items',

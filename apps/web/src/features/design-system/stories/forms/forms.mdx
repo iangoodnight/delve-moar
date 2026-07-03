@@ -1,6 +1,7 @@
 import { Meta, Story } from '@storybook/addon-docs/blocks';
 
 import * as FieldStories from './field.stories';
+import * as TextAreaStories from './text-area.stories';
 
 <Meta title="Design System/Forms/Overview" />
 
@@ -46,3 +47,10 @@ Disabled fields dim the label alongside the control so the whole field reads
 as inactive, not just the input.
 
 <Story of={FieldStories.Disabled} />
+
+## Textarea
+
+`TextArea` reuses the same wrapper for longer free text, so its label, message
+row, and focus and error states match the single-line field exactly.
+
+<Story of={TextAreaStories.States} />

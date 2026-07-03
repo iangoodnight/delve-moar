@@ -1,4 +1,5 @@
 import {
+  BooksIcon,
   SignInIcon,
   SignOutIcon,
   SwordIcon,
@@ -45,6 +46,11 @@ export function AuthMenu() {
             <DropdownMenu.Item asChild>
               <Link to={paths.account.getHref()}>
                 <UserIcon aria-hidden="true" /> Account
+              </Link>
+            </DropdownMenu.Item>
+            <DropdownMenu.Item asChild>
+              <Link to={paths.accountBooks.getHref()}>
+                <BooksIcon aria-hidden="true" /> My books
               </Link>
             </DropdownMenu.Item>
             <DropdownMenu.Separator />

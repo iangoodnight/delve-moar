@@ -1,6 +1,7 @@
 import type { components } from '@delve-moar/api-types';
+import type { ReactNode } from 'react';
 
-import { Column, Grid, Row, Section } from '@/components/ui/layout';
+import { Column, Flex, Grid, Row, Section } from '@/components/ui/layout';
 import { H1, Strong, Text } from '@/components/ui/typography';
 import type { Monster } from '@/features/monsters/api';
 
@@ -16,19 +17,36 @@ interface ContentBlockProps {
   readonly content: SrdMonsterContent;
 }
 
-function IdentityBlock({ content }: Readonly<ContentBlockProps>) {
+interface IdentityBlockProps {
+  readonly content: SrdMonsterContent;
+  readonly headerAction?: ReactNode;
+}
+
+function IdentityBlock({
+  content,
+  headerAction,
+}: Readonly<IdentityBlockProps>) {
   return (
     <Row
-      align="end"
+      align="start"
       className={styles['identity']}
-      gap="2"
+      gapX="4"
+      gapY="2"
       justify="between"
+      mb="2"
       wrap="wrap"
     >
-      <H1>{content.name}</H1>
-      <Text as="p" color="gray" mb="2" size="2">
-        {content.size} {content.type}, {content.alignment}
-      </Text>
+      <Column>
+        <H1>{content.name}</H1>
+        <Text as="p" color="gray" size="2">
+          {content.size} {content.type}, {content.alignment}
+        </Text>
+      </Column>
+      {headerAction && (
+        <Flex align="center" className="h1-line-min">
+          {headerAction}
+        </Flex>
+      )}
     </Row>
   );
 }
@@ -71,13 +89,17 @@ function CombatBlock({ content }: Readonly<ContentBlockProps>) {
 
 interface MonsterStatBlockProps {
   readonly monster: Monster;
+  readonly headerAction?: ReactNode;
 }
 
-export function MonsterStatBlock({ monster }: Readonly<MonsterStatBlockProps>) {
+export function MonsterStatBlock({
+  monster,
+  headerAction,
+}: Readonly<MonsterStatBlockProps>) {
   const { content } = monster;
   return (
     <Column>
-      <IdentityBlock content={content} />
+      <IdentityBlock content={content} headerAction={headerAction} />
       <Section size="1">
         <Column gap="4">
           <CombatBlock content={content} />

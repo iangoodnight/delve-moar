@@ -4,6 +4,7 @@
 import type { Spell } from '@/features/spells/api';
 
 export const fireballSpell: Spell = {
+  id: '979283ce-bda8-43f4-983e-91c588a987c9',
   slug: 'fireball',
   name: 'Fireball',
   level: '3rd',
