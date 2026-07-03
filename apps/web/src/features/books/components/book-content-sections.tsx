@@ -1,7 +1,11 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
 
 import { paths } from '@/config/paths';
+import { getItemCategoryLabel } from '@/constants/item-categories';
+import { getRarityOption } from '@/constants/item-rarities';
+import { capitalize, formatSpellLevel } from '@/utils/format';
 
+import { useRemoveContentFromBook } from '../api/content-membership';
 import {
   getBookItemsInfiniteQueryOptions,
   getBookMonstersInfiniteQueryOptions,
@@ -42,6 +46,7 @@ export function BookMonstersSection({
   onDirectionToggle,
 }: Readonly<SectionProps>) {
   const debouncedSearch = useDebouncedValue(search, SEARCH_DEBOUNCE_MS);
+  const removeMutation = useRemoveContentFromBook();
   const query = useInfiniteQuery(
     getBookMonstersInfiniteQueryOptions(bookId, {
       search: debouncedSearch || undefined,
@@ -52,9 +57,13 @@ export function BookMonstersSection({
     query.data?.pages.flatMap((page) => page.data) ?? []
   ).map((monster) => ({
     key: monster.slug,
+    id: monster.id,
     name: monster.name,
-    href: paths.monsterDetail.getHref(monster.slug),
-    meta: `CR ${monster.challengeRating}`,
+    href: `${paths.monsterDetail.getHref(monster.slug)}?fromBook=${bookId}`,
+    badges: [
+      { label: capitalize(monster.monsterType ?? 'Unknown') },
+      { label: `CR ${monster.challengeRating}` },
+    ],
   }));
 
   return (
@@ -68,6 +77,9 @@ export function BookMonstersSection({
         hasNextPage: query.hasNextPage,
         isFetchingNextPage: query.isFetchingNextPage,
         onLoadMore: () => void query.fetchNextPage(),
+      }}
+      onRemoveRow={(contentId) => {
+        removeMutation.mutate({ bookId, contentType: 'monster', contentId });
       }}
       search={{
         value: search,
@@ -97,6 +109,7 @@ export function BookSpellsSection({
   onDirectionToggle,
 }: Readonly<SectionProps>) {
   const debouncedSearch = useDebouncedValue(search, SEARCH_DEBOUNCE_MS);
+  const removeMutation = useRemoveContentFromBook();
   const query = useInfiniteQuery(
     getBookSpellsInfiniteQueryOptions(bookId, {
       search: debouncedSearch || undefined,
@@ -107,9 +120,13 @@ export function BookSpellsSection({
     query.data?.pages.flatMap((page) => page.data) ?? []
   ).map((spell) => ({
     key: spell.slug,
+    id: spell.id,
     name: spell.name,
-    href: paths.spellDetail.getHref(spell.slug),
-    meta: spell.level === '0' ? 'Cantrip' : `Level ${spell.level}`,
+    href: `${paths.spellDetail.getHref(spell.slug)}?fromBook=${bookId}`,
+    badges: [
+      { label: capitalize(spell.school ?? 'Unknown') },
+      { label: formatSpellLevel(spell.level) },
+    ],
   }));
 
   return (
@@ -123,6 +140,9 @@ export function BookSpellsSection({
         hasNextPage: query.hasNextPage,
         isFetchingNextPage: query.isFetchingNextPage,
         onLoadMore: () => void query.fetchNextPage(),
+      }}
+      onRemoveRow={(contentId) => {
+        removeMutation.mutate({ bookId, contentType: 'spell', contentId });
       }}
       search={{
         value: search,
@@ -152,6 +172,7 @@ export function BookItemsSection({
   onDirectionToggle,
 }: Readonly<SectionProps>) {
   const debouncedSearch = useDebouncedValue(search, SEARCH_DEBOUNCE_MS);
+  const removeMutation = useRemoveContentFromBook();
   const query = useInfiniteQuery(
     getBookItemsInfiniteQueryOptions(bookId, {
       search: debouncedSearch || undefined,
@@ -160,12 +181,19 @@ export function BookItemsSection({
   );
   const rows: BookContentRowData[] = (
     query.data?.pages.flatMap((page) => page.data) ?? []
-  ).map((item) => ({
-    key: item.slug,
-    name: item.name,
-    href: paths.itemDetail.getHref(item.slug),
-    meta: item.rarity ?? item.itemCategory ?? 'Item',
-  }));
+  ).map((item) => {
+    const rarity = getRarityOption(item.rarity);
+    return {
+      key: item.slug,
+      id: item.id,
+      name: item.name,
+      href: `${paths.itemDetail.getHref(item.slug)}?fromBook=${bookId}`,
+      badges: [
+        { label: getItemCategoryLabel(item.itemCategory) },
+        ...(rarity ? [{ label: rarity.label, color: rarity.badgeColor }] : []),
+      ],
+    };
+  });
 
   return (
     <BookContentSection
@@ -178,6 +206,9 @@ export function BookItemsSection({
         hasNextPage: query.hasNextPage,
         isFetchingNextPage: query.isFetchingNextPage,
         onLoadMore: () => void query.fetchNextPage(),
+      }}
+      onRemoveRow={(contentId) => {
+        removeMutation.mutate({ bookId, contentType: 'item', contentId });
       }}
       search={{
         value: search,

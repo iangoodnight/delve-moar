@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 
 import { Markdown } from '@/components/markdown';
 import { DataList } from '@/components/ui/data-list';
-import { Box, Column, Row, Section } from '@/components/ui/layout';
+import { Box, Column, Flex, Row, Section } from '@/components/ui/layout';
 import { H1, H2, Paragraph } from '@/components/ui/typography';
 import type { Spell } from '@/features/spells/api';
 
@@ -10,6 +10,7 @@ import styles from './spell-detail-block.module.css';
 
 interface SpellDetailBlockProps {
   readonly spell: Spell;
+  readonly headerAction?: ReactNode;
 }
 
 function formatComponents(spell: Readonly<Spell>): string {
@@ -39,22 +40,32 @@ function SpellDetailRow({
   );
 }
 
-export function SpellDetailBlock({ spell }: Readonly<SpellDetailBlockProps>) {
+export function SpellDetailBlock({
+  spell,
+  headerAction,
+}: Readonly<SpellDetailBlockProps>) {
   const { content } = spell;
   const classes = content.classes ?? [];
 
   return (
     <Column>
-      <Row align="end" gap="2" justify="between" wrap="wrap">
-        <H1>{spell.name}</H1>
-        <Paragraph
-          className="text-transform-capitalize text-oblique"
-          color="gray"
-          mb="2"
-          size="2"
-        >
-          {spell.level} {spell.school ? `— ${spell.school}` : ''}
-        </Paragraph>
+      <Row align="start" gapX="4" gapY="2" justify="between" mb="2" wrap="wrap">
+        <Column>
+          <H1>{spell.name}</H1>
+          <Paragraph
+            className="text-transform-capitalize text-oblique"
+            color="gray"
+            m="0"
+            size="2"
+          >
+            {spell.level} {spell.school ? `— ${spell.school}` : ''}
+          </Paragraph>
+        </Column>
+        {headerAction && (
+          <Flex align="center" className="h1-line-min">
+            {headerAction}
+          </Flex>
+        )}
       </Row>
 
       <Section size="1">

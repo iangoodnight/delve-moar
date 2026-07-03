@@ -1,3 +1,4 @@
+export { AddToBookControl } from './add-to-book-control';
 export { BookCard } from './book-card';
 export { BookCardSkeleton } from './book-card-skeleton';
 export { BookContents } from './book-contents';

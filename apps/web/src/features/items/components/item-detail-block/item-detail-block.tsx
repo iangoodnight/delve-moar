@@ -1,20 +1,17 @@
 import type { components } from '@delve-moar/api-types';
+import type { ReactNode } from 'react';
 
 import { Markdown } from '@/components/markdown';
 import { Badge } from '@/components/ui/badge';
-import { Box, Column, Grid, Row, Section } from '@/components/ui/layout';
+import { Box, Column, Flex, Grid, Row, Section } from '@/components/ui/layout';
 import { H1, H2, Paragraph, Strong, Text } from '@/components/ui/typography';
+import { getItemCategoryLabel } from '@/constants/item-categories';
+import { getRarityOption } from '@/constants/item-rarities';
 import type { Item } from '@/features/items/api';
-import { getRarityOption, ITEM_CATEGORIES } from '@/features/items/constants';
 
 import styles from './item-detail-block.module.css';
 
 type SrdItemContent = components['schemas']['SrdItemContent'];
-
-function categoryLabel(value: string | null): string {
-  if (!value) return 'Uncategorized';
-  return ITEM_CATEGORIES.find((c) => c.value === value)?.label ?? value;
-}
 
 function formatCost(cost: NonNullable<SrdItemContent['cost']>): string {
   return `${String(cost.quantity)} ${cost.unit}`;
@@ -130,27 +127,38 @@ function buildStats(content: SrdItemContent): readonly ItemStatProps[] {
 
 interface ItemDetailBlockProps {
   readonly item: Item;
+  readonly headerAction?: ReactNode;
 }
 
-export function ItemDetailBlock({ item }: Readonly<ItemDetailBlockProps>) {
+export function ItemDetailBlock({
+  item,
+  headerAction,
+}: Readonly<ItemDetailBlockProps>) {
   const { content } = item;
   const rarity = getRarityOption(item.rarity);
   const stats = buildStats(content);
 
   return (
     <Column>
-      <Row align="end" gap="2" justify="between" wrap="wrap">
-        <H1>{item.name}</H1>
-        <Row align="center" gap="2" mb="2">
-          <Paragraph className="text-oblique" color="gray" m="0" size="2">
-            {categoryLabel(item.itemCategory)}
-          </Paragraph>
-          {rarity && (
-            <Badge color={rarity.badgeColor} variant="soft">
-              {rarity.label}
-            </Badge>
-          )}
-        </Row>
+      <Row align="start" gapX="4" gapY="2" justify="between" mb="2" wrap="wrap">
+        <Column>
+          <H1>{item.name}</H1>
+          <Row align="center" gap="2">
+            <Paragraph className="text-oblique" color="gray" m="0" size="2">
+              {getItemCategoryLabel(item.itemCategory)}
+            </Paragraph>
+            {rarity && (
+              <Badge color={rarity.badgeColor} variant="soft">
+                {rarity.label}
+              </Badge>
+            )}
+          </Row>
+        </Column>
+        {headerAction && (
+          <Flex align="center" className="h1-line-min">
+            {headerAction}
+          </Flex>
+        )}
       </Row>
 
       {stats.length > 0 && (

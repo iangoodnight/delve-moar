@@ -11,19 +11,33 @@ function noop() {
 }
 
 const ROWS = [
-  { key: 'goblin', name: 'Goblin', href: '/monsters/goblin', meta: 'CR 1/4' },
-  { key: 'orc', name: 'Orc', href: '/monsters/orc', meta: 'CR 1/2' },
+  {
+    key: 'goblin',
+    id: '11111111-1111-1111-1111-111111111111',
+    name: 'Goblin',
+    href: '/monsters/goblin',
+    badges: [{ label: 'Humanoid' }, { label: 'CR 1/4' }],
+  },
+  {
+    key: 'orc',
+    id: '22222222-2222-2222-2222-222222222222',
+    name: 'Orc',
+    href: '/monsters/orc',
+    badges: [{ label: 'Humanoid' }, { label: 'CR 1/2' }],
+  },
   {
     key: 'adult-red-dragon',
+    id: '33333333-3333-3333-3333-333333333333',
     name: 'Adult Red Dragon',
     href: '/monsters/adult-red-dragon',
-    meta: 'CR 17',
+    badges: [{ label: 'Dragon' }, { label: 'CR 17' }],
   },
 ];
 
 const baseArgs = {
   title: 'Monsters',
   emptyLabel: 'No monsters in this book yet.',
+  onRemoveRow: noop,
   search: {
     value: '',
     placeholder: 'Search monsters...',

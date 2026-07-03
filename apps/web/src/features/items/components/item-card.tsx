@@ -5,18 +5,14 @@ import { Card } from '@/components/ui/card';
 import { Column, Row } from '@/components/ui/layout';
 import { Text } from '@/components/ui/typography';
 import { paths } from '@/config/paths';
+import { getItemCategoryLabel } from '@/constants/item-categories';
+import { getRarityOption } from '@/constants/item-rarities';
 import type { ItemSummary } from '@/features/items/api';
-import { getRarityOption, ITEM_CATEGORIES } from '@/features/items/constants';
 
 import styles from './item-card.module.css';
 
 interface ItemCardProps {
   readonly item: ItemSummary;
-}
-
-function categoryLabel(value: string | null): string {
-  if (!value) return 'Uncategorized';
-  return ITEM_CATEGORIES.find((c) => c.value === value)?.label ?? value;
 }
 
 export function ItemCard({ item }: Readonly<ItemCardProps>) {
@@ -35,7 +31,7 @@ export function ItemCard({ item }: Readonly<ItemCardProps>) {
               {item.name}
             </Text>
             <Text color="gray" size="2">
-              {categoryLabel(item.itemCategory)}
+              {getItemCategoryLabel(item.itemCategory)}
             </Text>
           </Column>
           {rarity && (

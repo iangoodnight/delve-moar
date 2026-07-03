@@ -51,7 +51,7 @@ export default function AccountBookDetail() {
 
       <Box>
         <RouterLink to={paths.accountBooks.getHref()}>
-          Back to My books
+          Back to my books
         </RouterLink>
       </Box>
     </Column>

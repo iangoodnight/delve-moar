@@ -4,16 +4,21 @@ import { Column } from '@/components/ui/layout';
 
 import { BookContentRow } from './book-content-row';
 
+function noop() {
+  /* no-op */
+}
+
 const meta: Meta<typeof BookContentRow> = {
   title: 'Features/Books/BookContentRow',
   component: BookContentRow,
+  args: { onRemove: noop },
   parameters: {
     docs: {
       description: {
         component:
           'A single in-book content item: the name links to the content ' +
-          'detail, with a type-specific metadatum on the right. Used in the ' +
-          'book-detail tabs for monsters, spells, and items.',
+          'detail, with the two secondary sortable fields as badges and a ' +
+          'remove-from-book action. Used in the book-detail tabs.',
       },
     },
   },
@@ -34,18 +39,25 @@ export const Monster: Story = {
   args: {
     name: 'Adult Red Dragon',
     href: '/monsters/adult-red-dragon',
-    meta: 'CR 17',
+    badges: [{ label: 'Dragon' }, { label: 'CR 17' }],
   },
 };
 
 export const Spell: Story = {
-  args: { name: 'Fireball', href: '/spells/fireball', meta: 'Level 3' },
+  args: {
+    name: 'Fireball',
+    href: '/spells/fireball',
+    badges: [{ label: 'Evocation' }, { label: '3rd Level' }],
+  },
 };
 
 export const Item: Story = {
   args: {
     name: 'Bag of Holding',
     href: '/items/bag-of-holding',
-    meta: 'Uncommon',
+    badges: [
+      { label: 'Wondrous Items' },
+      { label: 'Uncommon', color: 'green' },
+    ],
   },
 };

@@ -10,10 +10,12 @@ import { axe } from 'vitest-axe';
 
 import { fireballSpell } from '@/features/spells/__tests__/fireball-fixture';
 import { apiClient } from '@/lib/api-client';
+import { AuthProvider } from '@/lib/auth';
 
 import SpellDetail from '../spell-detail';
 
 const API_RESPONSE = {
+  id: fireballSpell.id,
   slug: fireballSpell.slug,
   name: fireballSpell.name,
   level: fireballSpell.level,
@@ -35,15 +37,17 @@ function makeWrapper() {
   function Wrapper({ children }: { readonly children: ReactNode }) {
     return (
       <QueryClientProvider client={queryClient}>
-        <HelmetProvider>
-          <Theme>
-            <MemoryRouter initialEntries={[`/spells/${fireballSpell.slug}`]}>
-              <Routes>
-                <Route element={children} path="/spells/:slug" />
-              </Routes>
-            </MemoryRouter>
-          </Theme>
-        </HelmetProvider>
+        <AuthProvider>
+          <HelmetProvider>
+            <Theme>
+              <MemoryRouter initialEntries={[`/spells/${fireballSpell.slug}`]}>
+                <Routes>
+                  <Route element={children} path="/spells/:slug" />
+                </Routes>
+              </MemoryRouter>
+            </Theme>
+          </HelmetProvider>
+        </AuthProvider>
       </QueryClientProvider>
     );
   }

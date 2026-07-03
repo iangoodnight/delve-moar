@@ -51,6 +51,7 @@ interface BookContentSectionProps {
   readonly search: SearchControl;
   readonly sort: SortControl;
   readonly list: ListState;
+  readonly onRemoveRow: (id: string) => void;
 }
 
 export function BookContentSection({
@@ -59,6 +60,7 @@ export function BookContentSection({
   search,
   sort,
   list,
+  onRemoveRow,
 }: Readonly<BookContentSectionProps>) {
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const {
@@ -187,9 +189,12 @@ export function BookContentSection({
             {rows.map((row) => (
               <BookContentRow
                 key={row.key}
+                badges={row.badges}
                 href={row.href}
-                meta={row.meta}
                 name={row.name}
+                onRemove={() => {
+                  onRemoveRow(row.id);
+                }}
               />
             ))}
           </Column>

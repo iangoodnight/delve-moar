@@ -10,10 +10,12 @@ import { axe } from 'vitest-axe';
 
 import { adultRedDragonMonster } from '@/features/monsters/__tests__/adult-red-dragon-fixture';
 import { apiClient } from '@/lib/api-client';
+import { AuthProvider } from '@/lib/auth';
 
 import MonsterDetail from '../monster-detail';
 
 const API_RESPONSE = {
+  id: adultRedDragonMonster.id,
   slug: adultRedDragonMonster.slug,
   name: adultRedDragonMonster.name,
   monsterType: adultRedDragonMonster.monsterType,
@@ -37,17 +39,19 @@ function makeWrapper() {
   function Wrapper({ children }: { readonly children: ReactNode }) {
     return (
       <QueryClientProvider client={queryClient}>
-        <HelmetProvider>
-          <Theme>
-            <MemoryRouter
-              initialEntries={[`/monsters/${adultRedDragonMonster.slug}`]}
-            >
-              <Routes>
-                <Route element={children} path="/monsters/:slug" />
-              </Routes>
-            </MemoryRouter>
-          </Theme>
-        </HelmetProvider>
+        <AuthProvider>
+          <HelmetProvider>
+            <Theme>
+              <MemoryRouter
+                initialEntries={[`/monsters/${adultRedDragonMonster.slug}`]}
+              >
+                <Routes>
+                  <Route element={children} path="/monsters/:slug" />
+                </Routes>
+              </MemoryRouter>
+            </Theme>
+          </HelmetProvider>
+        </AuthProvider>
       </QueryClientProvider>
     );
   }

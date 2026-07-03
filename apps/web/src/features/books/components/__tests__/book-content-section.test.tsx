@@ -12,7 +12,13 @@ import { BookContentSection } from '../book-content-section';
 type Props = ComponentProps<typeof BookContentSection>;
 
 const ROWS = [
-  { key: 'goblin', name: 'Goblin', href: '/monsters/goblin', meta: 'CR 1/4' },
+  {
+    key: 'goblin',
+    id: '11111111-1111-1111-1111-111111111111',
+    name: 'Goblin',
+    href: '/monsters/goblin',
+    badges: [{ label: 'Humanoid' }, { label: 'CR 1/4' }],
+  },
 ];
 
 function makeProps() {
@@ -20,9 +26,11 @@ function makeProps() {
   const onColumnChange = vi.fn();
   const onDirectionToggle = vi.fn();
   const onLoadMore = vi.fn();
+  const onRemoveRow = vi.fn();
   const props: Props = {
     title: 'Monsters',
     emptyLabel: 'No monsters in this book yet.',
+    onRemoveRow,
     search: {
       value: '',
       placeholder: 'Search monsters...',
@@ -46,7 +54,13 @@ function makeProps() {
       onLoadMore,
     },
   };
-  return { props, onSearchChange, onColumnChange, onDirectionToggle };
+  return {
+    props,
+    onSearchChange,
+    onColumnChange,
+    onDirectionToggle,
+    onRemoveRow,
+  };
 }
 
 function renderSection(props: Props) {
@@ -64,6 +78,17 @@ describe('BookContentSection', () => {
     const { props } = makeProps();
     renderSection(props);
     expect(screen.getByRole('link', { name: 'Goblin' })).toBeInTheDocument();
+  });
+
+  it('removes a row from the book', async () => {
+    const user = userEvent.setup();
+    const { props, onRemoveRow } = makeProps();
+    renderSection(props);
+
+    await user.click(
+      screen.getByRole('button', { name: /remove goblin from this book/i }),
+    );
+    expect(onRemoveRow).toHaveBeenCalledWith(ROWS[0]?.id);
   });
 
   it('reports search input changes', async () => {

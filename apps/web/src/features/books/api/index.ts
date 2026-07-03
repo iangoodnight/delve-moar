@@ -1,3 +1,8 @@
+export type { ContentMembershipArgs, ContentType } from './content-membership';
+export {
+  useAddContentToBook,
+  useRemoveContentFromBook,
+} from './content-membership';
 export type { BookCreate } from './create-book';
 export { useCreateBook } from './create-book';
 export { useDeleteBook } from './delete-book';
