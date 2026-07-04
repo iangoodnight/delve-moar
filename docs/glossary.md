@@ -33,7 +33,7 @@ not an afterthought to consuming SRD content.
 ### NPC (Non-Player Character)
 
 Any character in the game world that is not controlled by a player. May
-or may not have a statblock. Out of scope for Phase 1a.
+or may not have a statblock. Not yet modeled in DelveMoar.
 
 ### OGL (Open Game License) and ORC (Open RPG Creative)
 
@@ -45,14 +45,14 @@ under CC-BY-4.0. We do not redistribute non-SRD content.
 ### Session
 
 One sitting at the table (real or virtual), typically a few hours.
-Distinct from a software session (a user being logged in), which arrives
-in Phase 1b.
+Distinct from a software session (a user being logged in), which
+DelveMoar now supports.
 
 ### SRD (Systems Reference Document)
 
 The subset of D&D rules and content released under an open license. The
 5e SRD covers a baseline of monsters, spells, items, classes, and rules.
-DelveMoar's read-only catalog (Phase 1a) is seeded entirely from the SRD.
+DelveMoar's catalog is seeded entirely from the SRD.
 
 ### Statblock
 
@@ -97,12 +97,13 @@ config, types, assets. Cross-feature imports are blocked. See
 
 The container for a DM's homebrew content. Anchors multi-tenancy: a DM's
 homebrew monsters and spells live inside a campaign. The `campaigns`
-table exists from Phase 0 but is not surfaced in the UI until Phase 1b.
+table exists from Phase 0 but is not yet surfaced in the UI; campaigns
+are still to come.
 
 ### catalog
 
 The user-visible browse-and-search surface for SRD content (and, later,
-homebrew). Phase 1a covers monsters, spells, and items.
+homebrew). The catalog covers monsters, spells, and items.
 
 ### codegen / generated client
 
@@ -138,8 +139,9 @@ pre-commit, prettier, tsconfig.base.json), and per-area subdirectories
 ### phase
 
 A coarse-grained slice of the roadmap. Phase 0 (foundation, done), Phase
-1a (read-only catalog, current), Phase 1b (homebrew authoring, next).
-Phases own milestones; milestones own issues.
+1a (read-only SRD catalog, shipped), Phase 1b (accounts, content
+collections, and homebrew, in progress). Phases own milestones;
+milestones own issues.
 
 ### planning workspace
 
