@@ -16,3 +16,11 @@ export function signupFieldForError(
   }
   return null;
 }
+
+// A wrong re-auth password on account deletion maps to the password field.
+export function deleteAccountFieldForError(error: unknown): 'password' | null {
+  if (error instanceof ApiError && error.errorCode === 'INVALID_PASSWORD') {
+    return 'password';
+  }
+  return null;
+}
