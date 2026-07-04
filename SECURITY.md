@@ -53,16 +53,23 @@ We will credit reporters in the release notes unless asked otherwise.
 
 ## Scope notes for the current phase
 
-DelveMoar is in **Phase 1a** (SRD catalog, read-only). Some context that
-may be useful when deciding whether something is a security issue:
+DelveMoar has a public SRD catalog plus user accounts and content
+collections (books). Some context that may be useful when deciding
+whether something is a security issue:
 
 - The catalog endpoints (`/monsters`, `/spells`, `/items`) serve **public
-  SRD data**. They are read-only and require no authentication in this
-  phase. Information disclosure from these endpoints is by design.
-- There are no user accounts, sessions, or per-user data in Phase 1a. The
-  database is seeded entirely from public SRD content.
-- Authentication, authorization, and per-user homebrew arrive in Phase 1b.
-  Auth-related findings will become in scope once that phase opens.
+  SRD data**. Browsing them is read-only and needs no authentication.
+  Information disclosure from these endpoints is by design.
+- User accounts are live: signup and login, opaque server-side sessions
+  in HttpOnly cookies, double-submit CSRF on state-changing requests,
+  IP-based rate limiting on the auth endpoints, email verification, and
+  password reset. Authentication and authorization findings are in
+  scope.
+- Per-user data is private to its owner: a user's email and their books
+  (collections of catalog content). A user's only public identity is
+  their username. Leaking one user's data to another is in scope.
+- Per-user homebrew authoring and campaigns are still to come; findings
+  in those areas become in scope as the features land.
 
 Cross-cutting concerns that **are** in scope today:
 
