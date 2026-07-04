@@ -17,7 +17,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import mailer
-from app.auth.csrf import generate_csrf_token
+from app.auth.cookies import clear_auth_cookies, set_auth_cookies
 from app.auth.dependencies import CurrentUser, require_csrf
 from app.auth.email_tokens import (
     consume_token,
@@ -80,40 +80,6 @@ async def _issue_and_send_verification(
         settings.email_verification_ttl_seconds,
     )
     background_tasks.add_task(mailer.send_verification_email, user.email, token)
-
-
-def _set_auth_cookies(response: Response, session_token: str) -> None:
-    """Set the HttpOnly session cookie and the readable CSRF cookie."""
-    domain = settings.session_cookie_domain or None
-    response.set_cookie(
-        key=settings.session_cookie_name,
-        value=session_token,
-        max_age=settings.session_ttl_seconds,
-        httponly=True,
-        secure=settings.cookie_secure,
-        samesite="lax",
-        path="/",
-        domain=domain,
-    )
-    response.set_cookie(
-        key=settings.csrf_cookie_name,
-        value=generate_csrf_token(),
-        max_age=settings.session_ttl_seconds,
-        httponly=False,
-        secure=settings.cookie_secure,
-        samesite="lax",
-        path="/",
-        domain=domain,
-    )
-
-
-def _clear_auth_cookies(response: Response) -> None:
-    """Delete the session and CSRF cookies on logout."""
-    domain = settings.session_cookie_domain or None
-    response.delete_cookie(
-        settings.session_cookie_name, path="/", domain=domain
-    )
-    response.delete_cookie(settings.csrf_cookie_name, path="/", domain=domain)
 
 
 def _invalid_credentials() -> AppError:
@@ -226,7 +192,7 @@ async def signup(
     session_token = await create_session(db, user.id)
     await db.refresh(user)
     await _issue_and_send_verification(db, background_tasks, user)
-    _set_auth_cookies(response, session_token)
+    set_auth_cookies(response, session_token)
     return UserResponse.from_user(user)
 
 
@@ -271,7 +237,7 @@ async def login(
         await db.commit()
 
     token = await create_session(db, user.id)
-    _set_auth_cookies(response, token)
+    set_auth_cookies(response, token)
     return UserResponse.from_user(user)
 
 
@@ -298,7 +264,7 @@ async def logout(
         token = request.cookies.get(settings.session_cookie_name)
         if token:
             await revoke_session(db, token)
-    _clear_auth_cookies(response)
+    clear_auth_cookies(response)
 
 
 @router.get(
