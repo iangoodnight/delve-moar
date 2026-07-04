@@ -24,6 +24,55 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/account/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Export the current account's data
+         * @description Return a portable copy of the account record and its owned books.
+         *
+         *     Books list their content by id, not inlined, so the export stays a
+         *     record of what the user collected rather than a copy of the catalog.
+         */
+        get: operations["export_account_v1_account_export_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/account": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete the current account
+         * @description Permanently delete the current account after a password re-check.
+         *
+         *     On success the user row is removed and the database cascades every
+         *     dependent record: sessions, email tokens, and the user's owned books
+         *     (and, through the books, their content memberships). The public SRD
+         *     system book has no owner, so it is untouched. The session and CSRF
+         *     cookies are cleared, signing the browser out. This is irreversible.
+         */
+        delete: operations["delete_account_v1_account_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/auth/signup": {
         parameters: {
             query?: never;
@@ -514,6 +563,107 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /**
+         * AccountDeleteRequest
+         * @description Payload to delete the current account.
+         *
+         *     The current password is required as a re-authentication step, so a
+         *     stolen session alone cannot destroy the account. Deletion is
+         *     irreversible.
+         */
+        AccountDeleteRequest: {
+            /**
+             * Password
+             * @description The account's current password, for re-authentication.
+             */
+            password: string;
+        };
+        /**
+         * AccountExport
+         * @description A portable copy of everything stored for the current account.
+         */
+        AccountExport: {
+            /**
+             * Exportedat
+             * Format: date-time
+             * @description When this export was generated.
+             */
+            exportedAt: string;
+            /** @description The account record (the owner's own view). */
+            account: components["schemas"]["UserResponse"];
+            /**
+             * Books
+             * @description The books the account owns, with their content ids.
+             */
+            books: components["schemas"]["AccountExportBook"][];
+        };
+        /**
+         * AccountExportBook
+         * @description One of the user's owned books, with its content membership ids.
+         *
+         *     Content is referenced by id rather than inlined: the export is a record
+         *     of what the user has collected, not a copy of the SRD catalog.
+         */
+        AccountExportBook: {
+            /**
+             * Id
+             * Format: uuid
+             * @description Unique identifier for the book.
+             */
+            id: string;
+            /**
+             * Name
+             * @description Display name of the book.
+             */
+            name: string;
+            /**
+             * Slug
+             * @description Stable handle for system books; null for user books.
+             */
+            slug: string | null;
+            /**
+             * Description
+             * @description Longer description, if any.
+             */
+            description: string | null;
+            /**
+             * Ispublic
+             * @description Whether the book is readable by anyone.
+             */
+            isPublic: boolean;
+            /**
+             * Issystem
+             * @description Whether this is a read-only system book.
+             */
+            isSystem: boolean;
+            /**
+             * Createdat
+             * Format: date-time
+             * @description When the book was created.
+             */
+            createdAt: string;
+            /**
+             * Updatedat
+             * Format: date-time
+             * @description When the book was last updated.
+             */
+            updatedAt: string;
+            /**
+             * Monsterids
+             * @description Ids of the monsters collected in this book.
+             */
+            monsterIds: string[];
+            /**
+             * Spellids
+             * @description Ids of the spells collected in this book.
+             */
+            spellIds: string[];
+            /**
+             * Itemids
+             * @description Ids of the items collected in this book.
+             */
+            itemIds: string[];
+        };
         /**
          * ActionEntry
          * @description An action-shaped entry (actions, special_abilities, reactions, etc.).
@@ -1526,6 +1676,84 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HealthResponse"];
+                };
+            };
+        };
+    };
+    export_account_v1_account_export_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountExport"];
+                };
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    delete_account_v1_account_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AccountDeleteRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CSRF token or re-auth password invalid */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

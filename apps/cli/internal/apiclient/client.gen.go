@@ -36,6 +36,71 @@ func (e ListBooksV1BooksGetParamsScope) Valid() bool {
 	}
 }
 
+// AccountDeleteRequest Payload to delete the current account.
+//
+// The current password is required as a re-authentication step, so a
+// stolen session alone cannot destroy the account. Deletion is
+// irreversible.
+type AccountDeleteRequest struct {
+	// Password The account's current password, for re-authentication.
+	Password string `json:"password"`
+}
+
+// AccountExport A portable copy of everything stored for the current account.
+type AccountExport struct {
+	// Account The owner's own view of their account.
+	//
+	// Returned only to the authenticated account holder (signup, login,
+	// ``/me``). ``email`` appears here and nowhere else; other users see the
+	// ``Author`` projection instead.
+	Account UserResponse `json:"account"`
+
+	// Books The books the account owns, with their content ids.
+	Books []AccountExportBook `json:"books"`
+
+	// ExportedAt When this export was generated.
+	ExportedAt time.Time `json:"exportedAt"`
+}
+
+// AccountExportBook One of the user's owned books, with its content membership ids.
+//
+// Content is referenced by id rather than inlined: the export is a record
+// of what the user has collected, not a copy of the SRD catalog.
+type AccountExportBook struct {
+	// CreatedAt When the book was created.
+	CreatedAt time.Time `json:"createdAt"`
+
+	// Description Longer description, if any.
+	Description *string `json:"description"`
+
+	// Id Unique identifier for the book.
+	Id openapi_types.UUID `json:"id"`
+
+	// IsPublic Whether the book is readable by anyone.
+	IsPublic bool `json:"isPublic"`
+
+	// IsSystem Whether this is a read-only system book.
+	IsSystem bool `json:"isSystem"`
+
+	// ItemIds Ids of the items collected in this book.
+	ItemIds []openapi_types.UUID `json:"itemIds"`
+
+	// MonsterIds Ids of the monsters collected in this book.
+	MonsterIds []openapi_types.UUID `json:"monsterIds"`
+
+	// Name Display name of the book.
+	Name string `json:"name"`
+
+	// Slug Stable handle for system books; null for user books.
+	Slug *string `json:"slug"`
+
+	// SpellIds Ids of the spells collected in this book.
+	SpellIds []openapi_types.UUID `json:"spellIds"`
+
+	// UpdatedAt When the book was last updated.
+	UpdatedAt time.Time `json:"updatedAt"`
+}
+
 // ActionEntry An action-shaped entry (actions, special_abilities, reactions, etc.).
 //
 // We render `name` + `desc`; everything else (damage, dc, usage,
@@ -884,6 +949,9 @@ type GetSpellV1SpellsSlugGetParams struct {
 	// Include Comma-separated optional response expansions. Supported: 'book_memberships' annotates each entry with the signed-in user's own books that contain it.
 	Include *string `form:"include,omitempty" json:"include,omitempty"`
 }
+
+// DeleteAccountV1AccountDeleteJSONRequestBody defines body for DeleteAccountV1AccountDelete for application/json ContentType.
+type DeleteAccountV1AccountDeleteJSONRequestBody = AccountDeleteRequest
 
 // LoginV1AuthLoginPostJSONRequestBody defines body for LoginV1AuthLoginPost for application/json ContentType.
 type LoginV1AuthLoginPostJSONRequestBody = LoginRequest
@@ -3102,6 +3170,14 @@ type ClientInterface interface {
 	// HealthCheckHealthGet request
 	HealthCheckHealthGet(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// DeleteAccountV1AccountDeleteWithBody request with any body
+	DeleteAccountV1AccountDeleteWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	DeleteAccountV1AccountDelete(ctx context.Context, body DeleteAccountV1AccountDeleteJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ExportAccountV1AccountExportGet request
+	ExportAccountV1AccountExportGet(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// LoginV1AuthLoginPostWithBody request with any body
 	LoginV1AuthLoginPostWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -3203,6 +3279,42 @@ type ClientInterface interface {
 
 func (c *Client) HealthCheckHealthGet(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewHealthCheckHealthGetRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DeleteAccountV1AccountDeleteWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteAccountV1AccountDeleteRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DeleteAccountV1AccountDelete(ctx context.Context, body DeleteAccountV1AccountDeleteJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteAccountV1AccountDeleteRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ExportAccountV1AccountExportGet(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewExportAccountV1AccountExportGetRequest(c.Server)
 	if err != nil {
 		return nil, err
 	}
@@ -3643,6 +3755,73 @@ func NewHealthCheckHealthGetRequest(server string) (*http.Request, error) {
 	}
 
 	operationPath := fmt.Sprintf("/health")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewDeleteAccountV1AccountDeleteRequest calls the generic DeleteAccountV1AccountDelete builder with application/json body
+func NewDeleteAccountV1AccountDeleteRequest(server string, body DeleteAccountV1AccountDeleteJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewDeleteAccountV1AccountDeleteRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewDeleteAccountV1AccountDeleteRequestWithBody generates requests for DeleteAccountV1AccountDelete with any type of body
+func NewDeleteAccountV1AccountDeleteRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/account")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewExportAccountV1AccountExportGetRequest generates requests for ExportAccountV1AccountExportGet
+func NewExportAccountV1AccountExportGetRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/account/export")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -5566,6 +5745,14 @@ type ClientWithResponsesInterface interface {
 	// HealthCheckHealthGetWithResponse request
 	HealthCheckHealthGetWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*HealthCheckHealthGetResponse, error)
 
+	// DeleteAccountV1AccountDeleteWithBodyWithResponse request with any body
+	DeleteAccountV1AccountDeleteWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*DeleteAccountV1AccountDeleteResponse, error)
+
+	DeleteAccountV1AccountDeleteWithResponse(ctx context.Context, body DeleteAccountV1AccountDeleteJSONRequestBody, reqEditors ...RequestEditorFn) (*DeleteAccountV1AccountDeleteResponse, error)
+
+	// ExportAccountV1AccountExportGetWithResponse request
+	ExportAccountV1AccountExportGetWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ExportAccountV1AccountExportGetResponse, error)
+
 	// LoginV1AuthLoginPostWithBodyWithResponse request with any body
 	LoginV1AuthLoginPostWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*LoginV1AuthLoginPostResponse, error)
 
@@ -5681,6 +5868,53 @@ func (r HealthCheckHealthGetResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r HealthCheckHealthGetResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type DeleteAccountV1AccountDeleteResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON422      *HTTPValidationError
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteAccountV1AccountDeleteResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteAccountV1AccountDeleteResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ExportAccountV1AccountExportGetResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *AccountExport
+	JSON401      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r ExportAccountV1AccountExportGetResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ExportAccountV1AccountExportGetResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -6361,6 +6595,32 @@ func (c *ClientWithResponses) HealthCheckHealthGetWithResponse(ctx context.Conte
 	return ParseHealthCheckHealthGetResponse(rsp)
 }
 
+// DeleteAccountV1AccountDeleteWithBodyWithResponse request with arbitrary body returning *DeleteAccountV1AccountDeleteResponse
+func (c *ClientWithResponses) DeleteAccountV1AccountDeleteWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*DeleteAccountV1AccountDeleteResponse, error) {
+	rsp, err := c.DeleteAccountV1AccountDeleteWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteAccountV1AccountDeleteResponse(rsp)
+}
+
+func (c *ClientWithResponses) DeleteAccountV1AccountDeleteWithResponse(ctx context.Context, body DeleteAccountV1AccountDeleteJSONRequestBody, reqEditors ...RequestEditorFn) (*DeleteAccountV1AccountDeleteResponse, error) {
+	rsp, err := c.DeleteAccountV1AccountDelete(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteAccountV1AccountDeleteResponse(rsp)
+}
+
+// ExportAccountV1AccountExportGetWithResponse request returning *ExportAccountV1AccountExportGetResponse
+func (c *ClientWithResponses) ExportAccountV1AccountExportGetWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ExportAccountV1AccountExportGetResponse, error) {
+	rsp, err := c.ExportAccountV1AccountExportGet(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseExportAccountV1AccountExportGetResponse(rsp)
+}
+
 // LoginV1AuthLoginPostWithBodyWithResponse request with arbitrary body returning *LoginV1AuthLoginPostResponse
 func (c *ClientWithResponses) LoginV1AuthLoginPostWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*LoginV1AuthLoginPostResponse, error) {
 	rsp, err := c.LoginV1AuthLoginPostWithBody(ctx, contentType, body, reqEditors...)
@@ -6689,6 +6949,79 @@ func ParseHealthCheckHealthGetResponse(rsp *http.Response) (*HealthCheckHealthGe
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteAccountV1AccountDeleteResponse parses an HTTP response from a DeleteAccountV1AccountDeleteWithResponse call
+func ParseDeleteAccountV1AccountDeleteResponse(rsp *http.Response) (*DeleteAccountV1AccountDeleteResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteAccountV1AccountDeleteResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest HTTPValidationError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseExportAccountV1AccountExportGetResponse parses an HTTP response from a ExportAccountV1AccountExportGetWithResponse call
+func ParseExportAccountV1AccountExportGetResponse(rsp *http.Response) (*ExportAccountV1AccountExportGetResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ExportAccountV1AccountExportGetResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest AccountExport
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
 
 	}
 
