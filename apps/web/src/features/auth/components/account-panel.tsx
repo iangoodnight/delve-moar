@@ -12,6 +12,8 @@ import { H1, Text } from '@/components/ui/typography';
 import { paths } from '@/config/paths';
 import { useAuth, useLogout, useResendVerification } from '@/lib/auth';
 
+import { AccountDangerZone } from './account-danger-zone';
+
 export function AccountPanel() {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -83,22 +85,27 @@ export function AccountPanel() {
           </Column>
         ))}
 
-      <FormButton
-        icon={<SignOutIcon aria-hidden="true" weight="bold" />}
-        loading={logout.isPending}
-        mt="3"
-        onClick={() => {
-          logout.mutate(undefined, {
-            onSuccess: () => {
-              void navigate(paths.home.getHref(), { replace: true });
-            },
-          });
-        }}
-        type="button"
-        variant="soft"
-      >
-        Log out
-      </FormButton>
+      <Row>
+        <FormButton
+          color="gray"
+          icon={<SignOutIcon aria-hidden="true" weight="bold" />}
+          loading={logout.isPending}
+          mt="3"
+          onClick={() => {
+            logout.mutate(undefined, {
+              onSuccess: () => {
+                void navigate(paths.home.getHref(), { replace: true });
+              },
+            });
+          }}
+          type="button"
+          variant="soft"
+        >
+          Log out
+        </FormButton>
+      </Row>
+
+      <AccountDangerZone />
     </Column>
   );
 }

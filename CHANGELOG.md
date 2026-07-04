@@ -84,6 +84,15 @@ For the per-PR convention and the manual release ritual, see the
   content item's `id` (its UUID). The add-to-book and remove-from-book
   controls need this identifier because the membership endpoints key on
   the content id, not the slug.
+- Account self-service for signed-in users (#280). A new `/v1/account`
+  API can permanently delete the current account, which requires
+  re-entering the current password and then cascades the account's
+  sessions, email tokens, and owned books (the public SRD system book,
+  which has no owner, is untouched) and signs the browser out.
+  `GET /v1/account/export` returns a portable JSON copy of the account
+  record and the books it owns, listing each book's content by id. The
+  account page surfaces both as a data export and a confirmed, password-
+  gated "delete account" action.
 
 ### Changed
 

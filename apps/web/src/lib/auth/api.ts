@@ -16,6 +16,9 @@ export type PasswordResetConfirmRequest =
   components['schemas']['PasswordResetConfirmRequest'];
 export type VerifyEmailRequest = components['schemas']['VerifyEmailRequest'];
 export type MessageResponse = components['schemas']['MessageResponse'];
+export type AccountExport = components['schemas']['AccountExport'];
+export type AccountDeleteRequest =
+  components['schemas']['AccountDeleteRequest'];
 
 // Single source of truth for the cached current-user identity. The auth
 // context reads this key; the mutations below keep it in sync.
@@ -84,6 +87,16 @@ export async function resetPassword(
   await apiClient.post('/v1/auth/password-reset/confirm', data);
 }
 
+export function exportAccount(): Promise<AccountExport> {
+  return apiClient.get<AccountExport>('/v1/account/export');
+}
+
+export async function deleteAccount(data: AccountDeleteRequest): Promise<void> {
+  // axios sends a request body on DELETE via the `data` config; the client's
+  // interceptor attaches the CSRF header for the mutating method.
+  await apiClient.delete('/v1/account', { data });
+}
+
 export function useSignup() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -146,6 +159,22 @@ export function useResetPassword() {
     mutationFn: resetPassword,
     onSuccess: () => {
       // Confirming a reset revokes every session; force a fresh sign-in.
+      queryClient.setQueryData(USER_QUERY_KEY, null);
+    },
+  });
+}
+
+export function useExportAccount() {
+  return useMutation({ mutationFn: exportAccount });
+}
+
+export function useDeleteAccount() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deleteAccount,
+    onSuccess: () => {
+      // The account and its content are gone and the server cleared the
+      // cookies. Flip the cache to signed-out immediately, mirroring logout.
       queryClient.setQueryData(USER_QUERY_KEY, null);
     },
   });

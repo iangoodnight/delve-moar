@@ -76,3 +76,11 @@ export const resetPasswordSchema = z
   })
   .refine(passwordsMatch, PASSWORD_MISMATCH);
 export type ResetPasswordValues = z.infer<typeof resetPasswordSchema>;
+
+// Deleting the account re-authenticates with the current password. It only
+// needs to be present; the server verifies it (no length rules here, since
+// older passwords may predate the current minimum).
+export const deleteAccountSchema = z.object({
+  password: z.string().min(1, 'Enter your password.'),
+});
+export type DeleteAccountValues = z.infer<typeof deleteAccountSchema>;

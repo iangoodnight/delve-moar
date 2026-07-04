@@ -49,6 +49,7 @@ export function getApiErrorMessage(error: unknown): string {
 export const INLINE_FIELD_ERROR_CODES = new Set([
   'USERNAME_TAKEN',
   'EMAIL_TAKEN',
+  'INVALID_PASSWORD',
   'validation_error',
 ]);
 

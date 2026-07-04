@@ -1,3 +1,4 @@
+export { AccountDangerZone } from './account-danger-zone';
 export { AccountPanel } from './account-panel';
 export { AuthCard } from './auth-card';
 export { ForgotPasswordForm } from './forgot-password-form';
