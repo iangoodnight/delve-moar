@@ -14,6 +14,20 @@ For the per-PR convention and the manual release ritual, see the
 
 ### Added
 
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+
+## [0.1.3] - 2026-07-04
+
+### Added
+
 - Server-side authentication for the API (ADR 0010): email/password
   signup, login, and logout under `/v1/auth`, backed by argon2id
   password hashing and opaque server-side sessions in HttpOnly cookies
