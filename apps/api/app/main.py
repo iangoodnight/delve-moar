@@ -1,5 +1,6 @@
 """FastAPI application factory and lifespan configuration."""
 
+import logging
 from collections.abc import AsyncGenerator, Awaitable, Callable
 from contextlib import asynccontextmanager
 from typing import Any
@@ -10,18 +11,52 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.db import init_db
 from app.exceptions import register_exception_handlers
+from app.observability import init_observability
 from app.openapi import downgrade_to_openapi_30
-from app.routers import health, items, monsters, spells
+from app.routers import (
+    account,
+    auth,
+    books,
+    health,
+    items,
+    monsters,
+    spells,
+)
 
 V1_PREFIX = "/v1"
+
+# Initialize error tracking before the app is created so the SDK's
+# FastAPI/Starlette integrations instrument the request path. No-op until
+# SENTRY_DSN is set.
+init_observability()
+
+
+def _configure_app_logging() -> None:
+    """Make the application's own loggers visible in the server output.
+
+    uvicorn configures its ``uvicorn*`` loggers but neither the root nor the
+    ``app`` logger, so ``logging.getLogger("app.*").info(...)`` records are
+    dropped by the level-WARNING last-resort handler. Bind the ``app`` logger
+    to uvicorn's handlers (falling back to a plain stream handler off
+    uvicorn) at INFO, so app logs -- such as the console mailer transport --
+    actually appear. Idempotent: a second call is a no-op.
+    """
+    app_logger = logging.getLogger("app")
+    app_logger.setLevel(logging.INFO)
+    if app_logger.handlers:
+        return
+    uvicorn_handlers = logging.getLogger("uvicorn").handlers
+    app_logger.handlers = uvicorn_handlers or [logging.StreamHandler()]
+    app_logger.propagate = False
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Manage application startup and shutdown.
 
-    Initializes the database engine on startup. Teardown logic for a
-    graceful connection pool shutdown will be added here as needed.
+    Configures application logging and initializes the database engine on
+    startup. Teardown logic for a graceful connection pool shutdown will be
+    added here as needed.
 
     Args:
         app: The FastAPI application instance.
@@ -29,6 +64,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     Yields:
         Control back to FastAPI after startup tasks complete.
     """
+    _configure_app_logging()
     init_db(settings.database_url)
     yield
 
@@ -57,6 +93,7 @@ async def _add_x_robots_tag(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_allowed_origins,
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -67,6 +104,9 @@ register_exception_handlers(app)
 app.include_router(health.router)
 
 # Resource routers are mounted under /v1.
+app.include_router(account.router, prefix=V1_PREFIX)
+app.include_router(auth.router, prefix=V1_PREFIX)
+app.include_router(books.router, prefix=V1_PREFIX)
 app.include_router(items.router, prefix=V1_PREFIX)
 app.include_router(monsters.router, prefix=V1_PREFIX)
 app.include_router(spells.router, prefix=V1_PREFIX)

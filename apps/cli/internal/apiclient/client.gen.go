@@ -4,6 +4,7 @@
 package apiclient
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -11,9 +12,94 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/oapi-codegen/runtime"
+	openapi_types "github.com/oapi-codegen/runtime/types"
 )
+
+// Defines values for ListBooksV1BooksGetParamsScope.
+const (
+	All   ListBooksV1BooksGetParamsScope = "all"
+	Owned ListBooksV1BooksGetParamsScope = "owned"
+)
+
+// Valid indicates whether the value is a known member of the ListBooksV1BooksGetParamsScope enum.
+func (e ListBooksV1BooksGetParamsScope) Valid() bool {
+	switch e {
+	case All:
+		return true
+	case Owned:
+		return true
+	default:
+		return false
+	}
+}
+
+// AccountDeleteRequest Payload to delete the current account.
+//
+// The current password is required as a re-authentication step, so a
+// stolen session alone cannot destroy the account. Deletion is
+// irreversible.
+type AccountDeleteRequest struct {
+	// Password The account's current password, for re-authentication.
+	Password string `json:"password"`
+}
+
+// AccountExport A portable copy of everything stored for the current account.
+type AccountExport struct {
+	// Account The owner's own view of their account.
+	//
+	// Returned only to the authenticated account holder (signup, login,
+	// ``/me``). ``email`` appears here and nowhere else; other users see the
+	// ``Author`` projection instead.
+	Account UserResponse `json:"account"`
+
+	// Books The books the account owns, with their content ids.
+	Books []AccountExportBook `json:"books"`
+
+	// ExportedAt When this export was generated.
+	ExportedAt time.Time `json:"exportedAt"`
+}
+
+// AccountExportBook One of the user's owned books, with its content membership ids.
+//
+// Content is referenced by id rather than inlined: the export is a record
+// of what the user has collected, not a copy of the SRD catalog.
+type AccountExportBook struct {
+	// CreatedAt When the book was created.
+	CreatedAt time.Time `json:"createdAt"`
+
+	// Description Longer description, if any.
+	Description *string `json:"description"`
+
+	// Id Unique identifier for the book.
+	Id openapi_types.UUID `json:"id"`
+
+	// IsPublic Whether the book is readable by anyone.
+	IsPublic bool `json:"isPublic"`
+
+	// IsSystem Whether this is a read-only system book.
+	IsSystem bool `json:"isSystem"`
+
+	// ItemIds Ids of the items collected in this book.
+	ItemIds []openapi_types.UUID `json:"itemIds"`
+
+	// MonsterIds Ids of the monsters collected in this book.
+	MonsterIds []openapi_types.UUID `json:"monsterIds"`
+
+	// Name Display name of the book.
+	Name string `json:"name"`
+
+	// Slug Stable handle for system books; null for user books.
+	Slug *string `json:"slug"`
+
+	// SpellIds Ids of the spells collected in this book.
+	SpellIds []openapi_types.UUID `json:"spellIds"`
+
+	// UpdatedAt When the book was last updated.
+	UpdatedAt time.Time `json:"updatedAt"`
+}
 
 // ActionEntry An action-shaped entry (actions, special_abilities, reactions, etc.).
 //
@@ -39,6 +125,132 @@ type ArmorClassEntry struct {
 	Type                 string                 `json:"type"`
 	Value                int                    `json:"value"`
 	AdditionalProperties map[string]interface{} `json:"-"`
+}
+
+// Author Public author projection -- how a user is shown to *other* users.
+//
+// The only user data exposed when homebrew is published (#185, consumed by
+// #177+). Deliberately carries “username“ alone: it is a unique,
+// immutable, stable public handle in Phase 1b, so neither the private
+// email nor the internal user id ever needs to leave the owner's own view.
+// Adding fields later (e.g. a stable public id, should usernames ever
+// become mutable) is an additive, non-breaking change.
+type Author struct {
+	// Username The user's public handle.
+	Username string `json:"username"`
+}
+
+// BookCreate Payload to create a book.
+type BookCreate struct {
+	// Description Optional longer description of the book.
+	Description *string `json:"description,omitempty"`
+
+	// Name Display name for the book.
+	Name string `json:"name"`
+}
+
+// BookDetail A single book with the count of content it holds, by resource type.
+type BookDetail struct {
+	// CreatedAt When the book was created.
+	CreatedAt time.Time `json:"createdAt"`
+
+	// Description Longer description, if any.
+	Description *string `json:"description"`
+
+	// Id Unique identifier for the book.
+	Id openapi_types.UUID `json:"id"`
+
+	// IsPublic Whether the book is readable by anyone.
+	IsPublic bool `json:"isPublic"`
+
+	// IsSystem Whether this is a read-only system book (e.g. the SRD).
+	IsSystem bool `json:"isSystem"`
+
+	// ItemCount Number of items in the book.
+	ItemCount int `json:"itemCount"`
+
+	// MonsterCount Number of monsters in the book.
+	MonsterCount int `json:"monsterCount"`
+
+	// Name Display name of the book.
+	Name string `json:"name"`
+
+	// Owner Public author projection -- how a user is shown to *other* users.
+	//
+	// The only user data exposed when homebrew is published (#185, consumed by
+	// #177+). Deliberately carries ``username`` alone: it is a unique,
+	// immutable, stable public handle in Phase 1b, so neither the private
+	// email nor the internal user id ever needs to leave the owner's own view.
+	// Adding fields later (e.g. a stable public id, should usernames ever
+	// become mutable) is an additive, non-breaking change.
+	Owner Author `json:"owner"`
+
+	// Slug Stable handle for system books; null for user books.
+	Slug *string `json:"slug"`
+
+	// SpellCount Number of spells in the book.
+	SpellCount int `json:"spellCount"`
+
+	// UpdatedAt When the book was last updated.
+	UpdatedAt time.Time `json:"updatedAt"`
+}
+
+// BookMembership A book owned by the requesting user that contains this content.
+type BookMembership struct {
+	// Id Unique identifier for the book.
+	Id openapi_types.UUID `json:"id"`
+
+	// Name Display name of the book.
+	Name string `json:"name"`
+
+	// Slug Stable handle for system books; null for user books.
+	Slug *string `json:"slug"`
+}
+
+// BookSummary A book as shown in list views.
+type BookSummary struct {
+	// CreatedAt When the book was created.
+	CreatedAt time.Time `json:"createdAt"`
+
+	// Description Longer description, if any.
+	Description *string `json:"description"`
+
+	// Id Unique identifier for the book.
+	Id openapi_types.UUID `json:"id"`
+
+	// IsPublic Whether the book is readable by anyone.
+	IsPublic bool `json:"isPublic"`
+
+	// IsSystem Whether this is a read-only system book (e.g. the SRD).
+	IsSystem bool `json:"isSystem"`
+
+	// Name Display name of the book.
+	Name string `json:"name"`
+
+	// Owner Public author projection -- how a user is shown to *other* users.
+	//
+	// The only user data exposed when homebrew is published (#185, consumed by
+	// #177+). Deliberately carries ``username`` alone: it is a unique,
+	// immutable, stable public handle in Phase 1b, so neither the private
+	// email nor the internal user id ever needs to leave the owner's own view.
+	// Adding fields later (e.g. a stable public id, should usernames ever
+	// become mutable) is an additive, non-breaking change.
+	Owner Author `json:"owner"`
+
+	// Slug Stable handle for system books; null for user books.
+	Slug *string `json:"slug"`
+
+	// UpdatedAt When the book was last updated.
+	UpdatedAt time.Time `json:"updatedAt"`
+}
+
+// BookUpdate Payload to update a book. Only the provided fields are changed.
+type BookUpdate struct {
+	// Description New description for the book.
+	Description *string `json:"description,omitempty"`
+
+	// Name New display name for the book.
+	Name *string `json:"name,omitempty"`
 }
 
 // ContentSource SRD content source attribution.
@@ -99,14 +311,10 @@ type HealthResponse struct {
 }
 
 // ItemDetail Full item details, used in detail endpoints.
-//
-// Attributes:
-//
-//	content: The full item data as ingested from the source, with all
-//	    original fields and structure preserved.
-//	content_source: Metadata about the source of the item data, such as
-//	    the original URL or source file name.
 type ItemDetail struct {
+	// BookMemberships The signed-in user's own books that contain this entry. Present only when requested via include=book_memberships; omitted for anonymous requests.
+	BookMemberships *[]BookMembership `json:"bookMemberships,omitempty"`
+
 	// Content SRD item content payload.
 	Content SrdItemContent `json:"content"`
 
@@ -120,47 +328,74 @@ type ItemDetail struct {
 	//     data_provider: Origin of the seed data (e.g. "5e-bits/5e-database").
 	//     data_provider_url: URL to the data provider's source repo.
 	ContentSource ContentSource `json:"contentSource"`
-	ItemCategory  *string       `json:"itemCategory"`
-	Name          string        `json:"name"`
-	Rarity        *string       `json:"rarity"`
-	Slug          string        `json:"slug"`
+
+	// Id Unique identifier for the item.
+	Id openapi_types.UUID `json:"id"`
+
+	// ItemCategory Category (e.g. 'weapon', 'potion'), if available.
+	ItemCategory *string `json:"itemCategory"`
+
+	// Name The item's name.
+	Name string `json:"name"`
+
+	// Rarity Rarity (e.g. 'rare'); null for mundane items.
+	Rarity *string `json:"rarity"`
+
+	// Slug URL-safe unique identifier.
+	Slug string `json:"slug"`
 }
 
 // ItemSummary Summary info for an item, used in list endpoints.
-//
-// Attributes:
-//
-//	slug: Unique identifier for the item, used in URLs.
-//	name: The item's name.
-//	item_category: The category of the item (e.g. "Weapon", "Potion"),
-//	    if available. This is not guaranteed to be present for all items, as
-//	    it depends on the source data.
-//	rarity: The rarity of the item (e.g. "Common", "Rare"), if available.
 type ItemSummary struct {
+	// BookMemberships The signed-in user's own books that contain this entry. Present only when requested via include=book_memberships; omitted for anonymous requests.
+	BookMemberships *[]BookMembership `json:"bookMemberships,omitempty"`
+
+	// Id Unique identifier for the item.
+	Id openapi_types.UUID `json:"id"`
+
+	// ItemCategory Category (e.g. 'weapon', 'potion'), if available.
 	ItemCategory *string `json:"itemCategory"`
-	Name         string  `json:"name"`
-	Rarity       *string `json:"rarity"`
-	Slug         string  `json:"slug"`
+
+	// Name The item's name.
+	Name string `json:"name"`
+
+	// Rarity Rarity (e.g. 'rare'); null for mundane items.
+	Rarity *string `json:"rarity"`
+
+	// Slug URL-safe unique identifier.
+	Slug string `json:"slug"`
 }
 
 // Links Prev/next navigation links for a paginated resultset.
-//
-// Attributes:
-//
-//	prev: Absolute URL for the previous page, or null on the first page.
-//	next: Absolute URL for the next page, or null on the last page.
 type Links struct {
+	// Next URL of the next page, or null on the last page.
 	Next *string `json:"next"`
+
+	// Prev URL of the previous page, or null on the first page.
 	Prev *string `json:"prev"`
+}
+
+// LoginRequest Payload to authenticate with a username-or-email and password.
+//
+// “identifier“ accepts either the account's username or its email; the
+// presence of “@“ disambiguates (usernames cannot contain “@“).
+type LoginRequest struct {
+	// Identifier Account username or email.
+	Identifier string `json:"identifier"`
+
+	// Password Account password.
+	Password string `json:"password"`
+}
+
+// MessageResponse A generic, non-revealing acknowledgement message.
+type MessageResponse struct {
+	// Message Human-readable acknowledgement message.
+	Message string `json:"message"`
 }
 
 // MetadataEnvelope Envelopes a paginated resultset with metadata.
 type MetadataEnvelope struct {
 	// Links Prev/next navigation links for a paginated resultset.
-	//
-	// Attributes:
-	//     prev: Absolute URL for the previous page, or null on the first page.
-	//     next: Absolute URL for the next page, or null on the last page.
 	Links Links `json:"links"`
 
 	// Resultset Metadata about a paginated resultset.
@@ -168,14 +403,11 @@ type MetadataEnvelope struct {
 }
 
 // MonsterDetail Full monster details, used in detail endpoints.
-//
-// Attributes:
-//
-//	content: The full monster data as ingested from the source, with all
-//	    original fields and structure preserved.
-//	content_source: Metadata about the source of the monster data, such as
-//	    the original URL or source file name.
 type MonsterDetail struct {
+	// BookMemberships The signed-in user's own books that contain this entry. Present only when requested via include=book_memberships; omitted for anonymous requests.
+	BookMemberships *[]BookMembership `json:"bookMemberships,omitempty"`
+
+	// ChallengeRating Challenge rating as a display string (e.g. '1/2', '5').
 	ChallengeRating string `json:"challengeRating"`
 
 	// Content SRD monster content payload.
@@ -191,29 +423,53 @@ type MonsterDetail struct {
 	//     data_provider: Origin of the seed data (e.g. "5e-bits/5e-database").
 	//     data_provider_url: URL to the data provider's source repo.
 	ContentSource ContentSource `json:"contentSource"`
-	MonsterType   *string       `json:"monsterType"`
-	Name          string        `json:"name"`
-	Slug          string        `json:"slug"`
+
+	// Id Unique identifier for the monster.
+	Id openapi_types.UUID `json:"id"`
+
+	// MonsterType Type or category (e.g. 'dragon').
+	MonsterType *string `json:"monsterType"`
+
+	// Name The monster's name.
+	Name string `json:"name"`
+
+	// Slug URL-safe unique identifier.
+	Slug string `json:"slug"`
 }
 
 // MonsterSummary Summary info for a monster, used in list endpoints.
-//
-// Attributes:
-//
-//	slug: Unique identifier for the monster, used in URLs.
-//	name: The monster's name.
-//	monster_type: The type or category of the monster (e.g. "Dragon").
-//	challenge_rating: The monster's challenge rating as a display string
-//	    (e.g. "1/2", "5", "10").
 type MonsterSummary struct {
-	ChallengeRating string  `json:"challengeRating"`
-	MonsterType     *string `json:"monsterType"`
-	Name            string  `json:"name"`
-	Slug            string  `json:"slug"`
+	// BookMemberships The signed-in user's own books that contain this entry. Present only when requested via include=book_memberships; omitted for anonymous requests.
+	BookMemberships *[]BookMembership `json:"bookMemberships,omitempty"`
+
+	// ChallengeRating Challenge rating as a display string (e.g. '1/2', '5').
+	ChallengeRating string `json:"challengeRating"`
+
+	// Id Unique identifier for the monster.
+	Id openapi_types.UUID `json:"id"`
+
+	// MonsterType Type or category (e.g. 'dragon').
+	MonsterType *string `json:"monsterType"`
+
+	// Name The monster's name.
+	Name string `json:"name"`
+
+	// Slug URL-safe unique identifier.
+	Slug string `json:"slug"`
+}
+
+// PaginatedResultsetBookSummary defines model for PaginatedResultset_BookSummary_.
+type PaginatedResultsetBookSummary struct {
+	// Data The records on this page.
+	Data []BookSummary `json:"data"`
+
+	// Metadata Envelopes a paginated resultset with metadata.
+	Metadata MetadataEnvelope `json:"metadata"`
 }
 
 // PaginatedResultsetItemSummary defines model for PaginatedResultset_ItemSummary_.
 type PaginatedResultsetItemSummary struct {
+	// Data The records on this page.
 	Data []ItemSummary `json:"data"`
 
 	// Metadata Envelopes a paginated resultset with metadata.
@@ -222,6 +478,7 @@ type PaginatedResultsetItemSummary struct {
 
 // PaginatedResultsetMonsterSummary defines model for PaginatedResultset_MonsterSummary_.
 type PaginatedResultsetMonsterSummary struct {
+	// Data The records on this page.
 	Data []MonsterSummary `json:"data"`
 
 	// Metadata Envelopes a paginated resultset with metadata.
@@ -230,10 +487,30 @@ type PaginatedResultsetMonsterSummary struct {
 
 // PaginatedResultsetSpellSummary defines model for PaginatedResultset_SpellSummary_.
 type PaginatedResultsetSpellSummary struct {
+	// Data The records on this page.
 	Data []SpellSummary `json:"data"`
 
 	// Metadata Envelopes a paginated resultset with metadata.
 	Metadata MetadataEnvelope `json:"metadata"`
+}
+
+// PasswordResetConfirmRequest Payload to set a new password using a reset token.
+type PasswordResetConfirmRequest struct {
+	// Password Account password (8-128 characters).
+	Password string `json:"password"`
+
+	// Token Password-reset token from the email link.
+	Token string `json:"token"`
+}
+
+// PasswordResetRequest Payload to request a password-reset email.
+//
+// “identifier“ is the account's username or email (same matching as
+// login). The response is identical whether or not an account matches, so
+// it never reveals which addresses are registered.
+type PasswordResetRequest struct {
+	// Identifier Account username or email.
+	Identifier string `json:"identifier"`
 }
 
 // Proficiency A saving-throw or skill proficiency; index on `proficiency.index`.
@@ -253,8 +530,13 @@ type Range struct {
 
 // ResultsetMeta Metadata about a paginated resultset.
 type ResultsetMeta struct {
-	Count  int `json:"count"`
-	Limit  int `json:"limit"`
+	// Count Total records matching the query, across all pages.
+	Count int `json:"count"`
+
+	// Limit Number of records in this page.
+	Limit int `json:"limit"`
+
+	// Offset Offset of this page.
 	Offset int `json:"offset"`
 }
 
@@ -266,6 +548,18 @@ type Senses struct {
 	Tremorsense          *string                `json:"tremorsense,omitempty"`
 	Truesight            *string                `json:"truesight,omitempty"`
 	AdditionalProperties map[string]interface{} `json:"-"`
+}
+
+// SignupRequest Payload to create a new account.
+type SignupRequest struct {
+	// Email Account email address (kept private).
+	Email openapi_types.Email `json:"email"`
+
+	// Password Account password (8-128 characters).
+	Password string `json:"password"`
+
+	// Username Public handle. Lowercase letters, digits, hyphen, and underscore only; 3-30 characters.
+	Username string `json:"username"`
 }
 
 // Speed Movement speeds. Strings like '40 ft.' verbatim from the SRD.
@@ -281,6 +575,9 @@ type Speed struct {
 
 // SpellDetail Full spell details, used in the detail endpoint.
 type SpellDetail struct {
+	// BookMemberships The signed-in user's own books that contain this entry. Present only when requested via include=book_memberships; omitted for anonymous requests.
+	BookMemberships *[]BookMembership `json:"bookMemberships,omitempty"`
+
 	// Content SRD spell content payload.
 	Content SrdSpellContent `json:"content"`
 
@@ -294,25 +591,42 @@ type SpellDetail struct {
 	//     data_provider: Origin of the seed data (e.g. "5e-bits/5e-database").
 	//     data_provider_url: URL to the data provider's source repo.
 	ContentSource ContentSource `json:"contentSource"`
-	Level         string        `json:"level"`
-	Name          string        `json:"name"`
-	School        *string       `json:"school"`
-	Slug          string        `json:"slug"`
+
+	// Id Unique identifier for the spell.
+	Id openapi_types.UUID `json:"id"`
+
+	// Level Level as a display string (e.g. 'Cantrip', '1st').
+	Level string `json:"level"`
+
+	// Name The spell's name.
+	Name string `json:"name"`
+
+	// School School of magic (e.g. 'evocation').
+	School *string `json:"school"`
+
+	// Slug URL-safe unique identifier.
+	Slug string `json:"slug"`
 }
 
 // SpellSummary Summary info for a spell, used in list endpoints.
-//
-// Attributes:
-//
-//	slug: Unique identifier for the spell, used in URLs.
-//	name: The spell's name.
-//	level: The spell's level as a display string (e.g. "Cantrip", "1st").
-//	school: The spell's school of magic (e.g. "evocation").
 type SpellSummary struct {
-	Level  string  `json:"level"`
-	Name   string  `json:"name"`
+	// BookMemberships The signed-in user's own books that contain this entry. Present only when requested via include=book_memberships; omitted for anonymous requests.
+	BookMemberships *[]BookMembership `json:"bookMemberships,omitempty"`
+
+	// Id Unique identifier for the spell.
+	Id openapi_types.UUID `json:"id"`
+
+	// Level Level as a display string (e.g. 'Cantrip', '1st').
+	Level string `json:"level"`
+
+	// Name The spell's name.
+	Name string `json:"name"`
+
+	// School School of magic (e.g. 'evocation').
 	School *string `json:"school"`
-	Slug   string  `json:"slug"`
+
+	// Slug URL-safe unique identifier.
+	Slug string `json:"slug"`
 }
 
 // SrdItemContent SRD item content payload.
@@ -411,6 +725,28 @@ type SrdSpellContent struct {
 	AdditionalProperties map[string]interface{} `json:"-"`
 }
 
+// UserResponse The owner's own view of their account.
+//
+// Returned only to the authenticated account holder (signup, login,
+// “/me“). “email“ appears here and nowhere else; other users see the
+// “Author“ projection instead.
+type UserResponse struct {
+	// CreatedAt When the account was created.
+	CreatedAt time.Time `json:"createdAt"`
+
+	// Email The account's private email address.
+	Email openapi_types.Email `json:"email"`
+
+	// EmailVerified Whether the email has been verified.
+	EmailVerified bool `json:"emailVerified"`
+
+	// Id The account's unique identifier.
+	Id openapi_types.UUID `json:"id"`
+
+	// Username The account's public handle.
+	Username string `json:"username"`
+}
+
 // ValidationError defines model for ValidationError.
 type ValidationError struct {
 	Ctx   *map[string]interface{}    `json:"ctx,omitempty"`
@@ -431,15 +767,39 @@ type ValidationError_Loc_Item struct {
 	union json.RawMessage
 }
 
-// ListItemsV1ItemsGetParams defines parameters for ListItemsV1ItemsGet.
-type ListItemsV1ItemsGetParams struct {
-	// ItemCategory Exact match on item category (e.g. 'weapon'). This is not guaranteed to be present for all items, as it depends on the source data.
-	ItemCategory *string `form:"item_category,omitempty" json:"item_category,omitempty"`
+// VerifyEmailRequest Payload to confirm an email address with a verification token.
+type VerifyEmailRequest struct {
+	// Token Verification token from the email link.
+	Token string `json:"token"`
+}
 
-	// Rarity Exact match on item rarity (e.g. 'common'). This is not guaranteed to be present for all items, as it depends on the source data. Set to 'none' to filter for items with no rarity (equipment).
-	Rarity *string `form:"rarity,omitempty" json:"rarity,omitempty"`
-	Limit  *int    `form:"limit,omitempty" json:"limit,omitempty"`
-	Offset *int    `form:"offset,omitempty" json:"offset,omitempty"`
+// LogoutV1AuthLogoutPostParams defines parameters for LogoutV1AuthLogoutPost.
+type LogoutV1AuthLogoutPostParams struct {
+	// Everywhere Revoke all of this user's sessions, not just this.
+	Everywhere *bool `form:"everywhere,omitempty" json:"everywhere,omitempty"`
+}
+
+// ListBooksV1BooksGetParams defines parameters for ListBooksV1BooksGet.
+type ListBooksV1BooksGetParams struct {
+	// Scope Which books to include: 'all' (your books plus public books) or 'owned' (only books you created).
+	Scope  *ListBooksV1BooksGetParamsScope `form:"scope,omitempty" json:"scope,omitempty"`
+	Limit  *int                            `form:"limit,omitempty" json:"limit,omitempty"`
+	Offset *int                            `form:"offset,omitempty" json:"offset,omitempty"`
+
+	// OrderBy Comma-separated sort fields in column:direction format. Direction is 'asc' or 'desc' (case-insensitive); omitting direction defaults to 'asc'. Valid columns: created_at, name, updated_at.
+	OrderBy *string `form:"order_by,omitempty" json:"order_by,omitempty"`
+
+	// Search Case-insensitive substring search. Matches against name, description. Results are relevance-ordered: earlier columns rank higher than later ones.
+	Search *string `form:"search,omitempty" json:"search,omitempty"`
+}
+
+// ListBooksV1BooksGetParamsScope defines parameters for ListBooksV1BooksGet.
+type ListBooksV1BooksGetParamsScope string
+
+// ListBookItemsV1BooksBookIdItemsGetParams defines parameters for ListBookItemsV1BooksBookIdItemsGet.
+type ListBookItemsV1BooksBookIdItemsGetParams struct {
+	Limit  *int `form:"limit,omitempty" json:"limit,omitempty"`
+	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
 
 	// OrderBy Comma-separated sort fields in column:direction format. Direction is 'asc' or 'desc' (case-insensitive); omitting direction defaults to 'asc'. Valid columns: item_category, name, rarity.
 	OrderBy *string `form:"order_by,omitempty" json:"order_by,omitempty"`
@@ -448,10 +808,60 @@ type ListItemsV1ItemsGetParams struct {
 	Search *string `form:"search,omitempty" json:"search,omitempty"`
 }
 
+// ListBookMonstersV1BooksBookIdMonstersGetParams defines parameters for ListBookMonstersV1BooksBookIdMonstersGet.
+type ListBookMonstersV1BooksBookIdMonstersGetParams struct {
+	Limit  *int `form:"limit,omitempty" json:"limit,omitempty"`
+	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
+
+	// OrderBy Comma-separated sort fields in column:direction format. Direction is 'asc' or 'desc' (case-insensitive); omitting direction defaults to 'asc'. Valid columns: challenge_rating, monster_type, name.
+	OrderBy *string `form:"order_by,omitempty" json:"order_by,omitempty"`
+
+	// Search Case-insensitive substring search. Matches against name, monster_type. Results are relevance-ordered: earlier columns rank higher than later ones.
+	Search *string `form:"search,omitempty" json:"search,omitempty"`
+}
+
+// ListBookSpellsV1BooksBookIdSpellsGetParams defines parameters for ListBookSpellsV1BooksBookIdSpellsGet.
+type ListBookSpellsV1BooksBookIdSpellsGetParams struct {
+	Limit  *int `form:"limit,omitempty" json:"limit,omitempty"`
+	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
+
+	// OrderBy Comma-separated sort fields in column:direction format. Direction is 'asc' or 'desc' (case-insensitive); omitting direction defaults to 'asc'. Valid columns: level, name, school.
+	OrderBy *string `form:"order_by,omitempty" json:"order_by,omitempty"`
+
+	// Search Case-insensitive substring search. Matches against name. Results are relevance-ordered: earlier columns rank higher than later ones.
+	Search *string `form:"search,omitempty" json:"search,omitempty"`
+}
+
+// ListItemsV1ItemsGetParams defines parameters for ListItemsV1ItemsGet.
+type ListItemsV1ItemsGetParams struct {
+	// ItemCategory Exact match on item category (e.g. 'weapon'). This is not guaranteed to be present for all items, as it depends on the source data.
+	ItemCategory *string `form:"item_category,omitempty" json:"item_category,omitempty"`
+
+	// Rarity Exact match on item rarity (e.g. 'common'). This is not guaranteed to be present for all items, as it depends on the source data. Set to 'none' to filter for items with no rarity (equipment).
+	Rarity *string `form:"rarity,omitempty" json:"rarity,omitempty"`
+
+	// Book Filter to items in any of these books (repeat for multiple). Each must be a book you can read, else 404.
+	Book   *[]openapi_types.UUID `form:"book,omitempty" json:"book,omitempty"`
+	Limit  *int                  `form:"limit,omitempty" json:"limit,omitempty"`
+	Offset *int                  `form:"offset,omitempty" json:"offset,omitempty"`
+
+	// OrderBy Comma-separated sort fields in column:direction format. Direction is 'asc' or 'desc' (case-insensitive); omitting direction defaults to 'asc'. Valid columns: item_category, name, rarity.
+	OrderBy *string `form:"order_by,omitempty" json:"order_by,omitempty"`
+
+	// Search Case-insensitive substring search. Matches against name, item_category. Results are relevance-ordered: earlier columns rank higher than later ones.
+	Search *string `form:"search,omitempty" json:"search,omitempty"`
+
+	// Include Comma-separated optional response expansions. Supported: 'book_memberships' annotates each entry with the signed-in user's own books that contain it.
+	Include *string `form:"include,omitempty" json:"include,omitempty"`
+}
+
 // GetItemV1ItemsSlugGetParams defines parameters for GetItemV1ItemsSlugGet.
 type GetItemV1ItemsSlugGetParams struct {
 	// Namespace The source namespace of the item, used to disambiguate items with the same slug from different sources. Known values: 'srd-5.1', 'srd-2024', 'user:{user_id}'.
 	Namespace *string `form:"namespace,omitempty" json:"namespace,omitempty"`
+
+	// Include Comma-separated optional response expansions. Supported: 'book_memberships' annotates each entry with the signed-in user's own books that contain it.
+	Include *string `form:"include,omitempty" json:"include,omitempty"`
 }
 
 // ListMonstersV1MonstersGetParams defines parameters for ListMonstersV1MonstersGet.
@@ -468,14 +878,20 @@ type ListMonstersV1MonstersGetParams struct {
 	CrMax *struct {
 		union json.RawMessage
 	} `form:"cr_max,omitempty" json:"cr_max,omitempty"`
-	Limit  *int `form:"limit,omitempty" json:"limit,omitempty"`
-	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
+
+	// Book Filter to monsters in any of these books (repeat for multiple). Each must be a book you can read, else 404.
+	Book   *[]openapi_types.UUID `form:"book,omitempty" json:"book,omitempty"`
+	Limit  *int                  `form:"limit,omitempty" json:"limit,omitempty"`
+	Offset *int                  `form:"offset,omitempty" json:"offset,omitempty"`
 
 	// OrderBy Comma-separated sort fields in column:direction format. Direction is 'asc' or 'desc' (case-insensitive); omitting direction defaults to 'asc'. Valid columns: challenge_rating, monster_type, name.
 	OrderBy *string `form:"order_by,omitempty" json:"order_by,omitempty"`
 
 	// Search Case-insensitive substring search. Matches against name, monster_type. Results are relevance-ordered: earlier columns rank higher than later ones.
 	Search *string `form:"search,omitempty" json:"search,omitempty"`
+
+	// Include Comma-separated optional response expansions. Supported: 'book_memberships' annotates each entry with the signed-in user's own books that contain it.
+	Include *string `form:"include,omitempty" json:"include,omitempty"`
 }
 
 // ListMonstersV1MonstersGetParamsCrMin0 defines parameters for ListMonstersV1MonstersGet.
@@ -494,6 +910,9 @@ type ListMonstersV1MonstersGetParamsCrMax1 = string
 type GetMonsterV1MonstersSlugGetParams struct {
 	// Namespace Source namespace to search in. Defaults to the SRD 5.1 namespace. Use 'user:{user_id}' for homebrew content.
 	Namespace *string `form:"namespace,omitempty" json:"namespace,omitempty"`
+
+	// Include Comma-separated optional response expansions. Supported: 'book_memberships' annotates each entry with the signed-in user's own books that contain it.
+	Include *string `form:"include,omitempty" json:"include,omitempty"`
 }
 
 // ListSpellsV1SpellsGetParams defines parameters for ListSpellsV1SpellsGet.
@@ -506,21 +925,54 @@ type ListSpellsV1SpellsGetParams struct {
 
 	// LevelMax Inclusive maximum spell level (0-9).
 	LevelMax *int `form:"level_max,omitempty" json:"level_max,omitempty"`
-	Limit    *int `form:"limit,omitempty" json:"limit,omitempty"`
-	Offset   *int `form:"offset,omitempty" json:"offset,omitempty"`
+
+	// Book Filter to spells in any of these books (repeat for multiple). Each must be a book you can read, else 404.
+	Book   *[]openapi_types.UUID `form:"book,omitempty" json:"book,omitempty"`
+	Limit  *int                  `form:"limit,omitempty" json:"limit,omitempty"`
+	Offset *int                  `form:"offset,omitempty" json:"offset,omitempty"`
 
 	// OrderBy Comma-separated sort fields in column:direction format. Direction is 'asc' or 'desc' (case-insensitive); omitting direction defaults to 'asc'. Valid columns: level, name, school.
 	OrderBy *string `form:"order_by,omitempty" json:"order_by,omitempty"`
 
 	// Search Case-insensitive substring search. Matches against name. Results are relevance-ordered: earlier columns rank higher than later ones.
 	Search *string `form:"search,omitempty" json:"search,omitempty"`
+
+	// Include Comma-separated optional response expansions. Supported: 'book_memberships' annotates each entry with the signed-in user's own books that contain it.
+	Include *string `form:"include,omitempty" json:"include,omitempty"`
 }
 
 // GetSpellV1SpellsSlugGetParams defines parameters for GetSpellV1SpellsSlugGet.
 type GetSpellV1SpellsSlugGetParams struct {
 	// Namespace Source namespace to search in. Defaults to the SRD 5.1 namespace. Use 'user:{user_id}' for homebrew content.
 	Namespace *string `form:"namespace,omitempty" json:"namespace,omitempty"`
+
+	// Include Comma-separated optional response expansions. Supported: 'book_memberships' annotates each entry with the signed-in user's own books that contain it.
+	Include *string `form:"include,omitempty" json:"include,omitempty"`
 }
+
+// DeleteAccountV1AccountDeleteJSONRequestBody defines body for DeleteAccountV1AccountDelete for application/json ContentType.
+type DeleteAccountV1AccountDeleteJSONRequestBody = AccountDeleteRequest
+
+// LoginV1AuthLoginPostJSONRequestBody defines body for LoginV1AuthLoginPost for application/json ContentType.
+type LoginV1AuthLoginPostJSONRequestBody = LoginRequest
+
+// RequestPasswordResetV1AuthPasswordResetPostJSONRequestBody defines body for RequestPasswordResetV1AuthPasswordResetPost for application/json ContentType.
+type RequestPasswordResetV1AuthPasswordResetPostJSONRequestBody = PasswordResetRequest
+
+// ConfirmPasswordResetV1AuthPasswordResetConfirmPostJSONRequestBody defines body for ConfirmPasswordResetV1AuthPasswordResetConfirmPost for application/json ContentType.
+type ConfirmPasswordResetV1AuthPasswordResetConfirmPostJSONRequestBody = PasswordResetConfirmRequest
+
+// SignupV1AuthSignupPostJSONRequestBody defines body for SignupV1AuthSignupPost for application/json ContentType.
+type SignupV1AuthSignupPostJSONRequestBody = SignupRequest
+
+// VerifyEmailV1AuthVerifyEmailPostJSONRequestBody defines body for VerifyEmailV1AuthVerifyEmailPost for application/json ContentType.
+type VerifyEmailV1AuthVerifyEmailPostJSONRequestBody = VerifyEmailRequest
+
+// CreateBookV1BooksPostJSONRequestBody defines body for CreateBookV1BooksPost for application/json ContentType.
+type CreateBookV1BooksPostJSONRequestBody = BookCreate
+
+// UpdateBookV1BooksBookIdPatchJSONRequestBody defines body for UpdateBookV1BooksBookIdPatch for application/json ContentType.
+type UpdateBookV1BooksBookIdPatchJSONRequestBody = BookUpdate
 
 // Getter for additional properties for ActionEntry. Returns the specified
 // element and whether it was found
@@ -2718,6 +3170,94 @@ type ClientInterface interface {
 	// HealthCheckHealthGet request
 	HealthCheckHealthGet(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// DeleteAccountV1AccountDeleteWithBody request with any body
+	DeleteAccountV1AccountDeleteWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	DeleteAccountV1AccountDelete(ctx context.Context, body DeleteAccountV1AccountDeleteJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ExportAccountV1AccountExportGet request
+	ExportAccountV1AccountExportGet(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// LoginV1AuthLoginPostWithBody request with any body
+	LoginV1AuthLoginPostWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	LoginV1AuthLoginPost(ctx context.Context, body LoginV1AuthLoginPostJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// LogoutV1AuthLogoutPost request
+	LogoutV1AuthLogoutPost(ctx context.Context, params *LogoutV1AuthLogoutPostParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// MeV1AuthMeGet request
+	MeV1AuthMeGet(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// RequestPasswordResetV1AuthPasswordResetPostWithBody request with any body
+	RequestPasswordResetV1AuthPasswordResetPostWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	RequestPasswordResetV1AuthPasswordResetPost(ctx context.Context, body RequestPasswordResetV1AuthPasswordResetPostJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ConfirmPasswordResetV1AuthPasswordResetConfirmPostWithBody request with any body
+	ConfirmPasswordResetV1AuthPasswordResetConfirmPostWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	ConfirmPasswordResetV1AuthPasswordResetConfirmPost(ctx context.Context, body ConfirmPasswordResetV1AuthPasswordResetConfirmPostJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ResendVerificationV1AuthResendVerificationPost request
+	ResendVerificationV1AuthResendVerificationPost(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// SignupV1AuthSignupPostWithBody request with any body
+	SignupV1AuthSignupPostWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	SignupV1AuthSignupPost(ctx context.Context, body SignupV1AuthSignupPostJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// VerifyEmailV1AuthVerifyEmailPostWithBody request with any body
+	VerifyEmailV1AuthVerifyEmailPostWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	VerifyEmailV1AuthVerifyEmailPost(ctx context.Context, body VerifyEmailV1AuthVerifyEmailPostJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListBooksV1BooksGet request
+	ListBooksV1BooksGet(ctx context.Context, params *ListBooksV1BooksGetParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreateBookV1BooksPostWithBody request with any body
+	CreateBookV1BooksPostWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	CreateBookV1BooksPost(ctx context.Context, body CreateBookV1BooksPostJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeleteBookV1BooksBookIdDelete request
+	DeleteBookV1BooksBookIdDelete(ctx context.Context, bookId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetBookV1BooksBookIdGet request
+	GetBookV1BooksBookIdGet(ctx context.Context, bookId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateBookV1BooksBookIdPatchWithBody request with any body
+	UpdateBookV1BooksBookIdPatchWithBody(ctx context.Context, bookId openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	UpdateBookV1BooksBookIdPatch(ctx context.Context, bookId openapi_types.UUID, body UpdateBookV1BooksBookIdPatchJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListBookItemsV1BooksBookIdItemsGet request
+	ListBookItemsV1BooksBookIdItemsGet(ctx context.Context, bookId openapi_types.UUID, params *ListBookItemsV1BooksBookIdItemsGetParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// RemoveBookItemV1BooksBookIdItemsItemIdDelete request
+	RemoveBookItemV1BooksBookIdItemsItemIdDelete(ctx context.Context, bookId openapi_types.UUID, itemId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AddBookItemV1BooksBookIdItemsItemIdPut request
+	AddBookItemV1BooksBookIdItemsItemIdPut(ctx context.Context, bookId openapi_types.UUID, itemId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListBookMonstersV1BooksBookIdMonstersGet request
+	ListBookMonstersV1BooksBookIdMonstersGet(ctx context.Context, bookId openapi_types.UUID, params *ListBookMonstersV1BooksBookIdMonstersGetParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// RemoveBookMonsterV1BooksBookIdMonstersMonsterIdDelete request
+	RemoveBookMonsterV1BooksBookIdMonstersMonsterIdDelete(ctx context.Context, bookId openapi_types.UUID, monsterId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AddBookMonsterV1BooksBookIdMonstersMonsterIdPut request
+	AddBookMonsterV1BooksBookIdMonstersMonsterIdPut(ctx context.Context, bookId openapi_types.UUID, monsterId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListBookSpellsV1BooksBookIdSpellsGet request
+	ListBookSpellsV1BooksBookIdSpellsGet(ctx context.Context, bookId openapi_types.UUID, params *ListBookSpellsV1BooksBookIdSpellsGetParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// RemoveBookSpellV1BooksBookIdSpellsSpellIdDelete request
+	RemoveBookSpellV1BooksBookIdSpellsSpellIdDelete(ctx context.Context, bookId openapi_types.UUID, spellId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AddBookSpellV1BooksBookIdSpellsSpellIdPut request
+	AddBookSpellV1BooksBookIdSpellsSpellIdPut(ctx context.Context, bookId openapi_types.UUID, spellId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// ListItemsV1ItemsGet request
 	ListItemsV1ItemsGet(ctx context.Context, params *ListItemsV1ItemsGetParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -2739,6 +3279,390 @@ type ClientInterface interface {
 
 func (c *Client) HealthCheckHealthGet(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewHealthCheckHealthGetRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DeleteAccountV1AccountDeleteWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteAccountV1AccountDeleteRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DeleteAccountV1AccountDelete(ctx context.Context, body DeleteAccountV1AccountDeleteJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteAccountV1AccountDeleteRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ExportAccountV1AccountExportGet(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewExportAccountV1AccountExportGetRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) LoginV1AuthLoginPostWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewLoginV1AuthLoginPostRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) LoginV1AuthLoginPost(ctx context.Context, body LoginV1AuthLoginPostJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewLoginV1AuthLoginPostRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) LogoutV1AuthLogoutPost(ctx context.Context, params *LogoutV1AuthLogoutPostParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewLogoutV1AuthLogoutPostRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) MeV1AuthMeGet(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewMeV1AuthMeGetRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) RequestPasswordResetV1AuthPasswordResetPostWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewRequestPasswordResetV1AuthPasswordResetPostRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) RequestPasswordResetV1AuthPasswordResetPost(ctx context.Context, body RequestPasswordResetV1AuthPasswordResetPostJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewRequestPasswordResetV1AuthPasswordResetPostRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ConfirmPasswordResetV1AuthPasswordResetConfirmPostWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewConfirmPasswordResetV1AuthPasswordResetConfirmPostRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ConfirmPasswordResetV1AuthPasswordResetConfirmPost(ctx context.Context, body ConfirmPasswordResetV1AuthPasswordResetConfirmPostJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewConfirmPasswordResetV1AuthPasswordResetConfirmPostRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ResendVerificationV1AuthResendVerificationPost(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewResendVerificationV1AuthResendVerificationPostRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) SignupV1AuthSignupPostWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewSignupV1AuthSignupPostRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) SignupV1AuthSignupPost(ctx context.Context, body SignupV1AuthSignupPostJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewSignupV1AuthSignupPostRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) VerifyEmailV1AuthVerifyEmailPostWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewVerifyEmailV1AuthVerifyEmailPostRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) VerifyEmailV1AuthVerifyEmailPost(ctx context.Context, body VerifyEmailV1AuthVerifyEmailPostJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewVerifyEmailV1AuthVerifyEmailPostRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ListBooksV1BooksGet(ctx context.Context, params *ListBooksV1BooksGetParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListBooksV1BooksGetRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CreateBookV1BooksPostWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateBookV1BooksPostRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CreateBookV1BooksPost(ctx context.Context, body CreateBookV1BooksPostJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateBookV1BooksPostRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DeleteBookV1BooksBookIdDelete(ctx context.Context, bookId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteBookV1BooksBookIdDeleteRequest(c.Server, bookId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetBookV1BooksBookIdGet(ctx context.Context, bookId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetBookV1BooksBookIdGetRequest(c.Server, bookId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) UpdateBookV1BooksBookIdPatchWithBody(ctx context.Context, bookId openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateBookV1BooksBookIdPatchRequestWithBody(c.Server, bookId, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) UpdateBookV1BooksBookIdPatch(ctx context.Context, bookId openapi_types.UUID, body UpdateBookV1BooksBookIdPatchJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateBookV1BooksBookIdPatchRequest(c.Server, bookId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ListBookItemsV1BooksBookIdItemsGet(ctx context.Context, bookId openapi_types.UUID, params *ListBookItemsV1BooksBookIdItemsGetParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListBookItemsV1BooksBookIdItemsGetRequest(c.Server, bookId, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) RemoveBookItemV1BooksBookIdItemsItemIdDelete(ctx context.Context, bookId openapi_types.UUID, itemId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewRemoveBookItemV1BooksBookIdItemsItemIdDeleteRequest(c.Server, bookId, itemId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) AddBookItemV1BooksBookIdItemsItemIdPut(ctx context.Context, bookId openapi_types.UUID, itemId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAddBookItemV1BooksBookIdItemsItemIdPutRequest(c.Server, bookId, itemId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ListBookMonstersV1BooksBookIdMonstersGet(ctx context.Context, bookId openapi_types.UUID, params *ListBookMonstersV1BooksBookIdMonstersGetParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListBookMonstersV1BooksBookIdMonstersGetRequest(c.Server, bookId, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) RemoveBookMonsterV1BooksBookIdMonstersMonsterIdDelete(ctx context.Context, bookId openapi_types.UUID, monsterId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewRemoveBookMonsterV1BooksBookIdMonstersMonsterIdDeleteRequest(c.Server, bookId, monsterId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) AddBookMonsterV1BooksBookIdMonstersMonsterIdPut(ctx context.Context, bookId openapi_types.UUID, monsterId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAddBookMonsterV1BooksBookIdMonstersMonsterIdPutRequest(c.Server, bookId, monsterId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ListBookSpellsV1BooksBookIdSpellsGet(ctx context.Context, bookId openapi_types.UUID, params *ListBookSpellsV1BooksBookIdSpellsGetParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListBookSpellsV1BooksBookIdSpellsGetRequest(c.Server, bookId, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) RemoveBookSpellV1BooksBookIdSpellsSpellIdDelete(ctx context.Context, bookId openapi_types.UUID, spellId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewRemoveBookSpellV1BooksBookIdSpellsSpellIdDeleteRequest(c.Server, bookId, spellId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) AddBookSpellV1BooksBookIdSpellsSpellIdPut(ctx context.Context, bookId openapi_types.UUID, spellId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAddBookSpellV1BooksBookIdSpellsSpellIdPutRequest(c.Server, bookId, spellId)
 	if err != nil {
 		return nil, err
 	}
@@ -2848,8 +3772,19 @@ func NewHealthCheckHealthGetRequest(server string) (*http.Request, error) {
 	return req, nil
 }
 
-// NewListItemsV1ItemsGetRequest generates requests for ListItemsV1ItemsGet
-func NewListItemsV1ItemsGetRequest(server string, params *ListItemsV1ItemsGetParams) (*http.Request, error) {
+// NewDeleteAccountV1AccountDeleteRequest calls the generic DeleteAccountV1AccountDelete builder with application/json body
+func NewDeleteAccountV1AccountDeleteRequest(server string, body DeleteAccountV1AccountDeleteJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewDeleteAccountV1AccountDeleteRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewDeleteAccountV1AccountDeleteRequestWithBody generates requests for DeleteAccountV1AccountDelete with any type of body
+func NewDeleteAccountV1AccountDeleteRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -2857,7 +3792,103 @@ func NewListItemsV1ItemsGetRequest(server string, params *ListItemsV1ItemsGetPar
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/v1/items")
+	operationPath := fmt.Sprintf("/v1/account")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewExportAccountV1AccountExportGetRequest generates requests for ExportAccountV1AccountExportGet
+func NewExportAccountV1AccountExportGetRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/account/export")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewLoginV1AuthLoginPostRequest calls the generic LoginV1AuthLoginPost builder with application/json body
+func NewLoginV1AuthLoginPostRequest(server string, body LoginV1AuthLoginPostJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewLoginV1AuthLoginPostRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewLoginV1AuthLoginPostRequestWithBody generates requests for LoginV1AuthLoginPost with any type of body
+func NewLoginV1AuthLoginPostRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/auth/login")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewLogoutV1AuthLogoutPostRequest generates requests for LogoutV1AuthLogoutPost
+func NewLogoutV1AuthLogoutPostRequest(server string, params *LogoutV1AuthLogoutPostParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/auth/logout")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -2870,9 +3901,9 @@ func NewListItemsV1ItemsGetRequest(server string, params *ListItemsV1ItemsGetPar
 	if params != nil {
 		queryValues := queryURL.Query()
 
-		if params.ItemCategory != nil {
+		if params.Everywhere != nil {
 
-			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "item_category", *params.ItemCategory, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "everywhere", *params.Everywhere, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "boolean", Format: ""}); err != nil {
 				return nil, err
 			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
 				return nil, err
@@ -2886,9 +3917,256 @@ func NewListItemsV1ItemsGetRequest(server string, params *ListItemsV1ItemsGetPar
 
 		}
 
-		if params.Rarity != nil {
+		queryURL.RawQuery = queryValues.Encode()
+	}
 
-			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "rarity", *params.Rarity, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+	req, err := http.NewRequest("POST", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewMeV1AuthMeGetRequest generates requests for MeV1AuthMeGet
+func NewMeV1AuthMeGetRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/auth/me")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewRequestPasswordResetV1AuthPasswordResetPostRequest calls the generic RequestPasswordResetV1AuthPasswordResetPost builder with application/json body
+func NewRequestPasswordResetV1AuthPasswordResetPostRequest(server string, body RequestPasswordResetV1AuthPasswordResetPostJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewRequestPasswordResetV1AuthPasswordResetPostRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewRequestPasswordResetV1AuthPasswordResetPostRequestWithBody generates requests for RequestPasswordResetV1AuthPasswordResetPost with any type of body
+func NewRequestPasswordResetV1AuthPasswordResetPostRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/auth/password-reset")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewConfirmPasswordResetV1AuthPasswordResetConfirmPostRequest calls the generic ConfirmPasswordResetV1AuthPasswordResetConfirmPost builder with application/json body
+func NewConfirmPasswordResetV1AuthPasswordResetConfirmPostRequest(server string, body ConfirmPasswordResetV1AuthPasswordResetConfirmPostJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewConfirmPasswordResetV1AuthPasswordResetConfirmPostRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewConfirmPasswordResetV1AuthPasswordResetConfirmPostRequestWithBody generates requests for ConfirmPasswordResetV1AuthPasswordResetConfirmPost with any type of body
+func NewConfirmPasswordResetV1AuthPasswordResetConfirmPostRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/auth/password-reset/confirm")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewResendVerificationV1AuthResendVerificationPostRequest generates requests for ResendVerificationV1AuthResendVerificationPost
+func NewResendVerificationV1AuthResendVerificationPostRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/auth/resend-verification")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewSignupV1AuthSignupPostRequest calls the generic SignupV1AuthSignupPost builder with application/json body
+func NewSignupV1AuthSignupPostRequest(server string, body SignupV1AuthSignupPostJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewSignupV1AuthSignupPostRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewSignupV1AuthSignupPostRequestWithBody generates requests for SignupV1AuthSignupPost with any type of body
+func NewSignupV1AuthSignupPostRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/auth/signup")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewVerifyEmailV1AuthVerifyEmailPostRequest calls the generic VerifyEmailV1AuthVerifyEmailPost builder with application/json body
+func NewVerifyEmailV1AuthVerifyEmailPostRequest(server string, body VerifyEmailV1AuthVerifyEmailPostJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewVerifyEmailV1AuthVerifyEmailPostRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewVerifyEmailV1AuthVerifyEmailPostRequestWithBody generates requests for VerifyEmailV1AuthVerifyEmailPost with any type of body
+func NewVerifyEmailV1AuthVerifyEmailPostRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/auth/verify-email")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewListBooksV1BooksGetRequest generates requests for ListBooksV1BooksGet
+func NewListBooksV1BooksGetRequest(server string, params *ListBooksV1BooksGetParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/books")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.Scope != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "scope", *params.Scope, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
 				return nil, err
 			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
 				return nil, err
@@ -2977,6 +4255,880 @@ func NewListItemsV1ItemsGetRequest(server string, params *ListItemsV1ItemsGetPar
 	return req, nil
 }
 
+// NewCreateBookV1BooksPostRequest calls the generic CreateBookV1BooksPost builder with application/json body
+func NewCreateBookV1BooksPostRequest(server string, body CreateBookV1BooksPostJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCreateBookV1BooksPostRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewCreateBookV1BooksPostRequestWithBody generates requests for CreateBookV1BooksPost with any type of body
+func NewCreateBookV1BooksPostRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/books")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewDeleteBookV1BooksBookIdDeleteRequest generates requests for DeleteBookV1BooksBookIdDelete
+func NewDeleteBookV1BooksBookIdDeleteRequest(server string, bookId openapi_types.UUID) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "book_id", bookId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: "uuid"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/books/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetBookV1BooksBookIdGetRequest generates requests for GetBookV1BooksBookIdGet
+func NewGetBookV1BooksBookIdGetRequest(server string, bookId openapi_types.UUID) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "book_id", bookId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: "uuid"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/books/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewUpdateBookV1BooksBookIdPatchRequest calls the generic UpdateBookV1BooksBookIdPatch builder with application/json body
+func NewUpdateBookV1BooksBookIdPatchRequest(server string, bookId openapi_types.UUID, body UpdateBookV1BooksBookIdPatchJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewUpdateBookV1BooksBookIdPatchRequestWithBody(server, bookId, "application/json", bodyReader)
+}
+
+// NewUpdateBookV1BooksBookIdPatchRequestWithBody generates requests for UpdateBookV1BooksBookIdPatch with any type of body
+func NewUpdateBookV1BooksBookIdPatchRequestWithBody(server string, bookId openapi_types.UUID, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "book_id", bookId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: "uuid"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/books/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PATCH", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewListBookItemsV1BooksBookIdItemsGetRequest generates requests for ListBookItemsV1BooksBookIdItemsGet
+func NewListBookItemsV1BooksBookIdItemsGetRequest(server string, bookId openapi_types.UUID, params *ListBookItemsV1BooksBookIdItemsGetParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "book_id", bookId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: "uuid"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/books/%s/items", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.Limit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "limit", *params.Limit, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Offset != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "offset", *params.Offset, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.OrderBy != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "order_by", *params.OrderBy, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Search != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "search", *params.Search, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewRemoveBookItemV1BooksBookIdItemsItemIdDeleteRequest generates requests for RemoveBookItemV1BooksBookIdItemsItemIdDelete
+func NewRemoveBookItemV1BooksBookIdItemsItemIdDeleteRequest(server string, bookId openapi_types.UUID, itemId openapi_types.UUID) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "book_id", bookId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: "uuid"})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "item_id", itemId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: "uuid"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/books/%s/items/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewAddBookItemV1BooksBookIdItemsItemIdPutRequest generates requests for AddBookItemV1BooksBookIdItemsItemIdPut
+func NewAddBookItemV1BooksBookIdItemsItemIdPutRequest(server string, bookId openapi_types.UUID, itemId openapi_types.UUID) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "book_id", bookId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: "uuid"})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "item_id", itemId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: "uuid"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/books/%s/items/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PUT", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewListBookMonstersV1BooksBookIdMonstersGetRequest generates requests for ListBookMonstersV1BooksBookIdMonstersGet
+func NewListBookMonstersV1BooksBookIdMonstersGetRequest(server string, bookId openapi_types.UUID, params *ListBookMonstersV1BooksBookIdMonstersGetParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "book_id", bookId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: "uuid"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/books/%s/monsters", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.Limit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "limit", *params.Limit, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Offset != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "offset", *params.Offset, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.OrderBy != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "order_by", *params.OrderBy, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Search != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "search", *params.Search, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewRemoveBookMonsterV1BooksBookIdMonstersMonsterIdDeleteRequest generates requests for RemoveBookMonsterV1BooksBookIdMonstersMonsterIdDelete
+func NewRemoveBookMonsterV1BooksBookIdMonstersMonsterIdDeleteRequest(server string, bookId openapi_types.UUID, monsterId openapi_types.UUID) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "book_id", bookId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: "uuid"})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "monster_id", monsterId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: "uuid"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/books/%s/monsters/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewAddBookMonsterV1BooksBookIdMonstersMonsterIdPutRequest generates requests for AddBookMonsterV1BooksBookIdMonstersMonsterIdPut
+func NewAddBookMonsterV1BooksBookIdMonstersMonsterIdPutRequest(server string, bookId openapi_types.UUID, monsterId openapi_types.UUID) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "book_id", bookId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: "uuid"})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "monster_id", monsterId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: "uuid"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/books/%s/monsters/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PUT", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewListBookSpellsV1BooksBookIdSpellsGetRequest generates requests for ListBookSpellsV1BooksBookIdSpellsGet
+func NewListBookSpellsV1BooksBookIdSpellsGetRequest(server string, bookId openapi_types.UUID, params *ListBookSpellsV1BooksBookIdSpellsGetParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "book_id", bookId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: "uuid"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/books/%s/spells", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.Limit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "limit", *params.Limit, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Offset != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "offset", *params.Offset, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.OrderBy != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "order_by", *params.OrderBy, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Search != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "search", *params.Search, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewRemoveBookSpellV1BooksBookIdSpellsSpellIdDeleteRequest generates requests for RemoveBookSpellV1BooksBookIdSpellsSpellIdDelete
+func NewRemoveBookSpellV1BooksBookIdSpellsSpellIdDeleteRequest(server string, bookId openapi_types.UUID, spellId openapi_types.UUID) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "book_id", bookId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: "uuid"})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "spell_id", spellId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: "uuid"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/books/%s/spells/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewAddBookSpellV1BooksBookIdSpellsSpellIdPutRequest generates requests for AddBookSpellV1BooksBookIdSpellsSpellIdPut
+func NewAddBookSpellV1BooksBookIdSpellsSpellIdPutRequest(server string, bookId openapi_types.UUID, spellId openapi_types.UUID) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "book_id", bookId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: "uuid"})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "spell_id", spellId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: "uuid"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/books/%s/spells/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PUT", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewListItemsV1ItemsGetRequest generates requests for ListItemsV1ItemsGet
+func NewListItemsV1ItemsGetRequest(server string, params *ListItemsV1ItemsGetParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/items")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.ItemCategory != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "item_category", *params.ItemCategory, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Rarity != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "rarity", *params.Rarity, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Book != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "book", *params.Book, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "array", Format: ""}); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Limit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "limit", *params.Limit, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Offset != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "offset", *params.Offset, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.OrderBy != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "order_by", *params.OrderBy, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Search != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "search", *params.Search, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Include != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "include", *params.Include, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewGetItemV1ItemsSlugGetRequest generates requests for GetItemV1ItemsSlugGet
 func NewGetItemV1ItemsSlugGetRequest(server string, slug string, params *GetItemV1ItemsSlugGetParams) (*http.Request, error) {
 	var err error
@@ -3009,6 +5161,22 @@ func NewGetItemV1ItemsSlugGetRequest(server string, slug string, params *GetItem
 		if params.Namespace != nil {
 
 			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "namespace", *params.Namespace, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Include != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "include", *params.Include, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
 				return nil, err
 			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
 				return nil, err
@@ -3103,6 +5271,22 @@ func NewListMonstersV1MonstersGetRequest(server string, params *ListMonstersV1Mo
 
 		}
 
+		if params.Book != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "book", *params.Book, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "array", Format: ""}); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
 		if params.Limit != nil {
 
 			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "limit", *params.Limit, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
@@ -3167,6 +5351,22 @@ func NewListMonstersV1MonstersGetRequest(server string, params *ListMonstersV1Mo
 
 		}
 
+		if params.Include != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "include", *params.Include, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
 		queryURL.RawQuery = queryValues.Encode()
 	}
 
@@ -3210,6 +5410,22 @@ func NewGetMonsterV1MonstersSlugGetRequest(server string, slug string, params *G
 		if params.Namespace != nil {
 
 			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "namespace", *params.Namespace, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Include != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "include", *params.Include, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
 				return nil, err
 			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
 				return nil, err
@@ -3304,6 +5520,22 @@ func NewListSpellsV1SpellsGetRequest(server string, params *ListSpellsV1SpellsGe
 
 		}
 
+		if params.Book != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "book", *params.Book, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "array", Format: ""}); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
 		if params.Limit != nil {
 
 			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "limit", *params.Limit, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
@@ -3368,6 +5600,22 @@ func NewListSpellsV1SpellsGetRequest(server string, params *ListSpellsV1SpellsGe
 
 		}
 
+		if params.Include != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "include", *params.Include, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
 		queryURL.RawQuery = queryValues.Encode()
 	}
 
@@ -3411,6 +5659,22 @@ func NewGetSpellV1SpellsSlugGetRequest(server string, slug string, params *GetSp
 		if params.Namespace != nil {
 
 			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "namespace", *params.Namespace, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Include != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "include", *params.Include, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
 				return nil, err
 			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
 				return nil, err
@@ -3481,6 +5745,94 @@ type ClientWithResponsesInterface interface {
 	// HealthCheckHealthGetWithResponse request
 	HealthCheckHealthGetWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*HealthCheckHealthGetResponse, error)
 
+	// DeleteAccountV1AccountDeleteWithBodyWithResponse request with any body
+	DeleteAccountV1AccountDeleteWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*DeleteAccountV1AccountDeleteResponse, error)
+
+	DeleteAccountV1AccountDeleteWithResponse(ctx context.Context, body DeleteAccountV1AccountDeleteJSONRequestBody, reqEditors ...RequestEditorFn) (*DeleteAccountV1AccountDeleteResponse, error)
+
+	// ExportAccountV1AccountExportGetWithResponse request
+	ExportAccountV1AccountExportGetWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ExportAccountV1AccountExportGetResponse, error)
+
+	// LoginV1AuthLoginPostWithBodyWithResponse request with any body
+	LoginV1AuthLoginPostWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*LoginV1AuthLoginPostResponse, error)
+
+	LoginV1AuthLoginPostWithResponse(ctx context.Context, body LoginV1AuthLoginPostJSONRequestBody, reqEditors ...RequestEditorFn) (*LoginV1AuthLoginPostResponse, error)
+
+	// LogoutV1AuthLogoutPostWithResponse request
+	LogoutV1AuthLogoutPostWithResponse(ctx context.Context, params *LogoutV1AuthLogoutPostParams, reqEditors ...RequestEditorFn) (*LogoutV1AuthLogoutPostResponse, error)
+
+	// MeV1AuthMeGetWithResponse request
+	MeV1AuthMeGetWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*MeV1AuthMeGetResponse, error)
+
+	// RequestPasswordResetV1AuthPasswordResetPostWithBodyWithResponse request with any body
+	RequestPasswordResetV1AuthPasswordResetPostWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*RequestPasswordResetV1AuthPasswordResetPostResponse, error)
+
+	RequestPasswordResetV1AuthPasswordResetPostWithResponse(ctx context.Context, body RequestPasswordResetV1AuthPasswordResetPostJSONRequestBody, reqEditors ...RequestEditorFn) (*RequestPasswordResetV1AuthPasswordResetPostResponse, error)
+
+	// ConfirmPasswordResetV1AuthPasswordResetConfirmPostWithBodyWithResponse request with any body
+	ConfirmPasswordResetV1AuthPasswordResetConfirmPostWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ConfirmPasswordResetV1AuthPasswordResetConfirmPostResponse, error)
+
+	ConfirmPasswordResetV1AuthPasswordResetConfirmPostWithResponse(ctx context.Context, body ConfirmPasswordResetV1AuthPasswordResetConfirmPostJSONRequestBody, reqEditors ...RequestEditorFn) (*ConfirmPasswordResetV1AuthPasswordResetConfirmPostResponse, error)
+
+	// ResendVerificationV1AuthResendVerificationPostWithResponse request
+	ResendVerificationV1AuthResendVerificationPostWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ResendVerificationV1AuthResendVerificationPostResponse, error)
+
+	// SignupV1AuthSignupPostWithBodyWithResponse request with any body
+	SignupV1AuthSignupPostWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*SignupV1AuthSignupPostResponse, error)
+
+	SignupV1AuthSignupPostWithResponse(ctx context.Context, body SignupV1AuthSignupPostJSONRequestBody, reqEditors ...RequestEditorFn) (*SignupV1AuthSignupPostResponse, error)
+
+	// VerifyEmailV1AuthVerifyEmailPostWithBodyWithResponse request with any body
+	VerifyEmailV1AuthVerifyEmailPostWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*VerifyEmailV1AuthVerifyEmailPostResponse, error)
+
+	VerifyEmailV1AuthVerifyEmailPostWithResponse(ctx context.Context, body VerifyEmailV1AuthVerifyEmailPostJSONRequestBody, reqEditors ...RequestEditorFn) (*VerifyEmailV1AuthVerifyEmailPostResponse, error)
+
+	// ListBooksV1BooksGetWithResponse request
+	ListBooksV1BooksGetWithResponse(ctx context.Context, params *ListBooksV1BooksGetParams, reqEditors ...RequestEditorFn) (*ListBooksV1BooksGetResponse, error)
+
+	// CreateBookV1BooksPostWithBodyWithResponse request with any body
+	CreateBookV1BooksPostWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateBookV1BooksPostResponse, error)
+
+	CreateBookV1BooksPostWithResponse(ctx context.Context, body CreateBookV1BooksPostJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateBookV1BooksPostResponse, error)
+
+	// DeleteBookV1BooksBookIdDeleteWithResponse request
+	DeleteBookV1BooksBookIdDeleteWithResponse(ctx context.Context, bookId openapi_types.UUID, reqEditors ...RequestEditorFn) (*DeleteBookV1BooksBookIdDeleteResponse, error)
+
+	// GetBookV1BooksBookIdGetWithResponse request
+	GetBookV1BooksBookIdGetWithResponse(ctx context.Context, bookId openapi_types.UUID, reqEditors ...RequestEditorFn) (*GetBookV1BooksBookIdGetResponse, error)
+
+	// UpdateBookV1BooksBookIdPatchWithBodyWithResponse request with any body
+	UpdateBookV1BooksBookIdPatchWithBodyWithResponse(ctx context.Context, bookId openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateBookV1BooksBookIdPatchResponse, error)
+
+	UpdateBookV1BooksBookIdPatchWithResponse(ctx context.Context, bookId openapi_types.UUID, body UpdateBookV1BooksBookIdPatchJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateBookV1BooksBookIdPatchResponse, error)
+
+	// ListBookItemsV1BooksBookIdItemsGetWithResponse request
+	ListBookItemsV1BooksBookIdItemsGetWithResponse(ctx context.Context, bookId openapi_types.UUID, params *ListBookItemsV1BooksBookIdItemsGetParams, reqEditors ...RequestEditorFn) (*ListBookItemsV1BooksBookIdItemsGetResponse, error)
+
+	// RemoveBookItemV1BooksBookIdItemsItemIdDeleteWithResponse request
+	RemoveBookItemV1BooksBookIdItemsItemIdDeleteWithResponse(ctx context.Context, bookId openapi_types.UUID, itemId openapi_types.UUID, reqEditors ...RequestEditorFn) (*RemoveBookItemV1BooksBookIdItemsItemIdDeleteResponse, error)
+
+	// AddBookItemV1BooksBookIdItemsItemIdPutWithResponse request
+	AddBookItemV1BooksBookIdItemsItemIdPutWithResponse(ctx context.Context, bookId openapi_types.UUID, itemId openapi_types.UUID, reqEditors ...RequestEditorFn) (*AddBookItemV1BooksBookIdItemsItemIdPutResponse, error)
+
+	// ListBookMonstersV1BooksBookIdMonstersGetWithResponse request
+	ListBookMonstersV1BooksBookIdMonstersGetWithResponse(ctx context.Context, bookId openapi_types.UUID, params *ListBookMonstersV1BooksBookIdMonstersGetParams, reqEditors ...RequestEditorFn) (*ListBookMonstersV1BooksBookIdMonstersGetResponse, error)
+
+	// RemoveBookMonsterV1BooksBookIdMonstersMonsterIdDeleteWithResponse request
+	RemoveBookMonsterV1BooksBookIdMonstersMonsterIdDeleteWithResponse(ctx context.Context, bookId openapi_types.UUID, monsterId openapi_types.UUID, reqEditors ...RequestEditorFn) (*RemoveBookMonsterV1BooksBookIdMonstersMonsterIdDeleteResponse, error)
+
+	// AddBookMonsterV1BooksBookIdMonstersMonsterIdPutWithResponse request
+	AddBookMonsterV1BooksBookIdMonstersMonsterIdPutWithResponse(ctx context.Context, bookId openapi_types.UUID, monsterId openapi_types.UUID, reqEditors ...RequestEditorFn) (*AddBookMonsterV1BooksBookIdMonstersMonsterIdPutResponse, error)
+
+	// ListBookSpellsV1BooksBookIdSpellsGetWithResponse request
+	ListBookSpellsV1BooksBookIdSpellsGetWithResponse(ctx context.Context, bookId openapi_types.UUID, params *ListBookSpellsV1BooksBookIdSpellsGetParams, reqEditors ...RequestEditorFn) (*ListBookSpellsV1BooksBookIdSpellsGetResponse, error)
+
+	// RemoveBookSpellV1BooksBookIdSpellsSpellIdDeleteWithResponse request
+	RemoveBookSpellV1BooksBookIdSpellsSpellIdDeleteWithResponse(ctx context.Context, bookId openapi_types.UUID, spellId openapi_types.UUID, reqEditors ...RequestEditorFn) (*RemoveBookSpellV1BooksBookIdSpellsSpellIdDeleteResponse, error)
+
+	// AddBookSpellV1BooksBookIdSpellsSpellIdPutWithResponse request
+	AddBookSpellV1BooksBookIdSpellsSpellIdPutWithResponse(ctx context.Context, bookId openapi_types.UUID, spellId openapi_types.UUID, reqEditors ...RequestEditorFn) (*AddBookSpellV1BooksBookIdSpellsSpellIdPutResponse, error)
+
 	// ListItemsV1ItemsGetWithResponse request
 	ListItemsV1ItemsGetWithResponse(ctx context.Context, params *ListItemsV1ItemsGetParams, reqEditors ...RequestEditorFn) (*ListItemsV1ItemsGetResponse, error)
 
@@ -3516,6 +5868,577 @@ func (r HealthCheckHealthGetResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r HealthCheckHealthGetResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type DeleteAccountV1AccountDeleteResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON422      *HTTPValidationError
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteAccountV1AccountDeleteResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteAccountV1AccountDeleteResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ExportAccountV1AccountExportGetResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *AccountExport
+	JSON401      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r ExportAccountV1AccountExportGetResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ExportAccountV1AccountExportGetResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type LoginV1AuthLoginPostResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *UserResponse
+	JSON401      *ErrorResponse
+	JSON422      *HTTPValidationError
+	JSON429      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r LoginV1AuthLoginPostResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r LoginV1AuthLoginPostResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type LogoutV1AuthLogoutPostResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON422      *HTTPValidationError
+}
+
+// Status returns HTTPResponse.Status
+func (r LogoutV1AuthLogoutPostResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r LogoutV1AuthLogoutPostResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type MeV1AuthMeGetResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *UserResponse
+	JSON401      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r MeV1AuthMeGetResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r MeV1AuthMeGetResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type RequestPasswordResetV1AuthPasswordResetPostResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON202      *MessageResponse
+	JSON422      *HTTPValidationError
+	JSON429      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r RequestPasswordResetV1AuthPasswordResetPostResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r RequestPasswordResetV1AuthPasswordResetPostResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ConfirmPasswordResetV1AuthPasswordResetConfirmPostResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON400      *ErrorResponse
+	JSON422      *HTTPValidationError
+}
+
+// Status returns HTTPResponse.Status
+func (r ConfirmPasswordResetV1AuthPasswordResetConfirmPostResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ConfirmPasswordResetV1AuthPasswordResetConfirmPostResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ResendVerificationV1AuthResendVerificationPostResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON429      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r ResendVerificationV1AuthResendVerificationPostResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ResendVerificationV1AuthResendVerificationPostResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type SignupV1AuthSignupPostResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON201      *UserResponse
+	JSON409      *ErrorResponse
+	JSON422      *HTTPValidationError
+	JSON429      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r SignupV1AuthSignupPostResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r SignupV1AuthSignupPostResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type VerifyEmailV1AuthVerifyEmailPostResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON400      *ErrorResponse
+	JSON422      *HTTPValidationError
+}
+
+// Status returns HTTPResponse.Status
+func (r VerifyEmailV1AuthVerifyEmailPostResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r VerifyEmailV1AuthVerifyEmailPostResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ListBooksV1BooksGetResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *PaginatedResultsetBookSummary
+	JSON422      *HTTPValidationError
+}
+
+// Status returns HTTPResponse.Status
+func (r ListBooksV1BooksGetResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListBooksV1BooksGetResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type CreateBookV1BooksPostResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON201      *BookDetail
+	JSON422      *HTTPValidationError
+}
+
+// Status returns HTTPResponse.Status
+func (r CreateBookV1BooksPostResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CreateBookV1BooksPostResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type DeleteBookV1BooksBookIdDeleteResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON422      *HTTPValidationError
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteBookV1BooksBookIdDeleteResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteBookV1BooksBookIdDeleteResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetBookV1BooksBookIdGetResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *BookDetail
+	JSON404      *ErrorResponse
+	JSON422      *HTTPValidationError
+}
+
+// Status returns HTTPResponse.Status
+func (r GetBookV1BooksBookIdGetResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetBookV1BooksBookIdGetResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type UpdateBookV1BooksBookIdPatchResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *BookDetail
+	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON422      *HTTPValidationError
+}
+
+// Status returns HTTPResponse.Status
+func (r UpdateBookV1BooksBookIdPatchResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r UpdateBookV1BooksBookIdPatchResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ListBookItemsV1BooksBookIdItemsGetResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *PaginatedResultsetItemSummary
+	JSON404      *ErrorResponse
+	JSON422      *HTTPValidationError
+}
+
+// Status returns HTTPResponse.Status
+func (r ListBookItemsV1BooksBookIdItemsGetResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListBookItemsV1BooksBookIdItemsGetResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type RemoveBookItemV1BooksBookIdItemsItemIdDeleteResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON422      *HTTPValidationError
+}
+
+// Status returns HTTPResponse.Status
+func (r RemoveBookItemV1BooksBookIdItemsItemIdDeleteResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r RemoveBookItemV1BooksBookIdItemsItemIdDeleteResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type AddBookItemV1BooksBookIdItemsItemIdPutResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON422      *HTTPValidationError
+}
+
+// Status returns HTTPResponse.Status
+func (r AddBookItemV1BooksBookIdItemsItemIdPutResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r AddBookItemV1BooksBookIdItemsItemIdPutResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ListBookMonstersV1BooksBookIdMonstersGetResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *PaginatedResultsetMonsterSummary
+	JSON404      *ErrorResponse
+	JSON422      *HTTPValidationError
+}
+
+// Status returns HTTPResponse.Status
+func (r ListBookMonstersV1BooksBookIdMonstersGetResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListBookMonstersV1BooksBookIdMonstersGetResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type RemoveBookMonsterV1BooksBookIdMonstersMonsterIdDeleteResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON422      *HTTPValidationError
+}
+
+// Status returns HTTPResponse.Status
+func (r RemoveBookMonsterV1BooksBookIdMonstersMonsterIdDeleteResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r RemoveBookMonsterV1BooksBookIdMonstersMonsterIdDeleteResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type AddBookMonsterV1BooksBookIdMonstersMonsterIdPutResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON422      *HTTPValidationError
+}
+
+// Status returns HTTPResponse.Status
+func (r AddBookMonsterV1BooksBookIdMonstersMonsterIdPutResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r AddBookMonsterV1BooksBookIdMonstersMonsterIdPutResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ListBookSpellsV1BooksBookIdSpellsGetResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *PaginatedResultsetSpellSummary
+	JSON404      *ErrorResponse
+	JSON422      *HTTPValidationError
+}
+
+// Status returns HTTPResponse.Status
+func (r ListBookSpellsV1BooksBookIdSpellsGetResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListBookSpellsV1BooksBookIdSpellsGetResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type RemoveBookSpellV1BooksBookIdSpellsSpellIdDeleteResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON422      *HTTPValidationError
+}
+
+// Status returns HTTPResponse.Status
+func (r RemoveBookSpellV1BooksBookIdSpellsSpellIdDeleteResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r RemoveBookSpellV1BooksBookIdSpellsSpellIdDeleteResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type AddBookSpellV1BooksBookIdSpellsSpellIdPutResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON422      *HTTPValidationError
+}
+
+// Status returns HTTPResponse.Status
+func (r AddBookSpellV1BooksBookIdSpellsSpellIdPutResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r AddBookSpellV1BooksBookIdSpellsSpellIdPutResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -3672,6 +6595,286 @@ func (c *ClientWithResponses) HealthCheckHealthGetWithResponse(ctx context.Conte
 	return ParseHealthCheckHealthGetResponse(rsp)
 }
 
+// DeleteAccountV1AccountDeleteWithBodyWithResponse request with arbitrary body returning *DeleteAccountV1AccountDeleteResponse
+func (c *ClientWithResponses) DeleteAccountV1AccountDeleteWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*DeleteAccountV1AccountDeleteResponse, error) {
+	rsp, err := c.DeleteAccountV1AccountDeleteWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteAccountV1AccountDeleteResponse(rsp)
+}
+
+func (c *ClientWithResponses) DeleteAccountV1AccountDeleteWithResponse(ctx context.Context, body DeleteAccountV1AccountDeleteJSONRequestBody, reqEditors ...RequestEditorFn) (*DeleteAccountV1AccountDeleteResponse, error) {
+	rsp, err := c.DeleteAccountV1AccountDelete(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteAccountV1AccountDeleteResponse(rsp)
+}
+
+// ExportAccountV1AccountExportGetWithResponse request returning *ExportAccountV1AccountExportGetResponse
+func (c *ClientWithResponses) ExportAccountV1AccountExportGetWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ExportAccountV1AccountExportGetResponse, error) {
+	rsp, err := c.ExportAccountV1AccountExportGet(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseExportAccountV1AccountExportGetResponse(rsp)
+}
+
+// LoginV1AuthLoginPostWithBodyWithResponse request with arbitrary body returning *LoginV1AuthLoginPostResponse
+func (c *ClientWithResponses) LoginV1AuthLoginPostWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*LoginV1AuthLoginPostResponse, error) {
+	rsp, err := c.LoginV1AuthLoginPostWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseLoginV1AuthLoginPostResponse(rsp)
+}
+
+func (c *ClientWithResponses) LoginV1AuthLoginPostWithResponse(ctx context.Context, body LoginV1AuthLoginPostJSONRequestBody, reqEditors ...RequestEditorFn) (*LoginV1AuthLoginPostResponse, error) {
+	rsp, err := c.LoginV1AuthLoginPost(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseLoginV1AuthLoginPostResponse(rsp)
+}
+
+// LogoutV1AuthLogoutPostWithResponse request returning *LogoutV1AuthLogoutPostResponse
+func (c *ClientWithResponses) LogoutV1AuthLogoutPostWithResponse(ctx context.Context, params *LogoutV1AuthLogoutPostParams, reqEditors ...RequestEditorFn) (*LogoutV1AuthLogoutPostResponse, error) {
+	rsp, err := c.LogoutV1AuthLogoutPost(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseLogoutV1AuthLogoutPostResponse(rsp)
+}
+
+// MeV1AuthMeGetWithResponse request returning *MeV1AuthMeGetResponse
+func (c *ClientWithResponses) MeV1AuthMeGetWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*MeV1AuthMeGetResponse, error) {
+	rsp, err := c.MeV1AuthMeGet(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseMeV1AuthMeGetResponse(rsp)
+}
+
+// RequestPasswordResetV1AuthPasswordResetPostWithBodyWithResponse request with arbitrary body returning *RequestPasswordResetV1AuthPasswordResetPostResponse
+func (c *ClientWithResponses) RequestPasswordResetV1AuthPasswordResetPostWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*RequestPasswordResetV1AuthPasswordResetPostResponse, error) {
+	rsp, err := c.RequestPasswordResetV1AuthPasswordResetPostWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseRequestPasswordResetV1AuthPasswordResetPostResponse(rsp)
+}
+
+func (c *ClientWithResponses) RequestPasswordResetV1AuthPasswordResetPostWithResponse(ctx context.Context, body RequestPasswordResetV1AuthPasswordResetPostJSONRequestBody, reqEditors ...RequestEditorFn) (*RequestPasswordResetV1AuthPasswordResetPostResponse, error) {
+	rsp, err := c.RequestPasswordResetV1AuthPasswordResetPost(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseRequestPasswordResetV1AuthPasswordResetPostResponse(rsp)
+}
+
+// ConfirmPasswordResetV1AuthPasswordResetConfirmPostWithBodyWithResponse request with arbitrary body returning *ConfirmPasswordResetV1AuthPasswordResetConfirmPostResponse
+func (c *ClientWithResponses) ConfirmPasswordResetV1AuthPasswordResetConfirmPostWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ConfirmPasswordResetV1AuthPasswordResetConfirmPostResponse, error) {
+	rsp, err := c.ConfirmPasswordResetV1AuthPasswordResetConfirmPostWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseConfirmPasswordResetV1AuthPasswordResetConfirmPostResponse(rsp)
+}
+
+func (c *ClientWithResponses) ConfirmPasswordResetV1AuthPasswordResetConfirmPostWithResponse(ctx context.Context, body ConfirmPasswordResetV1AuthPasswordResetConfirmPostJSONRequestBody, reqEditors ...RequestEditorFn) (*ConfirmPasswordResetV1AuthPasswordResetConfirmPostResponse, error) {
+	rsp, err := c.ConfirmPasswordResetV1AuthPasswordResetConfirmPost(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseConfirmPasswordResetV1AuthPasswordResetConfirmPostResponse(rsp)
+}
+
+// ResendVerificationV1AuthResendVerificationPostWithResponse request returning *ResendVerificationV1AuthResendVerificationPostResponse
+func (c *ClientWithResponses) ResendVerificationV1AuthResendVerificationPostWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ResendVerificationV1AuthResendVerificationPostResponse, error) {
+	rsp, err := c.ResendVerificationV1AuthResendVerificationPost(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseResendVerificationV1AuthResendVerificationPostResponse(rsp)
+}
+
+// SignupV1AuthSignupPostWithBodyWithResponse request with arbitrary body returning *SignupV1AuthSignupPostResponse
+func (c *ClientWithResponses) SignupV1AuthSignupPostWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*SignupV1AuthSignupPostResponse, error) {
+	rsp, err := c.SignupV1AuthSignupPostWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseSignupV1AuthSignupPostResponse(rsp)
+}
+
+func (c *ClientWithResponses) SignupV1AuthSignupPostWithResponse(ctx context.Context, body SignupV1AuthSignupPostJSONRequestBody, reqEditors ...RequestEditorFn) (*SignupV1AuthSignupPostResponse, error) {
+	rsp, err := c.SignupV1AuthSignupPost(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseSignupV1AuthSignupPostResponse(rsp)
+}
+
+// VerifyEmailV1AuthVerifyEmailPostWithBodyWithResponse request with arbitrary body returning *VerifyEmailV1AuthVerifyEmailPostResponse
+func (c *ClientWithResponses) VerifyEmailV1AuthVerifyEmailPostWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*VerifyEmailV1AuthVerifyEmailPostResponse, error) {
+	rsp, err := c.VerifyEmailV1AuthVerifyEmailPostWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseVerifyEmailV1AuthVerifyEmailPostResponse(rsp)
+}
+
+func (c *ClientWithResponses) VerifyEmailV1AuthVerifyEmailPostWithResponse(ctx context.Context, body VerifyEmailV1AuthVerifyEmailPostJSONRequestBody, reqEditors ...RequestEditorFn) (*VerifyEmailV1AuthVerifyEmailPostResponse, error) {
+	rsp, err := c.VerifyEmailV1AuthVerifyEmailPost(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseVerifyEmailV1AuthVerifyEmailPostResponse(rsp)
+}
+
+// ListBooksV1BooksGetWithResponse request returning *ListBooksV1BooksGetResponse
+func (c *ClientWithResponses) ListBooksV1BooksGetWithResponse(ctx context.Context, params *ListBooksV1BooksGetParams, reqEditors ...RequestEditorFn) (*ListBooksV1BooksGetResponse, error) {
+	rsp, err := c.ListBooksV1BooksGet(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListBooksV1BooksGetResponse(rsp)
+}
+
+// CreateBookV1BooksPostWithBodyWithResponse request with arbitrary body returning *CreateBookV1BooksPostResponse
+func (c *ClientWithResponses) CreateBookV1BooksPostWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateBookV1BooksPostResponse, error) {
+	rsp, err := c.CreateBookV1BooksPostWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateBookV1BooksPostResponse(rsp)
+}
+
+func (c *ClientWithResponses) CreateBookV1BooksPostWithResponse(ctx context.Context, body CreateBookV1BooksPostJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateBookV1BooksPostResponse, error) {
+	rsp, err := c.CreateBookV1BooksPost(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateBookV1BooksPostResponse(rsp)
+}
+
+// DeleteBookV1BooksBookIdDeleteWithResponse request returning *DeleteBookV1BooksBookIdDeleteResponse
+func (c *ClientWithResponses) DeleteBookV1BooksBookIdDeleteWithResponse(ctx context.Context, bookId openapi_types.UUID, reqEditors ...RequestEditorFn) (*DeleteBookV1BooksBookIdDeleteResponse, error) {
+	rsp, err := c.DeleteBookV1BooksBookIdDelete(ctx, bookId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteBookV1BooksBookIdDeleteResponse(rsp)
+}
+
+// GetBookV1BooksBookIdGetWithResponse request returning *GetBookV1BooksBookIdGetResponse
+func (c *ClientWithResponses) GetBookV1BooksBookIdGetWithResponse(ctx context.Context, bookId openapi_types.UUID, reqEditors ...RequestEditorFn) (*GetBookV1BooksBookIdGetResponse, error) {
+	rsp, err := c.GetBookV1BooksBookIdGet(ctx, bookId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetBookV1BooksBookIdGetResponse(rsp)
+}
+
+// UpdateBookV1BooksBookIdPatchWithBodyWithResponse request with arbitrary body returning *UpdateBookV1BooksBookIdPatchResponse
+func (c *ClientWithResponses) UpdateBookV1BooksBookIdPatchWithBodyWithResponse(ctx context.Context, bookId openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateBookV1BooksBookIdPatchResponse, error) {
+	rsp, err := c.UpdateBookV1BooksBookIdPatchWithBody(ctx, bookId, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateBookV1BooksBookIdPatchResponse(rsp)
+}
+
+func (c *ClientWithResponses) UpdateBookV1BooksBookIdPatchWithResponse(ctx context.Context, bookId openapi_types.UUID, body UpdateBookV1BooksBookIdPatchJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateBookV1BooksBookIdPatchResponse, error) {
+	rsp, err := c.UpdateBookV1BooksBookIdPatch(ctx, bookId, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateBookV1BooksBookIdPatchResponse(rsp)
+}
+
+// ListBookItemsV1BooksBookIdItemsGetWithResponse request returning *ListBookItemsV1BooksBookIdItemsGetResponse
+func (c *ClientWithResponses) ListBookItemsV1BooksBookIdItemsGetWithResponse(ctx context.Context, bookId openapi_types.UUID, params *ListBookItemsV1BooksBookIdItemsGetParams, reqEditors ...RequestEditorFn) (*ListBookItemsV1BooksBookIdItemsGetResponse, error) {
+	rsp, err := c.ListBookItemsV1BooksBookIdItemsGet(ctx, bookId, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListBookItemsV1BooksBookIdItemsGetResponse(rsp)
+}
+
+// RemoveBookItemV1BooksBookIdItemsItemIdDeleteWithResponse request returning *RemoveBookItemV1BooksBookIdItemsItemIdDeleteResponse
+func (c *ClientWithResponses) RemoveBookItemV1BooksBookIdItemsItemIdDeleteWithResponse(ctx context.Context, bookId openapi_types.UUID, itemId openapi_types.UUID, reqEditors ...RequestEditorFn) (*RemoveBookItemV1BooksBookIdItemsItemIdDeleteResponse, error) {
+	rsp, err := c.RemoveBookItemV1BooksBookIdItemsItemIdDelete(ctx, bookId, itemId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseRemoveBookItemV1BooksBookIdItemsItemIdDeleteResponse(rsp)
+}
+
+// AddBookItemV1BooksBookIdItemsItemIdPutWithResponse request returning *AddBookItemV1BooksBookIdItemsItemIdPutResponse
+func (c *ClientWithResponses) AddBookItemV1BooksBookIdItemsItemIdPutWithResponse(ctx context.Context, bookId openapi_types.UUID, itemId openapi_types.UUID, reqEditors ...RequestEditorFn) (*AddBookItemV1BooksBookIdItemsItemIdPutResponse, error) {
+	rsp, err := c.AddBookItemV1BooksBookIdItemsItemIdPut(ctx, bookId, itemId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAddBookItemV1BooksBookIdItemsItemIdPutResponse(rsp)
+}
+
+// ListBookMonstersV1BooksBookIdMonstersGetWithResponse request returning *ListBookMonstersV1BooksBookIdMonstersGetResponse
+func (c *ClientWithResponses) ListBookMonstersV1BooksBookIdMonstersGetWithResponse(ctx context.Context, bookId openapi_types.UUID, params *ListBookMonstersV1BooksBookIdMonstersGetParams, reqEditors ...RequestEditorFn) (*ListBookMonstersV1BooksBookIdMonstersGetResponse, error) {
+	rsp, err := c.ListBookMonstersV1BooksBookIdMonstersGet(ctx, bookId, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListBookMonstersV1BooksBookIdMonstersGetResponse(rsp)
+}
+
+// RemoveBookMonsterV1BooksBookIdMonstersMonsterIdDeleteWithResponse request returning *RemoveBookMonsterV1BooksBookIdMonstersMonsterIdDeleteResponse
+func (c *ClientWithResponses) RemoveBookMonsterV1BooksBookIdMonstersMonsterIdDeleteWithResponse(ctx context.Context, bookId openapi_types.UUID, monsterId openapi_types.UUID, reqEditors ...RequestEditorFn) (*RemoveBookMonsterV1BooksBookIdMonstersMonsterIdDeleteResponse, error) {
+	rsp, err := c.RemoveBookMonsterV1BooksBookIdMonstersMonsterIdDelete(ctx, bookId, monsterId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseRemoveBookMonsterV1BooksBookIdMonstersMonsterIdDeleteResponse(rsp)
+}
+
+// AddBookMonsterV1BooksBookIdMonstersMonsterIdPutWithResponse request returning *AddBookMonsterV1BooksBookIdMonstersMonsterIdPutResponse
+func (c *ClientWithResponses) AddBookMonsterV1BooksBookIdMonstersMonsterIdPutWithResponse(ctx context.Context, bookId openapi_types.UUID, monsterId openapi_types.UUID, reqEditors ...RequestEditorFn) (*AddBookMonsterV1BooksBookIdMonstersMonsterIdPutResponse, error) {
+	rsp, err := c.AddBookMonsterV1BooksBookIdMonstersMonsterIdPut(ctx, bookId, monsterId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAddBookMonsterV1BooksBookIdMonstersMonsterIdPutResponse(rsp)
+}
+
+// ListBookSpellsV1BooksBookIdSpellsGetWithResponse request returning *ListBookSpellsV1BooksBookIdSpellsGetResponse
+func (c *ClientWithResponses) ListBookSpellsV1BooksBookIdSpellsGetWithResponse(ctx context.Context, bookId openapi_types.UUID, params *ListBookSpellsV1BooksBookIdSpellsGetParams, reqEditors ...RequestEditorFn) (*ListBookSpellsV1BooksBookIdSpellsGetResponse, error) {
+	rsp, err := c.ListBookSpellsV1BooksBookIdSpellsGet(ctx, bookId, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListBookSpellsV1BooksBookIdSpellsGetResponse(rsp)
+}
+
+// RemoveBookSpellV1BooksBookIdSpellsSpellIdDeleteWithResponse request returning *RemoveBookSpellV1BooksBookIdSpellsSpellIdDeleteResponse
+func (c *ClientWithResponses) RemoveBookSpellV1BooksBookIdSpellsSpellIdDeleteWithResponse(ctx context.Context, bookId openapi_types.UUID, spellId openapi_types.UUID, reqEditors ...RequestEditorFn) (*RemoveBookSpellV1BooksBookIdSpellsSpellIdDeleteResponse, error) {
+	rsp, err := c.RemoveBookSpellV1BooksBookIdSpellsSpellIdDelete(ctx, bookId, spellId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseRemoveBookSpellV1BooksBookIdSpellsSpellIdDeleteResponse(rsp)
+}
+
+// AddBookSpellV1BooksBookIdSpellsSpellIdPutWithResponse request returning *AddBookSpellV1BooksBookIdSpellsSpellIdPutResponse
+func (c *ClientWithResponses) AddBookSpellV1BooksBookIdSpellsSpellIdPutWithResponse(ctx context.Context, bookId openapi_types.UUID, spellId openapi_types.UUID, reqEditors ...RequestEditorFn) (*AddBookSpellV1BooksBookIdSpellsSpellIdPutResponse, error) {
+	rsp, err := c.AddBookSpellV1BooksBookIdSpellsSpellIdPut(ctx, bookId, spellId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAddBookSpellV1BooksBookIdSpellsSpellIdPutResponse(rsp)
+}
+
 // ListItemsV1ItemsGetWithResponse request returning *ListItemsV1ItemsGetResponse
 func (c *ClientWithResponses) ListItemsV1ItemsGetWithResponse(ctx context.Context, params *ListItemsV1ItemsGetParams, reqEditors ...RequestEditorFn) (*ListItemsV1ItemsGetResponse, error) {
 	rsp, err := c.ListItemsV1ItemsGet(ctx, params, reqEditors...)
@@ -3746,6 +6949,931 @@ func ParseHealthCheckHealthGetResponse(rsp *http.Response) (*HealthCheckHealthGe
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteAccountV1AccountDeleteResponse parses an HTTP response from a DeleteAccountV1AccountDeleteWithResponse call
+func ParseDeleteAccountV1AccountDeleteResponse(rsp *http.Response) (*DeleteAccountV1AccountDeleteResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteAccountV1AccountDeleteResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest HTTPValidationError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseExportAccountV1AccountExportGetResponse parses an HTTP response from a ExportAccountV1AccountExportGetWithResponse call
+func ParseExportAccountV1AccountExportGetResponse(rsp *http.Response) (*ExportAccountV1AccountExportGetResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ExportAccountV1AccountExportGetResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest AccountExport
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseLoginV1AuthLoginPostResponse parses an HTTP response from a LoginV1AuthLoginPostWithResponse call
+func ParseLoginV1AuthLoginPostResponse(rsp *http.Response) (*LoginV1AuthLoginPostResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &LoginV1AuthLoginPostResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest UserResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest HTTPValidationError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 429:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON429 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseLogoutV1AuthLogoutPostResponse parses an HTTP response from a LogoutV1AuthLogoutPostWithResponse call
+func ParseLogoutV1AuthLogoutPostResponse(rsp *http.Response) (*LogoutV1AuthLogoutPostResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &LogoutV1AuthLogoutPostResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest HTTPValidationError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseMeV1AuthMeGetResponse parses an HTTP response from a MeV1AuthMeGetWithResponse call
+func ParseMeV1AuthMeGetResponse(rsp *http.Response) (*MeV1AuthMeGetResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &MeV1AuthMeGetResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest UserResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseRequestPasswordResetV1AuthPasswordResetPostResponse parses an HTTP response from a RequestPasswordResetV1AuthPasswordResetPostWithResponse call
+func ParseRequestPasswordResetV1AuthPasswordResetPostResponse(rsp *http.Response) (*RequestPasswordResetV1AuthPasswordResetPostResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &RequestPasswordResetV1AuthPasswordResetPostResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 202:
+		var dest MessageResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON202 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest HTTPValidationError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 429:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON429 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseConfirmPasswordResetV1AuthPasswordResetConfirmPostResponse parses an HTTP response from a ConfirmPasswordResetV1AuthPasswordResetConfirmPostWithResponse call
+func ParseConfirmPasswordResetV1AuthPasswordResetConfirmPostResponse(rsp *http.Response) (*ConfirmPasswordResetV1AuthPasswordResetConfirmPostResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ConfirmPasswordResetV1AuthPasswordResetConfirmPostResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest HTTPValidationError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseResendVerificationV1AuthResendVerificationPostResponse parses an HTTP response from a ResendVerificationV1AuthResendVerificationPostWithResponse call
+func ParseResendVerificationV1AuthResendVerificationPostResponse(rsp *http.Response) (*ResendVerificationV1AuthResendVerificationPostResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ResendVerificationV1AuthResendVerificationPostResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 429:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON429 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseSignupV1AuthSignupPostResponse parses an HTTP response from a SignupV1AuthSignupPostWithResponse call
+func ParseSignupV1AuthSignupPostResponse(rsp *http.Response) (*SignupV1AuthSignupPostResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &SignupV1AuthSignupPostResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest UserResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest HTTPValidationError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 429:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON429 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseVerifyEmailV1AuthVerifyEmailPostResponse parses an HTTP response from a VerifyEmailV1AuthVerifyEmailPostWithResponse call
+func ParseVerifyEmailV1AuthVerifyEmailPostResponse(rsp *http.Response) (*VerifyEmailV1AuthVerifyEmailPostResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &VerifyEmailV1AuthVerifyEmailPostResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest HTTPValidationError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListBooksV1BooksGetResponse parses an HTTP response from a ListBooksV1BooksGetWithResponse call
+func ParseListBooksV1BooksGetResponse(rsp *http.Response) (*ListBooksV1BooksGetResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListBooksV1BooksGetResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PaginatedResultsetBookSummary
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest HTTPValidationError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCreateBookV1BooksPostResponse parses an HTTP response from a CreateBookV1BooksPostWithResponse call
+func ParseCreateBookV1BooksPostResponse(rsp *http.Response) (*CreateBookV1BooksPostResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreateBookV1BooksPostResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest BookDetail
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest HTTPValidationError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteBookV1BooksBookIdDeleteResponse parses an HTTP response from a DeleteBookV1BooksBookIdDeleteWithResponse call
+func ParseDeleteBookV1BooksBookIdDeleteResponse(rsp *http.Response) (*DeleteBookV1BooksBookIdDeleteResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteBookV1BooksBookIdDeleteResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest HTTPValidationError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetBookV1BooksBookIdGetResponse parses an HTTP response from a GetBookV1BooksBookIdGetWithResponse call
+func ParseGetBookV1BooksBookIdGetResponse(rsp *http.Response) (*GetBookV1BooksBookIdGetResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetBookV1BooksBookIdGetResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest BookDetail
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest HTTPValidationError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseUpdateBookV1BooksBookIdPatchResponse parses an HTTP response from a UpdateBookV1BooksBookIdPatchWithResponse call
+func ParseUpdateBookV1BooksBookIdPatchResponse(rsp *http.Response) (*UpdateBookV1BooksBookIdPatchResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &UpdateBookV1BooksBookIdPatchResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest BookDetail
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest HTTPValidationError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListBookItemsV1BooksBookIdItemsGetResponse parses an HTTP response from a ListBookItemsV1BooksBookIdItemsGetWithResponse call
+func ParseListBookItemsV1BooksBookIdItemsGetResponse(rsp *http.Response) (*ListBookItemsV1BooksBookIdItemsGetResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListBookItemsV1BooksBookIdItemsGetResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PaginatedResultsetItemSummary
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest HTTPValidationError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseRemoveBookItemV1BooksBookIdItemsItemIdDeleteResponse parses an HTTP response from a RemoveBookItemV1BooksBookIdItemsItemIdDeleteWithResponse call
+func ParseRemoveBookItemV1BooksBookIdItemsItemIdDeleteResponse(rsp *http.Response) (*RemoveBookItemV1BooksBookIdItemsItemIdDeleteResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &RemoveBookItemV1BooksBookIdItemsItemIdDeleteResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest HTTPValidationError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseAddBookItemV1BooksBookIdItemsItemIdPutResponse parses an HTTP response from a AddBookItemV1BooksBookIdItemsItemIdPutWithResponse call
+func ParseAddBookItemV1BooksBookIdItemsItemIdPutResponse(rsp *http.Response) (*AddBookItemV1BooksBookIdItemsItemIdPutResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &AddBookItemV1BooksBookIdItemsItemIdPutResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest HTTPValidationError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListBookMonstersV1BooksBookIdMonstersGetResponse parses an HTTP response from a ListBookMonstersV1BooksBookIdMonstersGetWithResponse call
+func ParseListBookMonstersV1BooksBookIdMonstersGetResponse(rsp *http.Response) (*ListBookMonstersV1BooksBookIdMonstersGetResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListBookMonstersV1BooksBookIdMonstersGetResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PaginatedResultsetMonsterSummary
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest HTTPValidationError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseRemoveBookMonsterV1BooksBookIdMonstersMonsterIdDeleteResponse parses an HTTP response from a RemoveBookMonsterV1BooksBookIdMonstersMonsterIdDeleteWithResponse call
+func ParseRemoveBookMonsterV1BooksBookIdMonstersMonsterIdDeleteResponse(rsp *http.Response) (*RemoveBookMonsterV1BooksBookIdMonstersMonsterIdDeleteResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &RemoveBookMonsterV1BooksBookIdMonstersMonsterIdDeleteResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest HTTPValidationError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseAddBookMonsterV1BooksBookIdMonstersMonsterIdPutResponse parses an HTTP response from a AddBookMonsterV1BooksBookIdMonstersMonsterIdPutWithResponse call
+func ParseAddBookMonsterV1BooksBookIdMonstersMonsterIdPutResponse(rsp *http.Response) (*AddBookMonsterV1BooksBookIdMonstersMonsterIdPutResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &AddBookMonsterV1BooksBookIdMonstersMonsterIdPutResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest HTTPValidationError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListBookSpellsV1BooksBookIdSpellsGetResponse parses an HTTP response from a ListBookSpellsV1BooksBookIdSpellsGetWithResponse call
+func ParseListBookSpellsV1BooksBookIdSpellsGetResponse(rsp *http.Response) (*ListBookSpellsV1BooksBookIdSpellsGetResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListBookSpellsV1BooksBookIdSpellsGetResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PaginatedResultsetSpellSummary
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest HTTPValidationError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseRemoveBookSpellV1BooksBookIdSpellsSpellIdDeleteResponse parses an HTTP response from a RemoveBookSpellV1BooksBookIdSpellsSpellIdDeleteWithResponse call
+func ParseRemoveBookSpellV1BooksBookIdSpellsSpellIdDeleteResponse(rsp *http.Response) (*RemoveBookSpellV1BooksBookIdSpellsSpellIdDeleteResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &RemoveBookSpellV1BooksBookIdSpellsSpellIdDeleteResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest HTTPValidationError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseAddBookSpellV1BooksBookIdSpellsSpellIdPutResponse parses an HTTP response from a AddBookSpellV1BooksBookIdSpellsSpellIdPutWithResponse call
+func ParseAddBookSpellV1BooksBookIdSpellsSpellIdPutResponse(rsp *http.Response) (*AddBookSpellV1BooksBookIdSpellsSpellIdPutResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &AddBookSpellV1BooksBookIdSpellsSpellIdPutResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest HTTPValidationError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
 
 	}
 

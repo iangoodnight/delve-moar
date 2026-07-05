@@ -1,12 +1,3 @@
-.desc-paragraph {
-  text-indent: var(--space-4) hanging;
-  text-wrap: revert;
-}
-
-.desc-paragraph + .desc-paragraph {
-  margin-top: var(--space-3);
-}
-
 .properties-block {
   figcaption {
     color: var(--accent-12);

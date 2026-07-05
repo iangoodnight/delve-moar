@@ -13,13 +13,14 @@ export const getMonsterV1MonstersSlugGetPathParamsSchema = z.object({
     })
 
 export const getMonsterV1MonstersSlugGetQueryParamsSchema = z.object({
-    "namespace": z.string().default("srd-5.1").describe("Source namespace to search in. Defaults to the SRD 5.1 namespace. Use 'user:{user_id}' for homebrew content.")
+    "namespace": z.string().default("srd-5.1").describe("Source namespace to search in. Defaults to the SRD 5.1 namespace. Use 'user:{user_id}' for homebrew content."),
+"include": z.string().describe("Comma-separated optional response expansions. Supported: 'book_memberships' annotates each entry with the signed-in user's own books that contain it.").nullish()
     })
 
 /**
  * @description Successful Response
  */
-export const getMonsterV1MonstersSlugGet200Schema = z.lazy(() => monsterDetailSchema).describe("Full monster details, used in detail endpoints.\n\nAttributes:\n    content: The full monster data as ingested from the source, with all\n        original fields and structure preserved.\n    content_source: Metadata about the source of the monster data, such as\n        the original URL or source file name.")
+export const getMonsterV1MonstersSlugGet200Schema = z.lazy(() => monsterDetailSchema).describe("Full monster details, used in detail endpoints.")
 
 /**
  * @description Monster not found

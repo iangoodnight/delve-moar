@@ -1,0 +1,93 @@
+# Dependabot version updates: scheduled PRs that bump dependencies when a
+# newer version is available. This is separate from Dependabot security
+# updates (advisory-driven), which are enabled at the repo level.
+# https://docs.github.com/code-security/dependabot/dependabot-version-updates
+#
+# The default branch is `dev`, so Dependabot reads this file from `dev` and
+# opens version-update PRs against `dev` (no target-branch override needed).
+#
+# Noise control: minor + patch bumps are grouped into one PR per ecosystem;
+# majors stay individual so breaking changes get reviewed one at a time.
+# `commit-message.prefix: chore` + `include: scope` yields `chore(deps): ...`
+# titles that pass the commitlint first-parent check.
+version: 2
+updates:
+  # ── JavaScript / pnpm workspace (apps/web + packages/*) ────────────────────
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: chore
+      include: scope
+    groups:
+      npm-minor-patch:
+        applies-to: version-updates
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+
+  # ── Python / uv (apps/api) ─────────────────────────────────────────────────
+  - package-ecosystem: uv
+    directory: /apps/api
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: chore
+      include: scope
+    groups:
+      uv-minor-patch:
+        applies-to: version-updates
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+
+  # ── Go modules (apps/cli) ──────────────────────────────────────────────────
+  - package-ecosystem: gomod
+    directory: /apps/cli
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: chore
+      include: scope
+    groups:
+      gomod-minor-patch:
+        applies-to: version-updates
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+
+  # ── GitHub Actions workflow pins ───────────────────────────────────────────
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: chore
+      include: scope
+    groups:
+      github-actions-all:
+        applies-to: version-updates
+        patterns: ["*"]
+
+  # ── Docker base images (apps/api + apps/cli) ───────────────────────────────
+  - package-ecosystem: docker
+    directories:
+      - /apps/api
+      - /apps/cli
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: chore
+      include: scope
+    groups:
+      docker-all:
+        applies-to: version-updates
+        patterns: ["*"]

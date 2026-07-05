@@ -64,17 +64,15 @@ repos:
       - id: eslint-web
         name: eslint (web)
         language: system
-        entry: pnpm --filter @delve-moar/web lint
+        entry: scripts/precommit-web.sh eslint
         files: ^apps/web/src/.*\.(ts|tsx)$
-        pass_filenames: false
         stages: [pre-commit]
 
       - id: prettier-web
         name: prettier (web)
         language: system
-        entry: pnpm --filter @delve-moar/web format
+        entry: scripts/precommit-web.sh prettier
         files: ^apps/web/.*\.(ts|tsx|css|json)$
-        pass_filenames: false
         stages: [pre-commit]
 
   # ── Commit message — commitlint ──────────────────────────────────────────

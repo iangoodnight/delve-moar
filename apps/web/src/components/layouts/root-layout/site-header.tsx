@@ -14,8 +14,8 @@ export function SiteHeader() {
     <>
       <NavProgress />
       <Row
-        asChild
         align="end"
+        asChild
         justify="between"
         px={{ initial: '1', sm: '2', lg: '6', xl: '9' }}
         py={{ initial: '2', sm: '2', lg: '4' }}

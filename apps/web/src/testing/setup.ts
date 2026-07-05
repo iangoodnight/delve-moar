@@ -59,6 +59,46 @@ Object.defineProperty(globalThis, 'ResizeObserver', {
   value: StubResizeObserver,
 });
 
+// jsdom does not implement matchMedia. sonner's <Toaster theme="system" />
+// calls it on mount, so without this stub every renderWithProvider tree
+// (AppProvider mounts the Toaster) throws.
+function stubMatchMedia(query: string): MediaQueryList {
+  return {
+    matches: false,
+    media: query,
+    onchange: null,
+    addEventListener: () => undefined,
+    removeEventListener: () => undefined,
+    addListener: () => undefined,
+    removeListener: () => undefined,
+    dispatchEvent: () => false,
+  };
+}
+
+Object.defineProperty(globalThis, 'matchMedia', {
+  writable: true,
+  value: stubMatchMedia,
+});
+
+// jsdom implements neither Pointer Capture nor scrollIntoView, which Radix's
+// menu/dialog primitives call during open/close interactions.
+Object.defineProperty(Element.prototype, 'hasPointerCapture', {
+  writable: true,
+  value: () => false,
+});
+Object.defineProperty(Element.prototype, 'setPointerCapture', {
+  writable: true,
+  value: () => undefined,
+});
+Object.defineProperty(Element.prototype, 'releasePointerCapture', {
+  writable: true,
+  value: () => undefined,
+});
+Object.defineProperty(Element.prototype, 'scrollIntoView', {
+  writable: true,
+  value: () => undefined,
+});
+
 export function renderWithProvider(ui: React.ReactElement) {
   return render(ui, { wrapper: AppProvider });
 }

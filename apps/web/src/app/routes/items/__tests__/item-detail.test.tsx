@@ -10,10 +10,12 @@ import { axe } from 'vitest-axe';
 
 import { longswordItem } from '@/features/items/__tests__/longsword-fixture';
 import { apiClient } from '@/lib/api-client';
+import { AuthProvider } from '@/lib/auth';
 
 import ItemDetail from '../item-detail';
 
 const API_RESPONSE = {
+  id: longswordItem.id,
   slug: longswordItem.slug,
   name: longswordItem.name,
   itemCategory: longswordItem.itemCategory,
@@ -35,15 +37,17 @@ function makeWrapper() {
   function Wrapper({ children }: { readonly children: ReactNode }) {
     return (
       <QueryClientProvider client={queryClient}>
-        <HelmetProvider>
-          <Theme>
-            <MemoryRouter initialEntries={[`/items/${longswordItem.slug}`]}>
-              <Routes>
-                <Route element={children} path="/items/:slug" />
-              </Routes>
-            </MemoryRouter>
-          </Theme>
-        </HelmetProvider>
+        <AuthProvider>
+          <HelmetProvider>
+            <Theme>
+              <MemoryRouter initialEntries={[`/items/${longswordItem.slug}`]}>
+                <Routes>
+                  <Route element={children} path="/items/:slug" />
+                </Routes>
+              </MemoryRouter>
+            </Theme>
+          </HelmetProvider>
+        </AuthProvider>
       </QueryClientProvider>
     );
   }

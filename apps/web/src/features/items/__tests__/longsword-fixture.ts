@@ -5,6 +5,7 @@
 import type { Item } from '@/features/items/api';
 
 export const longswordItem: Item = {
+  id: 'ae5fa840-c1c6-4639-9ae7-cbf31c9c701c',
   slug: 'longsword',
   name: 'Longsword',
   itemCategory: 'weapon',

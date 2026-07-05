@@ -3,9 +3,9 @@
 A homebrew-first TTRPG utility suite for game masters: catalog,
 encounter builder, and character tools, all self-hosted and SRD-powered.
 
-> **Status**: Phase 1a (SRD catalog, read-only) complete — v0.1.0. Phase 1b
-> (homebrew authoring) is next. See the [roadmap](docs/roadmap.md) for what
-> comes next.
+> **Status**: Phase 1b (accounts and content collections) in progress,
+> v0.1.3. The SRD catalog, user accounts, and books are live; homebrew
+> authoring and campaigns are next. See the [roadmap](docs/roadmap.md).
 
 ## What this is
 
@@ -20,13 +20,20 @@ produces both the web's TypeScript types and the CLI's Go HTTP client.
 
 ## Quick start
 
+> **Heads up:** `brew bundle` does not install Docker or Node.
+> Install [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+> first (it is required for `task dev`), and use a Node version
+> manager (fnm or nvm) that honors `.nvmrc` for the pinned Node
+> major. Everything else comes from `brew bundle`. Full list in
+> [`CONTRIBUTING.md`](CONTRIBUTING.md#local-setup).
+
 ```sh
 git clone git@github.com:iangoodnight/delve-moar.git
 cd delve-moar
 cp .env.example .env
-brew bundle         # install required tools (macOS)
+brew bundle         # required tools (macOS); not Docker or Node, see above
 task setup:dev      # git hooks, oapi-codegen, pnpm install
-task dev        # docker compose: postgres, api, web
+task dev            # docker compose: postgres, api, web
 ```
 
 API at `http://localhost:8000`, web app at `http://localhost:5173`.

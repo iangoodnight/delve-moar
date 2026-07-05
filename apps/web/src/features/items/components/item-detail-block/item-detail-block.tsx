@@ -1,23 +1,17 @@
 import type { components } from '@delve-moar/api-types';
+import type { ReactNode } from 'react';
 
+import { Markdown } from '@/components/markdown';
 import { Badge } from '@/components/ui/badge';
-import { Column, Grid, Row, Section } from '@/components/ui/layout';
+import { Box, Column, Flex, Grid, Row, Section } from '@/components/ui/layout';
 import { H1, H2, Paragraph, Strong, Text } from '@/components/ui/typography';
+import { getItemCategoryLabel } from '@/constants/item-categories';
+import { getRarityOption } from '@/constants/item-rarities';
 import type { Item } from '@/features/items/api';
-import { getRarityOption, ITEM_CATEGORIES } from '@/features/items/constants';
 
 import styles from './item-detail-block.module.css';
 
 type SrdItemContent = components['schemas']['SrdItemContent'];
-
-interface ItemDetailBlockProps {
-  readonly item: Item;
-}
-
-function categoryLabel(value: string | null): string {
-  if (!value) return 'Uncategorized';
-  return ITEM_CATEGORIES.find((c) => c.value === value)?.label ?? value;
-}
 
 function formatCost(cost: NonNullable<SrdItemContent['cost']>): string {
   return `${String(cost.quantity)} ${cost.unit}`;
@@ -53,13 +47,12 @@ function formatRange(range: NonNullable<SrdItemContent['range']>): string {
   return `${String(range.normal)} ft.`;
 }
 
-function ItemStat({
-  label,
-  value,
-}: {
+interface ItemStatProps {
   readonly label: string;
   readonly value: string;
-}) {
+}
+
+function ItemStat({ label, value }: Readonly<ItemStatProps>) {
   return (
     <Row gap="2">
       <Text as="div" ml="4" size="3">
@@ -70,10 +63,8 @@ function ItemStat({
   );
 }
 
-function buildStats(
-  content: SrdItemContent,
-): { label: string; value: string }[] {
-  const stats: { label: string; value: string }[] = [];
+function buildStats(content: SrdItemContent): readonly ItemStatProps[] {
+  const stats: ItemStatProps[] = [];
   if (content.cost) {
     stats.push({ label: 'Cost', value: formatCost(content.cost) });
   }
@@ -134,25 +125,40 @@ function buildStats(
   return stats;
 }
 
-export function ItemDetailBlock({ item }: ItemDetailBlockProps) {
+interface ItemDetailBlockProps {
+  readonly item: Item;
+  readonly headerAction?: ReactNode;
+}
+
+export function ItemDetailBlock({
+  item,
+  headerAction,
+}: Readonly<ItemDetailBlockProps>) {
   const { content } = item;
   const rarity = getRarityOption(item.rarity);
   const stats = buildStats(content);
 
   return (
     <Column>
-      <Row align="end" gap="2" justify="between" wrap="wrap">
-        <H1>{item.name}</H1>
-        <Row align="center" gap="2" mb="2">
-          <Paragraph className="text-oblique" color="gray" m="0" size="2">
-            {categoryLabel(item.itemCategory)}
-          </Paragraph>
-          {rarity && (
-            <Badge color={rarity.badgeColor} variant="soft">
-              {rarity.label}
-            </Badge>
-          )}
-        </Row>
+      <Row align="start" gapX="4" gapY="2" justify="between" mb="2" wrap="wrap">
+        <Column>
+          <H1>{item.name}</H1>
+          <Row align="center" gap="2">
+            <Paragraph className="text-oblique" color="gray" m="0" size="2">
+              {getItemCategoryLabel(item.itemCategory)}
+            </Paragraph>
+            {rarity && (
+              <Badge color={rarity.badgeColor} variant="soft">
+                {rarity.label}
+              </Badge>
+            )}
+          </Row>
+        </Column>
+        {headerAction && (
+          <Flex align="center" className="h1-line-min">
+            {headerAction}
+          </Flex>
+        )}
       </Row>
 
       {stats.length > 0 && (
@@ -176,15 +182,9 @@ export function ItemDetailBlock({ item }: ItemDetailBlockProps) {
         <Section size="1">
           <Column gap="2">
             <H2>Description</H2>
-            {content.desc.map((paragraph, index) => (
-              <Paragraph
-                className={styles['desc-paragraph']}
-                key={index}
-                ml={{ initial: '0', sm: '4' }}
-              >
-                {paragraph}
-              </Paragraph>
-            ))}
+            <Box className="text-constraint" ml={{ initial: '0', sm: '4' }}>
+              <Markdown>{content.desc.join('\n\n')}</Markdown>
+            </Box>
           </Column>
         </Section>
       )}

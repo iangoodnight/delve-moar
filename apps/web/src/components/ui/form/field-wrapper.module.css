@@ -1,0 +1,116 @@
+.field-wrapper {
+  /* Radix input root; transition the border so hover/error tint animates. */
+  :global(.rt-TextFieldRoot) {
+    transition: box-shadow var(--transition-fast);
+  }
+
+  .label {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    margin-block-end: var(--space-1);
+    /* Flush left with no icon; the icon lives in this reserved-on-demand pad. */
+    padding-inline-start: 0;
+    transition:
+      color var(--transition-fast),
+      padding-inline-start var(--transition-fast);
+  }
+
+  /* Icons pinned to the label's left edge; they cross-fade by state while the
+     label text slides right to make room. */
+  .icon-slot {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: 0;
+    display: inline-flex;
+    align-items: center;
+    inline-size: 1em;
+    block-size: 100%;
+  }
+
+  .icon {
+    position: absolute;
+    inset: 0;
+    inline-size: 100%;
+    block-size: 100%;
+    opacity: 0;
+    transition:
+      opacity var(--transition-fast),
+      transform var(--transition-fast);
+  }
+
+  .icon-focus {
+    transform: translateX(-0.25em);
+  }
+
+  /* Reserve one line so swapping help text <-> error never shifts layout.
+     Sits flush under the input; its line height is the only separation. */
+  .message {
+    min-block-size: var(--line-height-1);
+  }
+
+  .help-text {
+    transition: color var(--transition-fast);
+  }
+
+  &:hover:not([data-invalid]):not(:has(input:disabled)) {
+    :global(.rt-TextFieldRoot) {
+      box-shadow: inset 0 0 0 1px var(--accent-a8);
+    }
+
+    .help-text {
+      color: var(--gray-12);
+    }
+  }
+
+  &:focus-within:not([data-invalid]) {
+    .label {
+      color: var(--accent-11);
+      padding-inline-start: calc(1em + var(--space-2));
+    }
+
+    .icon-focus {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    .help-text {
+      color: var(--gray-12);
+    }
+  }
+
+  /* Read the whole field as disabled, not just the (Radix-dimmed) input. */
+  &:has(input:disabled) {
+    cursor: var(--cursor-disabled);
+
+    input {
+      cursor: var(--cursor-disabled);
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .label {
+      color: var(--gray-11);
+    }
+  }
+
+  &[data-invalid] {
+    .label {
+      color: var(--red-11);
+      padding-inline-start: calc(1em + var(--space-2));
+    }
+
+    .icon-error {
+      opacity: 1;
+    }
+
+    /* Red border at rest, red focus ring when focused. */
+    :global(.rt-TextFieldRoot) {
+      box-shadow: inset 0 0 0 1px var(--red-a7);
+
+      &:focus-within {
+        outline-color: var(--red-8);
+      }
+    }
+  }
+}

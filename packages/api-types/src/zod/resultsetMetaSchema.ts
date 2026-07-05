@@ -9,7 +9,7 @@ import { z } from "zod/v4";
  * @description Metadata about a paginated resultset.
  */
 export const resultsetMetaSchema = z.object({
-    "count": z.int(),
-"offset": z.int(),
-"limit": z.int()
+    "count": z.int().describe("Total records matching the query, across all pages."),
+"offset": z.int().describe("Offset of this page."),
+"limit": z.int().describe("Number of records in this page.")
     }).describe("Metadata about a paginated resultset.")

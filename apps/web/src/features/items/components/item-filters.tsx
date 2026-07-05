@@ -5,11 +5,8 @@ import { Column, Row } from '@/components/ui/layout';
 import { Select } from '@/components/ui/select';
 import { Label } from '@/components/ui/typography';
 import { VisuallyHidden } from '@/components/ui/utils';
-import {
-  isRarityCapable,
-  ITEM_CATEGORIES,
-  ITEM_RARITIES,
-} from '@/features/items/constants';
+import { isRarityCapable, ITEM_CATEGORIES } from '@/constants/item-categories';
+import { ITEM_RARITIES } from '@/constants/item-rarities';
 import { useItemFilters } from '@/features/items/hooks';
 
 import styles from './item-filters.module.css';

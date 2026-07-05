@@ -1,16 +1,30 @@
 """Monster list and detail endpoints."""
 
+import uuid
 from decimal import Decimal
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, Query, Request, status
 from sqlalchemy import select
 
+from app.auth.dependencies import OptionalCurrentUser
+from app.books_access import (
+    assert_books_readable,
+    attach_book_memberships,
+    book_memberships_for,
+)
 from app.constants import SRD_NAMESPACE
 from app.db import DbSession
-from app.dependencies import Pagination, SearchFilter, ordering_dep, search_dep
+from app.dependencies import (
+    INCLUDE_BOOK_MEMBERSHIPS,
+    Include,
+    Pagination,
+    SearchFilter,
+    ordering_dep,
+    search_dep,
+)
 from app.exceptions import get_or_404
-from app.models import Monster
+from app.models import BookMonster, Monster
 from app.schemas.errors import ErrorResponse
 from app.schemas.monsters import MonsterDetail, MonsterSummary
 from app.schemas.pagination import PaginatedResultset
@@ -46,9 +60,11 @@ MonsterSearch = Annotated[SearchFilter, Depends(_MONSTER_SEARCH)]
 async def list_monsters(
     request: Request,
     session: DbSession,
+    user: OptionalCurrentUser,
     params: Pagination,
     ordering: MonsterOrdering,
     search: MonsterSearch,
+    include: Include,
     monster_type: Annotated[
         str | None,
         Query(
@@ -64,29 +80,17 @@ async def list_monsters(
         Decimal | None,
         Query(ge=0, description="Inclusive maximum challenge rating."),
     ] = None,
+    book: Annotated[
+        list[uuid.UUID] | None,
+        Query(
+            description=(
+                "Filter to monsters in any of these books (repeat for "
+                "multiple). Each must be a book you can read, else 404."
+            ),
+        ),
+    ] = None,
 ) -> PaginatedResultset[MonsterSummary]:
-    """Return a paginated list of monsters with optional filters.
-
-    Args:
-        request: Current HTTP request, used to build pagination links.
-        session: Database session, injected by dependency.
-        params: Pagination parameters, injected by dependency.
-        ordering: SQLAlchemy ordering expressions, injected by dependency.
-        search: Parsed search filter, injected by dependency.
-        monster_type: Optional exact match for the monster_type field.
-        cr_min: Inclusive minimum challenge rating filter.
-        cr_max: Inclusive maximum challenge rating filter.
-
-    Returns:
-        A paginated resultset containing monster summaries and pagination
-        metadata.
-
-    Example:
-        GET /v1/monsters?search=dragon&limit=5&offset=10
-        GET /v1/monsters?type=undead&cr_min=1&cr_max=5
-        GET /v1/monsters?cr_max=0.25&order_by=name:asc
-        GET /v1/monsters?order_by=challenge_rating:desc,name:asc
-    """
+    """List monsters with optional type, challenge-rating, and book filters."""
     stmt = select(Monster).where(Monster.source_namespace == SRD_NAMESPACE)
 
     if search.where is not None:
@@ -97,6 +101,15 @@ async def list_monsters(
         stmt = stmt.where(Monster.challenge_rating >= cr_min)
     if cr_max is not None:
         stmt = stmt.where(Monster.challenge_rating <= cr_max)
+    if book:
+        await assert_books_readable(session, book, user)
+        stmt = stmt.where(
+            Monster.id.in_(
+                select(BookMonster.monster_id).where(
+                    BookMonster.book_id.in_(book)
+                )
+            )
+        )
 
     total, rows = await fetch_page(
         session,
@@ -104,8 +117,13 @@ async def list_monsters(
         ordering=[*search.order_priority, *ordering],
         params=params,
     )
+    data = [MonsterSummary.model_validate(row) for row in rows]
+    if INCLUDE_BOOK_MEMBERSHIPS in include and user is not None:
+        await attach_book_memberships(
+            session, user, rows, data, BookMonster, BookMonster.monster_id
+        )
     return paginate(
-        data=[MonsterSummary.model_validate(row) for row in rows],
+        data=data,
         total=total,
         params=params,
         links=build_links(request, total, params.offset, params.limit),
@@ -126,6 +144,8 @@ async def list_monsters(
 async def get_monster(
     slug: str,
     session: DbSession,
+    user: OptionalCurrentUser,
+    include: Include,
     namespace: Annotated[
         str,
         Query(
@@ -136,23 +156,7 @@ async def get_monster(
         ),
     ] = SRD_NAMESPACE,
 ) -> MonsterDetail:
-    """Return full details for a single monster by slug.
-
-    Args:
-        slug: The URL-safe unique identifier for the monster.
-        session: Database session, injected by dependency.
-        namespace: The source namespace to look in (default: srd-5.1).
-
-    Returns:
-        The full monster details, including all original content fields.
-
-    Raises:
-        AppError: With status 404 if no monster is found.
-
-    Example:
-        GET /v1/monsters/tarrasque
-        GET /v1/monsters/giant-spider?namespace=user:1234
-    """
+    """Get a single monster by slug within a source namespace."""
     result = await session.scalar(
         select(Monster).where(
             Monster.slug == slug,
@@ -162,4 +166,10 @@ async def get_monster(
     monster = get_or_404(
         result, resource="monster", identifier=f"{namespace}:{slug}"
     )
-    return MonsterDetail.model_validate(monster)
+    detail = MonsterDetail.model_validate(monster)
+    if INCLUDE_BOOK_MEMBERSHIPS in include and user is not None:
+        memberships = await book_memberships_for(
+            session, user, [monster.id], BookMonster, BookMonster.monster_id
+        )
+        detail.book_memberships = memberships.get(monster.id, [])
+    return detail

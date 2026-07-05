@@ -4,9 +4,17 @@ from pathlib import Path
 
 import pytest
 from httpx import AsyncClient
+from starlette.requests import Request
 
 from app.config import Settings
-from app.exceptions import AppError, get_or_404
+from app.exceptions import AppError, _handle_app_error, get_or_404
+
+
+def _bare_request() -> Request:
+    """Build a minimal request; the AppError handler does not read it."""
+    return Request(
+        {"type": "http", "method": "GET", "path": "/", "headers": []}
+    )
 
 
 async def test_app_error_handler_returns_correct_shape(
@@ -33,6 +41,21 @@ async def test_app_error_handler_camel_case(
     assert "user_message" not in body
     assert "error_code" not in body
     assert "more_info" not in body
+
+
+async def test_app_error_handler_propagates_custom_headers() -> None:
+    """AppError.headers are written onto the response (e.g. Retry-After)."""
+    exc = AppError(
+        status=429,
+        developer_message="Rate limit exceeded.",
+        user_message="Too many attempts.",
+        error_code="RATE_LIMITED",
+        more_info="http://test/docs",
+        headers={"Retry-After": "30"},
+    )
+    response = await _handle_app_error(_bare_request(), exc)
+    assert response.status_code == 429
+    assert response.headers["Retry-After"] == "30"
 
 
 async def test_validation_error_handler_returns_correct_shape(

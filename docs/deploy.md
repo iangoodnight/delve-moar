@@ -78,6 +78,38 @@ fly ssh console --app delvemoar-api \
   -C "uv run alembic downgrade -1"
 ```
 
+## Backup and restore
+
+Database recovery (daily volume snapshots, on-demand logical dumps,
+and the tested restore procedure) lives in its own runbook:
+[Postgres backup and restore](runbooks/postgres-backup-restore.md).
+Take a logical backup before any release that runs a migration; the
+[release checklist](../CONTRIBUTING.md#cutting-a-release-manual) calls
+this out.
+
+## Seeding the database
+
+The SRD catalog (monsters, spells, items) is populated by
+`apps/api/scripts/seed_srd.py`, which pulls from the public
+[5e-bits/5e-database](https://github.com/5e-bits/5e-database) dataset
+over HTTP. The script ships in the deployed image, so seeding runs
+inside the container, with no local tunnel or working tree required.
+It is idempotent, so re-running it is safe.
+
+Seed (or reseed) production over `fly ssh`:
+
+```bash
+fly ssh console --app delvemoar-api \
+  -C "sh -c 'PYTHONPATH=. uv run python scripts/seed_srd.py all'"
+```
+
+`all` seeds monsters, spells, and items; pass `monsters`, `spells`, or
+`items` to seed a single resource. The container needs outbound
+internet (the default on Fly) and `DATABASE_URL` (the attached
+Postgres sets it). This is the supported path for both first-deploy
+seeding and disaster-recovery reseeding (see the
+[backup and restore runbook](runbooks/postgres-backup-restore.md)).
+
 ## Infrastructure provisioning (first-time setup)
 
 These steps are one-time. The repo ships with the IaC config; apply it
@@ -161,7 +193,13 @@ And in **Settings > Secrets and variables > Actions** (repo-level):
 
 ## Observability
 
+Quick log and health surfaces:
+
 - **Fly logs**: `fly logs -a delvemoar-api`
 - **Fly dashboard**: <https://fly.io/apps/delvemoar-api>
 - **Vercel logs**: Vercel dashboard > project > Deployments > Functions
 - **Health check**: `curl https://api.delvemoar.com/health`
+
+For error tracking, uptime checks, Postgres metrics, and alerting (Sentry
+plus Fly Grafana), and the production secrets that turn them on, see the
+[monitoring and alerting runbook](runbooks/monitoring.md).

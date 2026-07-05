@@ -1,6 +1,7 @@
 import type { components } from '@delve-moar/api-types';
+import type { ReactNode } from 'react';
 
-import { Column, Grid, Row, Section } from '@/components/ui/layout';
+import { Column, Flex, Grid, Row, Section } from '@/components/ui/layout';
 import { H1, Strong, Text } from '@/components/ui/typography';
 import type { Monster } from '@/features/monsters/api';
 
@@ -12,23 +13,40 @@ import { TraitsBlock } from './traits-block';
 
 type SrdMonsterContent = components['schemas']['SrdMonsterContent'];
 
-interface MonsterStatBlockProps {
-  readonly monster: Monster;
+interface ContentBlockProps {
+  readonly content: SrdMonsterContent;
 }
 
-function IdentityBlock({ content }: { readonly content: SrdMonsterContent }) {
+interface IdentityBlockProps {
+  readonly content: SrdMonsterContent;
+  readonly headerAction?: ReactNode;
+}
+
+function IdentityBlock({
+  content,
+  headerAction,
+}: Readonly<IdentityBlockProps>) {
   return (
     <Row
-      align="end"
+      align="start"
       className={styles['identity']}
-      gap="2"
+      gapX="4"
+      gapY="2"
       justify="between"
+      mb="2"
       wrap="wrap"
     >
-      <H1>{content.name}</H1>
-      <Text as="p" color="gray" mb="2" size="2">
-        {content.size} {content.type}, {content.alignment}
-      </Text>
+      <Column>
+        <H1>{content.name}</H1>
+        <Text as="p" color="gray" size="2">
+          {content.size} {content.type}, {content.alignment}
+        </Text>
+      </Column>
+      {headerAction && (
+        <Flex align="center" className="h1-line-min">
+          {headerAction}
+        </Flex>
+      )}
     </Row>
   );
 }
@@ -50,7 +68,7 @@ function CombatStat({
   );
 }
 
-function CombatBlock({ content }: { readonly content: SrdMonsterContent }) {
+function CombatBlock({ content }: Readonly<ContentBlockProps>) {
   return (
     <figure className={styles['combat-block']}>
       <figcaption>Combat</figcaption>
@@ -69,11 +87,19 @@ function CombatBlock({ content }: { readonly content: SrdMonsterContent }) {
   );
 }
 
-export function MonsterStatBlock({ monster }: MonsterStatBlockProps) {
+interface MonsterStatBlockProps {
+  readonly monster: Monster;
+  readonly headerAction?: ReactNode;
+}
+
+export function MonsterStatBlock({
+  monster,
+  headerAction,
+}: Readonly<MonsterStatBlockProps>) {
   const { content } = monster;
   return (
     <Column>
-      <IdentityBlock content={content} />
+      <IdentityBlock content={content} headerAction={headerAction} />
       <Section size="1">
         <Column gap="4">
           <CombatBlock content={content} />
@@ -82,18 +108,18 @@ export function MonsterStatBlock({ monster }: MonsterStatBlockProps) {
         </Column>
       </Section>
       <ActionsBlock
-        title="Special Abilities"
         entries={content.specialAbilities}
+        title="Special Abilities"
       />
       {content.legendaryActions && (
         <ActionsBlock
-          title="Legendary Actions"
           entries={content.legendaryActions}
+          title="Legendary Actions"
         />
       )}
-      <ActionsBlock title="Actions" entries={content.actions} />
+      <ActionsBlock entries={content.actions} title="Actions" />
       {content.reactions && (
-        <ActionsBlock title="Reactions" entries={content.reactions} />
+        <ActionsBlock entries={content.reactions} title="Reactions" />
       )}
     </Column>
   );

@@ -1,30 +1,37 @@
 """Monsters schemas."""
 
+import uuid
 from typing import Any
 
-from pydantic import field_validator
+from pydantic import Field, field_validator
 
 from app.display import cr_display
 from app.schemas.base import AppSchema
+from app.schemas.book_membership import BookMembership
 from app.schemas.content_source import ContentSource
 from app.schemas.monster_content import SrdMonsterContent
 
 
 class MonsterSummary(AppSchema):
-    """Summary info for a monster, used in list endpoints.
+    """Summary info for a monster, used in list endpoints."""
 
-    Attributes:
-        slug: Unique identifier for the monster, used in URLs.
-        name: The monster's name.
-        monster_type: The type or category of the monster (e.g. "Dragon").
-        challenge_rating: The monster's challenge rating as a display string
-            (e.g. "1/2", "5", "10").
-    """
-
-    slug: str
-    name: str
-    monster_type: str | None
-    challenge_rating: str  # display str, not the raw decimal
+    id: uuid.UUID = Field(description="Unique identifier for the monster.")
+    slug: str = Field(description="URL-safe unique identifier.")
+    name: str = Field(description="The monster's name.")
+    monster_type: str | None = Field(
+        description="Type or category (e.g. 'dragon')."
+    )
+    challenge_rating: str = Field(
+        description="Challenge rating as a display string (e.g. '1/2', '5')."
+    )
+    book_memberships: list[BookMembership] | None = Field(
+        default=None,
+        description=(
+            "The signed-in user's own books that contain this entry. Present "
+            "only when requested via include=book_memberships; omitted for "
+            "anonymous requests."
+        ),
+    )
 
     @field_validator("challenge_rating", mode="before")
     @classmethod
@@ -36,14 +43,11 @@ class MonsterSummary(AppSchema):
 
 
 class MonsterDetail(MonsterSummary):
-    """Full monster details, used in detail endpoints.
+    """Full monster details, used in detail endpoints."""
 
-    Attributes:
-        content: The full monster data as ingested from the source, with all
-            original fields and structure preserved.
-        content_source: Metadata about the source of the monster data, such as
-            the original URL or source file name.
-    """
-
-    content: SrdMonsterContent
-    content_source: ContentSource
+    content: SrdMonsterContent = Field(
+        description="Full source payload, with all original fields preserved."
+    )
+    content_source: ContentSource = Field(
+        description="Provenance and licensing metadata for the entry."
+    )

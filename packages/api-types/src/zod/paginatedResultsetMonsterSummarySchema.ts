@@ -12,6 +12,6 @@ export const paginatedResultsetMonsterSummarySchema = z.object({
                 return metadataEnvelopeSchema.describe("Envelopes a paginated resultset with metadata.")
               },
 get "data"(){
-                return z.array(monsterSummarySchema.describe("Summary info for a monster, used in list endpoints.\n\nAttributes:\n    slug: Unique identifier for the monster, used in URLs.\n    name: The monster's name.\n    monster_type: The type or category of the monster (e.g. \"Dragon\").\n    challenge_rating: The monster's challenge rating as a display string\n        (e.g. \"1/2\", \"5\", \"10\")."))
+                return z.array(monsterSummarySchema.describe("Summary info for a monster, used in list endpoints.")).describe("The records on this page.")
               }
     })

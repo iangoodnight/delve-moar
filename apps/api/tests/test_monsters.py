@@ -5,6 +5,7 @@ Schema tests exercise Pydantic validation and serialization in isolation
 FastAPI's dependency_overrides so they run without a live database.
 """
 
+import uuid
 from collections.abc import AsyncGenerator
 from decimal import Decimal
 from types import SimpleNamespace
@@ -34,6 +35,7 @@ def _make_monster(**overrides: Any) -> SimpleNamespace:
     fields via getattr without needing a live SQLAlchemy session.
     """
     defaults: dict[str, Any] = {
+        "id": uuid.uuid4(),
         "slug": "goblin",
         "source_namespace": "srd-5.1",
         "name": "Goblin",

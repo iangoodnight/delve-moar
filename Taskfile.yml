@@ -62,9 +62,13 @@ tasks:
     dir: "{{.CLI_DIR}}"
     cmd: go test -race ./...
 
+  test:shell:
+    desc: Run shell-script unit tests (bats)
+    cmd: bats test/
+
   test:
     desc: Run all tests in parallel
-    deps: [test:api, test:web, test:cli]
+    deps: [test:api, test:web, test:cli, test:shell]
 
   # ── Building ───────────────────────────────────────────────────────────────
 
@@ -112,6 +116,22 @@ tasks:
     dir: "{{.API_DIR}}"
     cmd: uv run alembic downgrade -1
 
+  db:revision:
+    desc: 'Autogenerate an Alembic migration: task db:revision -- "add conditions table"'
+    dir: "{{.API_DIR}}"
+    preconditions:
+      - sh: '[ -n "{{.CLI_ARGS}}" ]'
+        msg: 'Provide a message: task db:revision -- "add conditions table"'
+    cmd: uv run alembic revision --autogenerate -m {{.CLI_ARGS}}
+
+  db:dump:
+    desc: "Logical backup of production Postgres to ./backups (needs PROD_DATABASE_URL; see runbook)"
+    cmd: bash scripts/db_backup.sh dump
+
+  db:restore:
+    desc: "Restore a dump into a LOCAL database (drill/inspection): task db:restore -- ./backups/x.dump [db]"
+    cmd: bash scripts/db_backup.sh restore {{.CLI_ARGS}}
+
   seed:srd:monsters:
     desc: Seed SRD monsters from dnd5eapi.co
     dir: "{{.API_DIR}}"
@@ -147,12 +167,14 @@ tasks:
     cmd: brew bundle
 
   setup:dev:
-    desc: Set up a contributor environment — git hooks, oapi-codegen, pnpm install
+    desc: "Set up a contributor environment: git hooks, codegen tools, and all app deps"
     preconditions:
       - sh: command -v pre-commit
         msg: "pre-commit not found. Run 'task setup:brew' or install manually."
       - sh: command -v go
         msg: "go not found. Run 'task setup:brew' or install manually."
+      - sh: command -v uv
+        msg: "uv not found. Run 'task setup:brew' or install manually."
       - sh: command -v pnpm
         msg: "pnpm not found. Run 'task setup:brew' or install manually."
     cmds:
@@ -161,6 +183,8 @@ tasks:
       - pre-commit install --hook-type commit-msg
       - go install github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen@v2.6.0
       - pnpm install
+      - cd {{.API_DIR}} && uv sync --group dev
+      - cd {{.CLI_DIR}} && go mod download
 
   setup:maintainer:
     desc: Full maintainer setup — contributor tools + Fly.io and Terraform initialised

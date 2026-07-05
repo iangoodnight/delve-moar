@@ -9,14 +9,14 @@ After cloning, in order:
 
 ```sh
 cp .env.example .env       # defaults work for local Docker dev
-task setup                 # installs git hooks, pnpm deps, oapi-codegen
-uv sync --group dev        # (in apps/api) Python deps
-cd apps/cli && go mod download && cd ../..
+task setup                 # git hooks, codegen tools, and all app deps
 ```
 
-`task setup` installs the pre-commit hooks at three stages: `pre-commit`,
-`commit-msg`, and `pre-push`. These run automatically on the corresponding
-git operations. See [hooks](#hooks) below.
+`task setup` installs the pre-commit hooks at three stages (`pre-commit`,
+`commit-msg`, and `pre-push`), the oapi-codegen tool, and the
+JavaScript, Python (uv), and Go dependencies. The hooks run
+automatically on the corresponding git operations; see
+[hooks](#hooks) below.
 
 ## Day to day
 
@@ -29,11 +29,12 @@ git operations. See [hooks](#hooks) below.
 | Lint everything                      | `task lint`               |
 | Lint one app                         | `task lint:api`, `task lint:web`, `task lint:cli`, `task lint:shell` |
 | Test everything                      | `task test`               |
-| Test one app                         | `task test:api`, `task test:web`, `task test:cli` |
+| Test one suite                       | `task test:api`, `task test:web`, `task test:cli`, `task test:shell` |
 | Build everything                     | `task build`              |
 | Regenerate OpenAPI types             | `task gen:types`          |
 | Apply pending DB migrations          | `task db:migrate`          |
 | Roll back the last migration         | `task db:rollback`         |
+| Create a new DB migration            | `task db:revision -- "..."`|
 
 Full list: `task --list`.
 
@@ -127,8 +128,7 @@ Alembic lives in `apps/api/alembic/`. Common commands:
 
 ```sh
 # Create a new migration from autogenerate (after editing models)
-cd apps/api
-uv run alembic revision --autogenerate -m "add conditions table"
+task db:revision -- "add conditions table"
 
 # Apply all pending migrations
 task db:migrate

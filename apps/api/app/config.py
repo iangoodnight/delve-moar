@@ -106,5 +106,90 @@ class Settings(BaseSettings):
     version: str = _read_version()
     public_url: str = "http://localhost:8000"
 
+    # Auth -- argon2id password-hashing parameters. Defaults are the OWASP
+    # minimums; tune upward as hardware allows. They live in config so they
+    # can change without a code edit, and check_needs_rehash() upgrades
+    # stored hashes on the next login when these change.
+    argon2_time_cost: int = 2
+    argon2_memory_cost: int = 19456  # KiB (19 MiB)
+    argon2_parallelism: int = 1
+
+    # Sessions -- opaque token in an HttpOnly cookie; sliding expiry.
+    session_ttl_seconds: int = 1_209_600  # 14 days
+    session_cookie_name: str = "dm_session"
+    csrf_cookie_name: str = "dm_csrf"
+    # None -> derive from env via cookie_secure: Secure everywhere except
+    # local development (plain-HTTP, where Secure cookies are never sent).
+    session_cookie_secure: bool | None = None
+    # Cookie Domain attribute. Leave empty for host-only cookies (local dev,
+    # where web and API share localhost). In production set to the shared
+    # parent (e.g. ".delvemoar.com") so the web origin can read the CSRF
+    # cookie set by the API subdomain.
+    session_cookie_domain: str | None = None
+
+    # Rate limiting -- brute-force and abuse protection on auth endpoints,
+    # part of the ADR 0010 threat model. Limits use the ``limits`` library
+    # notation (e.g. "10/minute" or "5/hour;100/day") and are keyed by client
+    # IP. Storage defaults to in-process memory, which is correct for the
+    # single-process deploy; point it at "async+redis://..." to share counters
+    # across machines if the app ever scales horizontally.
+    rate_limit_enabled: bool = True
+    rate_limit_storage_uri: str = "async+memory://"
+    rate_limit_login: str = "10/minute"
+    rate_limit_signup: str = "5/hour"
+    # Email-sending endpoints are an abuse vector (mail-bombing a victim's
+    # inbox), so the reset-request and resend-verification routes carry their
+    # own IP-keyed limits. The token-consuming routes are not limited: the
+    # tokens are 256-bit and unbruteforceable.
+    rate_limit_password_reset: str = "5/hour"  # noqa: S105 (rate, not a secret)
+    rate_limit_resend_verification: str = "5/hour"
+
+    # Email / mailer (#171). Verification and password-reset links are sent
+    # through a provider-agnostic seam. ``mailer_transport`` selects the
+    # backend: "console" logs the message (zero-config for local dev, CI, and
+    # self-hosters) while "smtp" delivers via any SMTP server (Mailpit
+    # locally, or a provider's SMTP endpoint in production). Links point at
+    # the web app, whose routes are built in #174.
+    frontend_base_url: str = "http://localhost:5173"
+    mailer_transport: str = "console"
+    mailer_from: str = "DelveMoar <no-reply@delvemoar.com>"
+    smtp_host: str = "localhost"
+    smtp_port: int = 1025
+    smtp_username: str = ""
+    smtp_password: str = ""
+    # Implicit TLS (port 465). STARTTLS (port 587) upgrades a plaintext
+    # connection instead; set at most one. Both off suits a local Mailpit.
+    smtp_use_tls: bool = False
+    smtp_start_tls: bool = False
+    # Single-use token lifetimes. Verification is generous; reset is short
+    # since it grants a password change.
+    email_verification_ttl_seconds: int = 86_400  # 24 hours
+    password_reset_ttl_seconds: int = 3_600  # 1 hour
+
+    # Observability / error tracking (#167). Sentry is wired through a seam
+    # (app/observability.py) that stays inert until sentry_dsn is set, so local
+    # dev, CI, and tests never emit events; the deploy sets SENTRY_DSN as a
+    # secret. sentry_environment falls back to `env` when empty. Tracing is off
+    # by default (errors only) to stay within the free quota; PII is never sent
+    # (send_default_pii stays off in the SDK init).
+    sentry_dsn: str = ""
+    sentry_environment: str = ""
+    sentry_traces_sample_rate: float = 0.0
+
+    @property
+    def cookie_secure(self) -> bool:
+        """Whether auth cookies carry the ``Secure`` flag.
+
+        Defaults to ``True`` everywhere except local development, where the
+        API is served over plain HTTP and a ``Secure`` cookie would never be
+        sent back. Set ``SESSION_COOKIE_SECURE`` explicitly to override.
+
+        Returns:
+            ``True`` if auth cookies should be marked ``Secure``.
+        """
+        if self.session_cookie_secure is not None:
+            return self.session_cookie_secure
+        return self.env != "development"
+
 
 settings = Settings()

@@ -12,7 +12,10 @@ primary_region = 'iad'
   force_https = true
   auto_stop_machines = true
   auto_start_machines = true
-  min_machines_running = 0
+  # Keep one machine running so external uptime checks (#167) do not read a
+  # cold-start wake as downtime, and so the first real request never pays the
+  # boot latency. Trades the idle auto-stop savings for predictable uptime.
+  min_machines_running = 1
   processes = ['app']
 
   [[http_service.checks]]

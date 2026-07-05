@@ -3,6 +3,7 @@
 * Do not edit manually.
 */
 
+import { bookMembershipSchema } from "./bookMembershipSchema.ts";
 import { contentSourceSchema } from "./contentSourceSchema.ts";
 import { srdSpellContentSchema } from "./srdSpellContentSchema.ts";
 import { z } from "zod/v4";
@@ -11,10 +12,14 @@ import { z } from "zod/v4";
  * @description Full spell details, used in the detail endpoint.
  */
 export const spellDetailSchema = z.object({
-    "slug": z.string(),
-"name": z.string(),
-"level": z.string(),
-"school": z.nullable(z.string()),
+    "id": z.uuid().describe("Unique identifier for the spell."),
+"slug": z.string().describe("URL-safe unique identifier."),
+"name": z.string().describe("The spell's name."),
+"level": z.string().describe("Level as a display string (e.g. 'Cantrip', '1st')."),
+"school": z.nullable(z.string().describe("School of magic (e.g. 'evocation').")),
+get "bookMemberships"(){
+                return z.array(bookMembershipSchema.describe("A book owned by the requesting user that contains this content.")).describe("The signed-in user's own books that contain this entry. Present only when requested via include=book_memberships; omitted for anonymous requests.").nullish()
+              },
 get "content"(){
                 return srdSpellContentSchema.describe("SRD spell content payload.")
               },

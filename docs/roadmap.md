@@ -53,40 +53,52 @@ proven on real content. The site is publicly hostable (Vercel + Fly.io)
 with noindex / nofollow while the product matures. No accounts, no
 edits, no campaign scoping.
 
-## Phase 1b: Homebrew authoring (current, partially defined)
+## Phase 1b: Homebrew authoring and accounts (current)
 
 The point at which the homebrew-first thesis starts to land in the
-product.
+product. Phase 1a's catalog becomes something a DM can extend and share
+with their players.
 
-Likely scope:
+Scope:
 
-- User accounts and sessions.
-- Per-user homebrew monsters, spells, items.
-- Edit and clone-from-SRD flows.
-- Visibility model: private by default, shareable later.
+- User accounts and sessions (email and password, server-side sessions).
+- Per-user homebrew monsters, spells, and items, surfaced alongside the
+  SRD baseline in search.
+- Campaigns as an organizing layer, with membership and invites.
+- Visibility model: private by default, with campaign-based sharing and
+  optional view-only share links.
+- An authorization layer, rate limiting, and the operational prep
+  (backup and restore, monitoring, analytics, a staging environment)
+  that user data requires.
+- CLI parity for the new endpoints.
 
-Open questions still being worked out: auth provider choice and the
-campaign model. Tracked locally in the planning workspace; will land in
-ADRs as they get decided.
+The architecture is settled in three ADRs: authentication
+([0010](decisions/0010-authentication.md)), the campaign model
+([0011](decisions/0011-campaign-model.md)), and visibility and sharing
+([0012](decisions/0012-visibility-and-sharing.md)).
+
+Milestone: [Phase 1b - Homebrew and Accounts](https://github.com/iangoodnight/delve-moar/milestone/4).
 
 What will be true at the end of Phase 1b: a logged-in DM can create
-their own homebrew content, modify clones of SRD entries, and keep
-their work private to their account.
+their own homebrew content, organize it into campaigns, and share a
+campaign's content with invited players, all private by default.
 
 ## Phase 2 and beyond (direction of travel)
 
-Not committed. The order below is current best guess, and any of these
-could be re-prioritized once Phase 1 lands and we see how the product
-is actually used.
+Not committed. Campaign-scoped content and campaign-based player sharing,
+once slated for here, moved forward into Phase 1b. What remains is the
+more speculative, higher-effort work. The order below is current best
+guess, and could be re-prioritized once Phase 1 lands and we see how the
+product is actually used.
 
-- **Campaign-scoped content.** The `campaigns` table from Phase 0
-  anticipates this. A DM picks a campaign and sees only that
-  campaign's homebrew plus the SRD baseline.
 - **Encounter builder.** Build encounters from SRD plus homebrew,
   calculate XP budgets, run initiative.
-- **Sharing and forking.** Public homebrew gallery, fork-to-modify.
-- **Player-facing read views.** A DM shares a campaign with players.
-  Players see only what the DM publishes.
+- **Public sharing and forking.** A public homebrew gallery and
+  fork-to-modify, gated on a moderation and safety story.
+- **Account-to-account sharing.** Invites and sharing outside a single
+  campaign.
+- **Richer player-facing surfaces.** Beyond Phase 1b's campaign read
+  access: player dashboards and notifications.
 - **Mobile-friendly TUI surfaces.** The CLI already uses Bubble Tea.
   Could expand to an encounter run UI.
 

@@ -1,11 +1,35 @@
 import { fileURLToPath } from 'node:url';
 import babel from '@rolldown/plugin-babel';
+import { sentryVitePlugin } from '@sentry/vite-plugin';
 import react, { reactCompilerPreset } from '@vitejs/plugin-react';
 import { defineConfig } from 'vitest/config';
 
+// Upload source maps to Sentry only when an auth token is present (production
+// builds on Vercel). Local and CI builds skip it, so they never fail on a
+// missing token, and source maps are only emitted when they will be uploaded
+// and deleted by the plugin (never served).
+const sentryAuthToken = process.env.SENTRY_AUTH_TOKEN;
+const sentryPlugins = sentryAuthToken
+  ? [
+      sentryVitePlugin({
+        org: process.env.SENTRY_ORG,
+        project: process.env.SENTRY_PROJECT,
+        authToken: sentryAuthToken,
+      }),
+    ]
+  : [];
+
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), babel({ presets: [reactCompilerPreset()] })],
+  plugins: [
+    react(),
+    babel({ presets: [reactCompilerPreset()] }),
+    ...sentryPlugins,
+  ],
+
+  build: {
+    sourcemap: Boolean(sentryAuthToken),
+  },
 
   resolve: {
     alias: {

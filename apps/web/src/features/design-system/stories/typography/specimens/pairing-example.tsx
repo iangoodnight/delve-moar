@@ -22,8 +22,8 @@ export function PairingExample() {
       <Column gap="2">
         <Label
           as="span"
-          size="1"
           color="indigo"
+          size="1"
           style={{ letterSpacing: '0.18em', textTransform: 'uppercase' }}
         >
           SRD 5.1 / Spell
