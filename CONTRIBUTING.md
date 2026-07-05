@@ -290,20 +290,32 @@ the tag goes on `main` after the release PR merges.
       so the new version is the latest supported and the prior release
       drops to unsupported.
    5. Merge the version-bump PR into `dev`.
-2. **Open a `dev` → `main` Release PR** titled `Release vX.Y.Z`. The
-   body is the new `[X.Y.Z]` section of the changelog.
+2. **Open a `dev` → `main` Release PR** titled `chore(release): vX.Y.Z`.
+   The body is the new `[X.Y.Z]` section of the changelog. Use the
+   conventional-commit form (not a bare `Release vX.Y.Z`): if the merge
+   ever adopts the PR title as its subject, or the commitlint back-merge
+   guard is later removed, a conventional title still passes when the
+   release commit is re-linted during a back-merge.
 3. **Merge the Release PR with "Create a merge commit" or "Rebase and
-   merge" — never Squash.** Squashing the release PR collapses every
-   commit on `dev` into a single new commit on `main`, with no shared
-   ancestry to the original commits. The next release then sees every
-   touched file as a conflict against the squashed history. Use a real
-   merge or rebase so `main` keeps the lineage.
+   merge", never Squash.** Two reasons:
+   - **Ancestry.** Squashing collapses every commit on `dev` into a
+     single new commit on `main` with no shared ancestry, so the next
+     release sees every touched file as a conflict against the squashed
+     history. A real merge or rebase keeps `main`'s lineage (and keeps
+     `main` an ancestor of `dev`, per the back-merge in step 7).
+   - **Commitlint.** A merge commit's `Merge ...` subject is ignored by
+     commitlint, but a squash produces a normal subject that gets
+     re-linted when `main` is later back-merged into `dev`. The v0.1.0 /
+     v0.1.2 `Release vX.Y.Z` squashes are exactly the commits that broke
+     that check.
 
    If `dev` and `main` have already diverged from a prior squash (you
    will see conflicts on `VERSION`, `CHANGELOG.md`, etc.), branch from
    `main` to `release/vX.Y.Z`, merge `dev` into it (resolving conflicts
    in `dev`'s favor), and open the Release PR from that branch instead.
    The `Main branch guard` workflow accepts `dev` or `release/*` heads.
+   Once step 7's back-merge is part of the ritual, this divergence
+   should not recur.
 4. **Tag the merge commit on `main`:**
    ```bash
    git checkout main && git pull
@@ -325,6 +337,33 @@ the tag goes on `main` after the release PR merges.
    web automatically on the `main` push. See
    [`docs/deploy.md`](docs/deploy.md) for the full deploy and rollback
    runbook.
+7. **Back-merge `main` into `dev`.** Once the deploy is verified
+   healthy, merge `main` back into `dev` so `main` stays an ancestor of
+   `dev` and the next release is a plain `dev` → `main` PR with no
+   conflicts (retiring the `release/*` workaround in step 3). Cut a
+   dedicated throwaway branch from `main` for the PR head; **never open
+   the back-merge PR with `main` itself as the head branch.**
+   ```bash
+   git checkout main && git pull
+   git checkout -b chore/backmerge-vX.Y.Z
+   git push -u origin chore/backmerge-vX.Y.Z
+   gh pr create --base dev --head chore/backmerge-vX.Y.Z \
+     --title "chore: back-merge vX.Y.Z into dev"
+   ```
+   Merge it as a **merge commit** (same reasons as step 3). Two hazards
+   this avoids:
+   - **`main` deletion.** The repo's "automatically delete head
+     branches" setting deletes the PR head on merge. With `main` as the
+     head it deletes `main` (it did during v0.1.3; `main` had to be
+     restored by hand). The throwaway branch is what gets deleted
+     instead. Confirm `main`'s branch protection restricts deletions as
+     a backstop.
+   - **Commitlint.** The dedicated-branch back-merge is not covered by
+     the `head == main` skip in
+     [`commitlint.yml`](.github/workflows/commitlint.yml), but it stays
+     green anyway: after the first reconciliation `main` and `dev`
+     share history, so the only new first-parent commit is the release
+     merge (a `Merge ...` subject commitlint ignores).
 
 Future automation of this ritual is tracked in
 [#102](https://github.com/iangoodnight/delve-moar/issues/102).
