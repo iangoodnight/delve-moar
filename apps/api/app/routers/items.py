@@ -1,15 +1,29 @@
 """Item list and detail endpoints."""
 
+import uuid
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, Query, Request, status
 from sqlalchemy import select
 
+from app.auth.dependencies import OptionalCurrentUser
+from app.books_access import (
+    assert_books_readable,
+    attach_book_memberships,
+    book_memberships_for,
+)
 from app.constants import SRD_NAMESPACE
 from app.db import DbSession
-from app.dependencies import Pagination, SearchFilter, ordering_dep, search_dep
+from app.dependencies import (
+    INCLUDE_BOOK_MEMBERSHIPS,
+    Include,
+    Pagination,
+    SearchFilter,
+    ordering_dep,
+    search_dep,
+)
 from app.exceptions import get_or_404
-from app.models import Item
+from app.models import BookItem, Item
 from app.schemas.errors import ErrorResponse
 from app.schemas.items import ItemDetail, ItemSummary
 from app.schemas.pagination import PaginatedResultset
@@ -45,9 +59,11 @@ ItemSearch = Annotated[SearchFilter, Depends(_ITEM_SEARCH)]
 async def list_items(
     request: Request,
     session: DbSession,
+    user: OptionalCurrentUser,
     params: Pagination,
     ordering: ItemOrdering,
     search: ItemSearch,
+    include: Include,
     item_category: Annotated[
         str | None,
         Query(
@@ -65,29 +81,17 @@ async def list_items(
             "rarity (equipment).",
         ),
     ] = None,
+    book: Annotated[
+        list[uuid.UUID] | None,
+        Query(
+            description=(
+                "Filter to items in any of these books (repeat for "
+                "multiple). Each must be a book you can read, else 404."
+            ),
+        ),
+    ] = None,
 ) -> PaginatedResultset[ItemSummary]:
-    """Return a paginated list of items with optional filters.
-
-    Args:
-        request: Current HTTP request, used to build pagination links.
-        session: Database session, injected by dependency.
-        params: Pagination parameters, injected by dependency.
-        ordering: SQLAlchemy ordering expressions, injected by dependency.
-        search: Parsed search filter, injected by dependency.
-        item_category: Optional exact match for the item_category field.
-        rarity: Optional exact match for the rarity field. Set to 'none' to
-            filter for items with no rarity (equipment).
-
-    Returns:
-        A paginated list of items matching the filters, with summary information
-        and pagination metadata.
-
-    Example:
-        GET /v1/items?search=sword&item_category=weapon&rarity=rare&limit=2
-        GET /v1/items?item_category=potion&rarity=none
-        GET /v1/items?order_by=name:asc&limit=5&offset=10
-        GET /v1/items?order_by=rarity:desc,name:asc
-    """
+    """List items with optional category, rarity, and book filters."""
     stmt = select(Item).where(Item.source_namespace == SRD_NAMESPACE)
 
     if search.where is not None:
@@ -99,6 +103,13 @@ async def list_items(
             stmt = stmt.where(Item.rarity.is_(None))
         else:
             stmt = stmt.where(Item.rarity == rarity)
+    if book:
+        await assert_books_readable(session, book, user)
+        stmt = stmt.where(
+            Item.id.in_(
+                select(BookItem.item_id).where(BookItem.book_id.in_(book))
+            )
+        )
 
     total, rows = await fetch_page(
         session,
@@ -106,8 +117,13 @@ async def list_items(
         ordering=[*search.order_priority, *ordering],
         params=params,
     )
+    data = [ItemSummary.model_validate(row) for row in rows]
+    if INCLUDE_BOOK_MEMBERSHIPS in include and user is not None:
+        await attach_book_memberships(
+            session, user, rows, data, BookItem, BookItem.item_id
+        )
     return paginate(
-        data=[ItemSummary.model_validate(row) for row in rows],
+        data=data,
         total=total,
         params=params,
         links=build_links(request, total, params.offset, params.limit),
@@ -128,6 +144,8 @@ async def list_items(
 async def get_item(
     slug: str,
     session: DbSession,
+    user: OptionalCurrentUser,
+    include: Include,
     namespace: Annotated[
         str,
         Query(
@@ -137,23 +155,7 @@ async def get_item(
         ),
     ] = SRD_NAMESPACE,
 ) -> ItemDetail:
-    """Return full details for a single item by slug and namespace.
-
-    Args:
-        slug: The unique slug identifier for the item.
-        session: Database session, injected by dependency.
-        namespace: The source namespace to look up the item in.
-
-    Returns:
-        The full details of the item, including all original content fields.
-
-    Raises:
-        AppError: With status 404 if no item is found.
-
-    Example:
-        GET /v1/items/flame-tongue?namespace=srd-5.1
-        GET /v1/items/amulet-of-health?namespace=user:1234
-    """
+    """Get a single item by slug within a source namespace."""
     result = await session.scalar(
         select(Item).where(
             Item.slug == slug,
@@ -165,4 +167,10 @@ async def get_item(
         resource="item",
         identifier=f"{namespace}:{slug}",
     )
-    return ItemDetail.model_validate(item)
+    detail = ItemDetail.model_validate(item)
+    if INCLUDE_BOOK_MEMBERSHIPS in include and user is not None:
+        memberships = await book_memberships_for(
+            session, user, [item.id], BookItem, BookItem.item_id
+        )
+        detail.book_memberships = memberships.get(item.id, [])
+    return detail

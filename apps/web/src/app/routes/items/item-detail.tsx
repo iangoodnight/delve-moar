@@ -4,8 +4,9 @@ import { Head } from '@/components/seo/head';
 import { SrdAttribution } from '@/components/srd';
 import { Callout } from '@/components/ui/callout';
 import { Box, Column } from '@/components/ui/layout';
-import { RouterLink } from '@/components/ui/navigation';
+import { ContentBackLink } from '@/components/ui/navigation';
 import { paths } from '@/config/paths';
+import { AddToBookControl } from '@/features/books';
 import { useItem } from '@/features/items/api';
 import {
   ItemDetailBlock,
@@ -24,12 +25,12 @@ export default function ItemDetail() {
   return (
     <Column aria-busy={isLoading} mb="8">
       <Head
-        title={item?.name ?? `Item ${safeSlug}`}
         description={
           item?.name
             ? `Details for ${item.name}.`
             : `Detail page for item ${safeSlug}.`
         }
+        title={item?.name ?? `Item ${safeSlug}`}
       />
       {isLoading && <ItemDetailSkeleton />}
       {isError && isNotFound && (
@@ -44,12 +45,25 @@ export default function ItemDetail() {
       )}
       {item && (
         <>
-          <ItemDetailBlock item={item} />
+          <ItemDetailBlock
+            headerAction={
+              <AddToBookControl
+                key={item.id}
+                contentId={item.id}
+                contentType="item"
+                memberships={item.bookMemberships}
+              />
+            }
+            item={item}
+          />
           <SrdAttribution contentSource={item.contentSource} />
         </>
       )}
       <Box py="4">
-        <RouterLink to={paths.items.path}>Back to Items</RouterLink>
+        <ContentBackLink
+          listHref={paths.items.path}
+          listLabel="Back to Items"
+        />
       </Box>
     </Column>
   );

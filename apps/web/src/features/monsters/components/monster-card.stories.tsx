@@ -11,7 +11,6 @@ const meta: Meta<typeof MonsterCard> = {
   title: 'Features/Monsters/MonsterCard',
   component: MonsterCard,
   parameters: {
-    layout: 'padded',
     docs: {
       description: {
         component:
@@ -33,6 +32,7 @@ export default meta;
 type Story = StoryObj<typeof MonsterCard>;
 
 const ADULT_RED_DRAGON: MonsterSummary = {
+  id: 'deeb81cf-7762-428e-b86b-d60f7db33fb7',
   slug: 'adult-red-dragon',
   name: 'Adult Red Dragon',
   monsterType: 'dragon',
@@ -40,6 +40,7 @@ const ADULT_RED_DRAGON: MonsterSummary = {
 };
 
 const TARRASQUE: MonsterSummary = {
+  id: 'ebde252d-0ffd-4633-909d-88538ce73915',
   slug: 'tarrasque',
   name: 'Tarrasque',
   monsterType: 'monstrosity',
@@ -47,6 +48,7 @@ const TARRASQUE: MonsterSummary = {
 };
 
 const KOBOLD: MonsterSummary = {
+  id: '064966f4-f73b-46c6-ad95-6bf83ee165b2',
   slug: 'kobold',
   name: 'Kobold',
   monsterType: 'humanoid',
@@ -54,6 +56,7 @@ const KOBOLD: MonsterSummary = {
 };
 
 const SWARM: MonsterSummary = {
+  id: '4df09db6-ba5d-4b51-bd95-f8c8e65ae064',
   slug: 'swarm-of-rats',
   name: 'Swarm of Rats',
   monsterType: 'swarm of tiny beasts',
@@ -61,6 +64,7 @@ const SWARM: MonsterSummary = {
 };
 
 const UNTYPED: MonsterSummary = {
+  id: '55cd38aa-c3b2-4790-979b-fd240bbb5213',
   slug: 'something-strange',
   name: 'Something Strange and Long-Named',
   monsterType: null,

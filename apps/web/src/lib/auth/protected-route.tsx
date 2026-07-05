@@ -1,0 +1,33 @@
+import type { ReactNode } from 'react';
+import { Navigate, useLocation } from 'react-router-dom';
+
+import { paths } from '@/config/paths';
+
+import { useAuth } from './auth-context';
+
+interface ProtectedRouteProps {
+  readonly children: ReactNode;
+}
+
+export function ProtectedRoute({ children }: Readonly<ProtectedRouteProps>) {
+  const { status } = useAuth();
+  const location = useLocation();
+
+  if (status === 'loading') {
+    // Brief: only while /me is in flight on a returning visit.
+    return null;
+  }
+
+  if (status === 'anonymous') {
+    // Carry the attempted path so login can send the user back.
+    return (
+      <Navigate
+        replace
+        state={{ from: `${location.pathname}${location.search}` }}
+        to={paths.login.getHref()}
+      />
+    );
+  }
+
+  return <>{children}</>;
+}

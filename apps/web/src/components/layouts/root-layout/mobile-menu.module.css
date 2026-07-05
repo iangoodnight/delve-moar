@@ -1,0 +1,66 @@
+.trigger {
+  @media (min-width: 520px) {
+    display: none;
+  }
+}
+
+/* Override Radix's centered dialog into a right-side, full-height sheet. The
+   doubled class beats Radix's own .rt-BaseDialogContent selector. */
+.content.content {
+  block-size: 90dvh;
+  inline-size: 85vw;
+  margin-block: 0;
+  margin-inline: auto 0;
+  max-block-size: 100dvh;
+  max-inline-size: 20rem;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .content.content[data-state='open'] {
+    animation: sheet-slide-in var(--transition-medium);
+  }
+
+  .content.content[data-state='closed'] {
+    animation: sheet-slide-out var(--transition-fast);
+  }
+}
+
+@keyframes sheet-slide-in {
+  from {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes sheet-slide-out {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+.section-heading {
+  color: var(--gray-11);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.link {
+  background-color: inherit;
+  border: none;
+  display: block;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-2);
+  color: var(--gray-12);
+  font-family: var(--heading-font-family);
+  text-align: start;
+  text-decoration: none;
+  transition: background-color var(--transition-fast);
+
+  &:focus-visible {
+    outline: 2px solid var(--focus-8);
+    outline-offset: 2px;
+  }
+
+  &:hover {
+    background-color: var(--accent-a3);
+  }
+}

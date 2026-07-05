@@ -24,9 +24,9 @@ function LinkedBrand({ children }: { readonly children: ReactNode }) {
   return (
     <Link
       aria-current={isActive ? 'page' : undefined}
+      className={styles['brand-mark']}
       data-active={isActive ? 'true' : undefined}
       data-discover={!isActive ? 'true' : undefined}
-      className={styles['brand-mark']}
       to={paths.home.path}
     >
       {children}

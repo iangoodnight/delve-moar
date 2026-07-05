@@ -11,8 +11,8 @@ export function Paragraph({ className, ...rest }: ParagraphProps) {
   return (
     <RadixText
       as="p"
-      size="3"
       className={classNames('paragraph', className)}
+      size="3"
       {...rest}
     />
   );

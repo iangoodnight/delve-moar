@@ -3,14 +3,19 @@
 * Do not edit manually.
 */
 
+import { bookMembershipSchema } from "./bookMembershipSchema.ts";
 import { z } from "zod/v4";
 
 /**
- * @description Summary info for a monster, used in list endpoints.\n\nAttributes:\n    slug: Unique identifier for the monster, used in URLs.\n    name: The monster\'s name.\n    monster_type: The type or category of the monster (e.g. \"Dragon\").\n    challenge_rating: The monster\'s challenge rating as a display string\n        (e.g. \"1/2\", \"5\", \"10\").
+ * @description Summary info for a monster, used in list endpoints.
  */
 export const monsterSummarySchema = z.object({
-    "slug": z.string(),
-"name": z.string(),
-"monsterType": z.nullable(z.string()),
-"challengeRating": z.string()
-    }).describe("Summary info for a monster, used in list endpoints.\n\nAttributes:\n    slug: Unique identifier for the monster, used in URLs.\n    name: The monster's name.\n    monster_type: The type or category of the monster (e.g. \"Dragon\").\n    challenge_rating: The monster's challenge rating as a display string\n        (e.g. \"1/2\", \"5\", \"10\").")
+    "id": z.uuid().describe("Unique identifier for the monster."),
+"slug": z.string().describe("URL-safe unique identifier."),
+"name": z.string().describe("The monster's name."),
+"monsterType": z.nullable(z.string().describe("Type or category (e.g. 'dragon').")),
+"challengeRating": z.string().describe("Challenge rating as a display string (e.g. '1/2', '5')."),
+get "bookMemberships"(){
+                return z.array(bookMembershipSchema.describe("A book owned by the requesting user that contains this content.")).describe("The signed-in user's own books that contain this entry. Present only when requested via include=book_memberships; omitted for anonymous requests.").nullish()
+              }
+    }).describe("Summary info for a monster, used in list endpoints.")

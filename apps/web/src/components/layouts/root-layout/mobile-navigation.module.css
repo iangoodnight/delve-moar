@@ -1,9 +1,0 @@
-.mobile-navigation-trigger {
-  @media (min-width: 520px) {
-    display: none;
-  }
-}
-
-.mobile-navigation-content {
-  min-width: 18rem;
-}

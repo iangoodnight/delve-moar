@@ -1,4 +1,8 @@
-# Brewfile — install required developer tools with `brew bundle`.
+# Brewfile: install required developer tools with `brew bundle`.
+#
+# Docker and Node are NOT installed here: install Docker Desktop
+# separately, and manage Node with fnm/nvm honoring .nvmrc. See
+# CONTRIBUTING.md "Local setup".
 #
 # Developer setup (all contributors):
 #   brew bundle --file Brewfile
@@ -19,6 +23,7 @@ brew "pnpm"
 # ── Shell tooling ─────────────────────────────────────────────────────────────
 brew "shfmt"       # shell formatter (pre-commit + CI)
 brew "shellcheck"  # shell linter (pre-commit + CI)
+brew "bats-core"   # shell unit-test runner (task test:shell + CI)
 
 # ── Go tooling ────────────────────────────────────────────────────────────────
 brew "golangci-lint"  # Go linter (pre-commit + CI)

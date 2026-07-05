@@ -19,6 +19,7 @@ class AppError(Exception):
         user_message: User-friendly message for end users.
         error_code: Machine-readable error code (SCREAMING_SNAKE_CASE).
         more_info: Absolute URL pointing to relevant API documentation.
+        headers: Optional extra response headers (e.g. ``Retry-After``).
 
     Usage:
         raise AppError(
@@ -38,6 +39,7 @@ class AppError(Exception):
         user_message: str,
         error_code: str,
         more_info: str,
+        headers: dict[str, str] | None = None,
     ) -> None:
         """Initialize AppError with all required fields."""
         self.status = status
@@ -45,6 +47,7 @@ class AppError(Exception):
         self.user_message = user_message
         self.error_code = error_code
         self.more_info = more_info
+        self.headers = headers
         super().__init__(developer_message)
 
 
@@ -72,6 +75,7 @@ async def _handle_app_error(request: Request, exc: Any) -> JSONResponse:
             error_code=exc.error_code,
             more_info=exc.more_info,
         ).model_dump(by_alias=True),
+        headers=exc.headers,
     )
 
 

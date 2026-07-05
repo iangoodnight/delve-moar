@@ -3,22 +3,27 @@
 * Do not edit manually.
 */
 
+import { bookMembershipSchema } from "./bookMembershipSchema.ts";
 import { contentSourceSchema } from "./contentSourceSchema.ts";
 import { srdMonsterContentSchema } from "./srdMonsterContentSchema.ts";
 import { z } from "zod/v4";
 
 /**
- * @description Full monster details, used in detail endpoints.\n\nAttributes:\n    content: The full monster data as ingested from the source, with all\n        original fields and structure preserved.\n    content_source: Metadata about the source of the monster data, such as\n        the original URL or source file name.
+ * @description Full monster details, used in detail endpoints.
  */
 export const monsterDetailSchema = z.object({
-    "slug": z.string(),
-"name": z.string(),
-"monsterType": z.nullable(z.string()),
-"challengeRating": z.string(),
+    "id": z.uuid().describe("Unique identifier for the monster."),
+"slug": z.string().describe("URL-safe unique identifier."),
+"name": z.string().describe("The monster's name."),
+"monsterType": z.nullable(z.string().describe("Type or category (e.g. 'dragon').")),
+"challengeRating": z.string().describe("Challenge rating as a display string (e.g. '1/2', '5')."),
+get "bookMemberships"(){
+                return z.array(bookMembershipSchema.describe("A book owned by the requesting user that contains this content.")).describe("The signed-in user's own books that contain this entry. Present only when requested via include=book_memberships; omitted for anonymous requests.").nullish()
+              },
 get "content"(){
                 return srdMonsterContentSchema.describe("SRD monster content payload.")
               },
 get "contentSource"(){
                 return contentSourceSchema.describe("SRD content source attribution.\n\nAttributes:\n    type: Identifier for the kind of source (e.g. \"srd\").\n    license: Human-readable license name (e.g. \"CC BY 4.0\").\n    license_url: URL to the license text.\n    attribution: Required attribution string per the license.\n    data_provider: Origin of the seed data (e.g. \"5e-bits/5e-database\").\n    data_provider_url: URL to the data provider's source repo.")
               }
-    }).describe("Full monster details, used in detail endpoints.\n\nAttributes:\n    content: The full monster data as ingested from the source, with all\n        original fields and structure preserved.\n    content_source: Metadata about the source of the monster data, such as\n        the original URL or source file name.")
+    }).describe("Full monster details, used in detail endpoints.")

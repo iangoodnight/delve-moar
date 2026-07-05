@@ -10,10 +10,12 @@ import { z } from "zod/v4";
 export const listItemsV1ItemsGetQueryParamsSchema = z.object({
     "item_category": z.string().describe("Exact match on item category (e.g. 'weapon'). This is not guaranteed to be present for all items, as it depends on the source data.").nullish(),
 "rarity": z.string().describe("Exact match on item rarity (e.g. 'common'). This is not guaranteed to be present for all items, as it depends on the source data. Set to 'none' to filter for items with no rarity (equipment).").nullish(),
+"book": z.array(z.uuid()).describe("Filter to items in any of these books (repeat for multiple). Each must be a book you can read, else 404.").nullish(),
 "limit": z.coerce.number().int().min(1).max(100).default(20),
 "offset": z.coerce.number().int().min(0).default(0),
 "order_by": z.string().describe("Comma-separated sort fields in column:direction format. Direction is 'asc' or 'desc' (case-insensitive); omitting direction defaults to 'asc'. Valid columns: item_category, name, rarity.").nullish(),
-"search": z.string().describe("Case-insensitive substring search. Matches against name, item_category. Results are relevance-ordered: earlier columns rank higher than later ones.").nullish()
+"search": z.string().describe("Case-insensitive substring search. Matches against name, item_category. Results are relevance-ordered: earlier columns rank higher than later ones.").nullish(),
+"include": z.string().describe("Comma-separated optional response expansions. Supported: 'book_memberships' annotates each entry with the signed-in user's own books that contain it.").nullish()
     })
 
 /**

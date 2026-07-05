@@ -4,20 +4,27 @@ version = "0.0.1"
 description = "TTRPG utility API — homebrew-first GM tools"
 requires-python = ">=3.12"
 dependencies = [
-    "fastapi[standard]>=0.115",
-    "sqlalchemy[asyncio]>=2.0",
+    "fastapi[standard]>=0.138.2",
+    "sqlalchemy[asyncio]>=2.0.51",
     "asyncpg>=0.29",
-    "alembic>=1.13",
-    "pydantic-settings>=2.7",
+    "alembic>=1.18.5",
+    "pydantic-settings>=2.14.2",
+    "argon2-cffi>=25.1.0",
+    "limits>=5.8.0",
+    "aiosmtplib>=5.1.2",
+    "sentry-sdk[fastapi]>=2.63.0",
+    # Used by the SRD seed script (scripts/seed_srd.py), which runs inside the
+    # deployed image; declared directly rather than leaning on
+    # fastapi[standard]'s transitive httpx.
+    "httpx>=0.28",
 ]
 
 [dependency-groups]
 dev = [
-    "ruff>=0.11",
-    "mypy>=1.15",
-    "pytest>=8.0",
-    "pytest-asyncio>=0.25",
-    "httpx>=0.28",
+    "ruff>=0.15.20",
+    "mypy>=2.1.0",
+    "pytest>=9.1.1",
+    "pytest-asyncio>=1.4.0",
     "pytest-cov>=7.1.0",
 ]
 
@@ -70,6 +77,9 @@ max-complexity = 10
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = [
     "S101", # allow assert in tests
+    "S105", # test fixtures use literal tokens/passwords
+    "S106", # test fixtures pass literal passwords as kwargs
+    "S107", # test fixtures use literal password defaults
     "D",    # docstrings not required in tests
 ]
 "alembic/**" = [
@@ -104,3 +114,10 @@ ignore_missing_imports = true
 asyncio_mode = "auto"
 testpaths = ["tests"]
 addopts = "--cov=app --cov-report=term-missing --cov-fail-under=90"
+
+[tool.coverage.run]
+# SQLAlchemy's async layer runs DB I/O through greenlets. Without tracking
+# greenlet concurrency, coverage cannot follow an endpoint handler's
+# continuation after an awaited DB call, under-reporting routes that are
+# in fact fully exercised by the DB-backed tests.
+concurrency = ["thread", "greenlet"]

@@ -15,8 +15,8 @@ export function H3({ className, ...rest }: Readonly<HeadingProps>) {
   return (
     <Heading
       as="h3"
-      weight="medium"
       className={classNames('h3', className)}
+      weight="medium"
       {...rest}
     />
   );
@@ -26,8 +26,8 @@ export function H4({ className, ...rest }: Readonly<HeadingProps>) {
   return (
     <Heading
       as="h4"
-      weight="medium"
       className={classNames('h4', className)}
+      weight="medium"
       {...rest}
     />
   );

@@ -82,7 +82,7 @@ export function ItemGrid() {
     <Column gap="3">
       <Grid columns={GRID_COLUMNS} gap="3">
         {items.map((item) => (
-          <ItemCard item={item} key={item.slug} />
+          <ItemCard key={item.slug} item={item} />
         ))}
       </Grid>
       <div aria-hidden="true" ref={sentinelRef} />

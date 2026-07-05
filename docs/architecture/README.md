@@ -78,7 +78,7 @@ See [openapi-pipeline.md](openapi-pipeline.md) for the full pipeline,
 the OpenAPI 3.1 to 3.0.3 downgrade quirk, and what to do when the CI
 drift check fails.
 
-## Request flow (Phase 1a)
+## Request flow (public catalog read)
 
 A typical read request from the web app:
 
@@ -101,8 +101,11 @@ sequenceDiagram
     W-->>U: rendered list
 ```
 
-Phase 1b will add authentication and per-user homebrew mutations. Phase
-1a is read-only; no auth, no sessions.
+Authenticated requests add two things to this path: the browser sends an
+opaque, server-side session cookie, and it echoes a readable CSRF cookie
+in a header on state-changing requests (double-submit CSRF). Signed-in
+users can manage their account and curate catalog content into books.
+Per-user homebrew authoring and campaigns are still to come.
 
 ## Versioning and contracts
 

@@ -30,13 +30,6 @@
   letter-spacing: var(--letter-spacing-wide);
 }
 
-.actions-block {
-  p {
-    text-indent: var(--space-4) hanging;
-    text-wrap: revert;
-  }
-}
-
 .traits-card {
   composes: card from global;
   padding: var(--space-4);

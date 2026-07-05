@@ -40,7 +40,7 @@ describe('RouterLink', () => {
 
   it('applies Radix data attributes for size, weight, and color', () => {
     renderInRouter(
-      <RouterLink color="indigo" size="4" weight="bold" to="/spells">
+      <RouterLink color="indigo" size="4" to="/spells" weight="bold">
         Spells
       </RouterLink>,
     );

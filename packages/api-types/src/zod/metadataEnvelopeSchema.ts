@@ -15,6 +15,6 @@ export const metadataEnvelopeSchema = z.object({
                 return resultsetMetaSchema.describe("Metadata about a paginated resultset.")
               },
 get "links"(){
-                return linksSchema.describe("Prev/next navigation links for a paginated resultset.\n\nAttributes:\n    prev: Absolute URL for the previous page, or null on the first page.\n    next: Absolute URL for the next page, or null on the last page.")
+                return linksSchema.describe("Prev/next navigation links for a paginated resultset.")
               }
     }).describe("Envelopes a paginated resultset with metadata.")

@@ -26,6 +26,13 @@ Walkthroughs for common contributor tasks.
 - [Adding a new endpoint](recipes/adding-a-new-endpoint.md), end-to-end walkthrough (tutorial style)
 - [Deployment runbook](deploy.md), release ritual, rollback, and first-time infrastructure setup
 
+### Runbooks
+
+Operational procedures for production.
+
+- [Postgres backup and restore](runbooks/postgres-backup-restore.md), backup mechanisms, RPO/RTO, and the tested restore procedure
+- [Monitoring and alerting](runbooks/monitoring.md), error tracking, uptime, Postgres metrics, and alert setup
+
 ### Decisions
 
 - [Architecture Decision Records](decisions/README.md), the durable

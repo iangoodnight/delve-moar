@@ -38,8 +38,8 @@ export const Wordmark: Story = {
       <Column align="center" gap="5" py="6">
         <BrandMark asLink={false} />
         <Text
-          as="div"
           align="center"
+          as="div"
           style={{
             fontFamily: 'var(--font-body)',
             fontSize: '18px',
@@ -150,7 +150,7 @@ export const BodySpecimen: Story = {
           >
             Il1 / O0 / rn m / Cc Gg
           </div>
-          <Text size="2" color="gray">
+          <Text color="gray" size="2">
             Atkinson Hyperlegible disambiguates the letterforms most commonly
             confused by low-vision readers and OCR.
           </Text>
@@ -233,7 +233,7 @@ export const BlockquoteSpecimen: Story = {
           physics, and a librarian is just a wizard who has not yet decided
           which laws to break.
         </Blockquote>
-        <Text as="div" color="gray" size="2" mt="2">
+        <Text as="div" color="gray" mt="2" size="2">
           attributed to Mordenkainen the Mage, apocryphal
         </Text>
       </SpecimenBlock>

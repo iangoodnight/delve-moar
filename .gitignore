@@ -72,3 +72,9 @@ Desktop.ini
 # alongside the generated Zod files; only the Zod output is shipped)
 # =============================================================================
 packages/api-types/src/zod/schemas/
+
+# =============================================================================
+# Database backups (logical pg_dump output; contains live data + secrets,
+# never committed). Written by `task db:dump`.
+# =============================================================================
+backups/

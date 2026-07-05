@@ -1,13 +1,14 @@
 import MockAdapter from 'axios-mock-adapter';
 import { afterEach, describe, expect, expectTypeOf, it } from 'vitest';
 
-import { apiClient, ApiError } from '../api-client';
+import { apiClient, ApiError, getApiErrorMessage } from '../api-client';
 
 describe('apiClient', () => {
   const mock = new MockAdapter(apiClient);
 
   afterEach(() => {
     mock.reset();
+    document.cookie = 'dm_csrf=; expires=Thu, 01 Jan 1970 00:00:00 GMT';
   });
 
   it('unwraps response.data on 2xx', async () => {
@@ -98,6 +99,38 @@ describe('apiClient', () => {
     expect(err.errorCode).toBe('unknown_error');
   });
 
+  it('sets withCredentials so session cookies ride along on API calls', () => {
+    expect(apiClient.defaults.withCredentials).toBe(true);
+  });
+
+  it('echoes the dm_csrf cookie in X-CSRF-Token on mutating requests', async () => {
+    document.cookie = 'dm_csrf=csrf-token-value';
+    mock.onPost('/v1/auth/logout').reply(204);
+
+    await apiClient.post('/v1/auth/logout');
+
+    expect(mock.history.post[0]?.headers?.['X-CSRF-Token']).toBe(
+      'csrf-token-value',
+    );
+  });
+
+  it('omits X-CSRF-Token when the dm_csrf cookie is absent', async () => {
+    mock.onPost('/v1/auth/login').reply(200, {});
+
+    await apiClient.post('/v1/auth/login');
+
+    expect(mock.history.post[0]?.headers?.['X-CSRF-Token']).toBeUndefined();
+  });
+
+  it('does not attach X-CSRF-Token on non-mutating GET requests', async () => {
+    document.cookie = 'dm_csrf=csrf-token-value';
+    mock.onGet('/v1/spells').reply(200, {});
+
+    await apiClient.get('/v1/spells');
+
+    expect(mock.history.get[0]?.headers?.['X-CSRF-Token']).toBeUndefined();
+  });
+
   it('ApiError is an instance of Error', () => {
     const err = new ApiError({
       status: 500,
@@ -109,5 +142,36 @@ describe('apiClient', () => {
     });
     expect(err).toBeInstanceOf(Error);
     expect(err.message).toBe('user');
+  });
+});
+
+describe('getApiErrorMessage', () => {
+  function apiError(userMessage: string): ApiError {
+    return new ApiError({
+      status: 400,
+      errorCode: 'X',
+      developerMessage: 'dev',
+      userMessage,
+      moreInfo: '',
+      envelope: null,
+    });
+  }
+
+  it("returns the ApiError's userMessage", () => {
+    expect(getApiErrorMessage(apiError('Bad credentials.'))).toBe(
+      'Bad credentials.',
+    );
+  });
+
+  it('falls back for a non-ApiError', () => {
+    expect(getApiErrorMessage(new Error('boom'))).toBe(
+      'Something went wrong. Please try again.',
+    );
+  });
+
+  it('falls back when the userMessage is empty', () => {
+    expect(getApiErrorMessage(apiError(''))).toBe(
+      'Something went wrong. Please try again.',
+    );
   });
 });

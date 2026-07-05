@@ -6,7 +6,7 @@ import { MonsterFilters, MonsterGrid } from '@/features/monsters/components';
 export default function Monsters() {
   return (
     <Column gap="4">
-      <Head title="Monsters" description="Browse monsters." />
+      <Head description="Browse monsters." title="Monsters" />
       <H1>Monsters</H1>
       <MonsterFilters />
       <MonsterGrid />

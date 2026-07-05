@@ -24,6 +24,421 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/account/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Export the current account's data
+         * @description Return a portable copy of the account record and its owned books.
+         *
+         *     Books list their content by id, not inlined, so the export stays a
+         *     record of what the user collected rather than a copy of the catalog.
+         */
+        get: operations["export_account_v1_account_export_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/account": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete the current account
+         * @description Permanently delete the current account after a password re-check.
+         *
+         *     On success the user row is removed and the database cascades every
+         *     dependent record: sessions, email tokens, and the user's owned books
+         *     (and, through the books, their content memberships). The public SRD
+         *     system book has no owner, so it is untouched. The session and CSRF
+         *     cookies are cleared, signing the browser out. This is irreversible.
+         */
+        delete: operations["delete_account_v1_account_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/signup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create an account
+         * @description Create an account, start a session, and email a verification link.
+         */
+        post: operations["signup_v1_auth_signup_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Log in
+         * @description Log in with a username or email and password.
+         *
+         *     The identifier matches email when it contains "@" and username
+         *     otherwise; both are case-insensitive. Sets the session and CSRF
+         *     cookies.
+         */
+        post: operations["login_v1_auth_login_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Log out
+         * @description Revoke the current session (or all sessions) and clear the cookies.
+         */
+        post: operations["logout_v1_auth_logout_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get the current user
+         * @description Return the currently authenticated user.
+         */
+        get: operations["me_v1_auth_me_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/verify-email": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Confirm an email address
+         * @description Mark a user's email as verified using a verification token.
+         *
+         *     Unauthenticated: possession of the emailed token is the proof, and
+         *     the token is single-use.
+         */
+        post: operations["verify_email_v1_auth_verify_email_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/resend-verification": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Resend the verification email
+         * @description Send a fresh verification email to the signed-in user.
+         *
+         *     A no-op (still 204) when already verified. Takes no email input, so
+         *     it cannot be used to probe account existence.
+         */
+        post: operations["resend_verification_v1_auth_resend_verification_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/password-reset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Request a password reset
+         * @description Email a password-reset link if the identifier matches an account.
+         *
+         *     The response is identical whether or not an account matched, so it
+         *     never discloses which usernames or emails are registered.
+         */
+        post: operations["request_password_reset_v1_auth_password_reset_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/password-reset/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Set a new password with a reset token
+         * @description Set a new password using a reset token and sign the user out.
+         *
+         *     On success the password is rehashed, every reset token is retired,
+         *     and all of the user's sessions are revoked, so a thief holding an old
+         *     session is locked out. Receiving the reset email proves control of
+         *     the address, so an unverified account is verified at the same time.
+         *     The user is not logged in; they sign in fresh with the new password.
+         */
+        post: operations["confirm_password_reset_v1_auth_password_reset_confirm_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/books": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List books
+         * @description List the user's books, optionally scoped to only the ones they own.
+         */
+        get: operations["list_books_v1_books_get"];
+        put?: never;
+        /**
+         * Create a book
+         * @description Create a new, empty book owned by the current user.
+         */
+        post: operations["create_book_v1_books_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/books/{book_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get a book
+         * @description Get a readable book (owner or public) with its content counts.
+         */
+        get: operations["get_book_v1_books__book_id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete a book
+         * @description Delete a book and its content memberships (owner-only).
+         *
+         *     The owned content itself is untouched; only the collection and its
+         *     join rows are removed.
+         */
+        delete: operations["delete_book_v1_books__book_id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update a book
+         * @description Update a book's name and/or description (owner-only).
+         */
+        patch: operations["update_book_v1_books__book_id__patch"];
+        trace?: never;
+    };
+    "/v1/books/{book_id}/monsters": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List a book's monsters
+         * @description List the monsters in a readable book.
+         */
+        get: operations["list_book_monsters_v1_books__book_id__monsters_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/books/{book_id}/monsters/{monster_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Add a monster to a book
+         * @description Add a monster to a book the user owns (idempotent).
+         */
+        put: operations["add_book_monster_v1_books__book_id__monsters__monster_id__put"];
+        post?: never;
+        /**
+         * Remove a monster from a book
+         * @description Remove a monster from a book the user owns (idempotent).
+         */
+        delete: operations["remove_book_monster_v1_books__book_id__monsters__monster_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/books/{book_id}/spells": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List a book's spells
+         * @description List the spells in a readable book.
+         */
+        get: operations["list_book_spells_v1_books__book_id__spells_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/books/{book_id}/spells/{spell_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Add a spell to a book
+         * @description Add a spell to a book the user owns (idempotent).
+         */
+        put: operations["add_book_spell_v1_books__book_id__spells__spell_id__put"];
+        post?: never;
+        /**
+         * Remove a spell from a book
+         * @description Remove a spell from a book the user owns (idempotent).
+         */
+        delete: operations["remove_book_spell_v1_books__book_id__spells__spell_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/books/{book_id}/items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List a book's items
+         * @description List the items in a readable book.
+         */
+        get: operations["list_book_items_v1_books__book_id__items_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/books/{book_id}/items/{item_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Add an item to a book
+         * @description Add an item to a book the user owns (idempotent).
+         */
+        put: operations["add_book_item_v1_books__book_id__items__item_id__put"];
+        post?: never;
+        /**
+         * Remove an item from a book
+         * @description Remove an item from a book the user owns (idempotent).
+         */
+        delete: operations["remove_book_item_v1_books__book_id__items__item_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/items": {
         parameters: {
             query?: never;
@@ -33,27 +448,7 @@ export interface paths {
         };
         /**
          * List items
-         * @description Return a paginated list of items with optional filters.
-         *
-         *     Args:
-         *         request: Current HTTP request, used to build pagination links.
-         *         session: Database session, injected by dependency.
-         *         params: Pagination parameters, injected by dependency.
-         *         ordering: SQLAlchemy ordering expressions, injected by dependency.
-         *         search: Parsed search filter, injected by dependency.
-         *         item_category: Optional exact match for the item_category field.
-         *         rarity: Optional exact match for the rarity field. Set to 'none' to
-         *             filter for items with no rarity (equipment).
-         *
-         *     Returns:
-         *         A paginated list of items matching the filters, with summary information
-         *         and pagination metadata.
-         *
-         *     Example:
-         *         GET /v1/items?search=sword&item_category=weapon&rarity=rare&limit=2
-         *         GET /v1/items?item_category=potion&rarity=none
-         *         GET /v1/items?order_by=name:asc&limit=5&offset=10
-         *         GET /v1/items?order_by=rarity:desc,name:asc
+         * @description List items with optional category, rarity, and book filters.
          */
         get: operations["list_items_v1_items_get"];
         put?: never;
@@ -73,22 +468,7 @@ export interface paths {
         };
         /**
          * Get item details
-         * @description Return full details for a single item by slug and namespace.
-         *
-         *     Args:
-         *         slug: The unique slug identifier for the item.
-         *         session: Database session, injected by dependency.
-         *         namespace: The source namespace to look up the item in.
-         *
-         *     Returns:
-         *         The full details of the item, including all original content fields.
-         *
-         *     Raises:
-         *         AppError: With status 404 if no item is found.
-         *
-         *     Example:
-         *         GET /v1/items/flame-tongue?namespace=srd-5.1
-         *         GET /v1/items/amulet-of-health?namespace=user:1234
+         * @description Get a single item by slug within a source namespace.
          */
         get: operations["get_item_v1_items__slug__get"];
         put?: never;
@@ -108,27 +488,7 @@ export interface paths {
         };
         /**
          * List monsters
-         * @description Return a paginated list of monsters with optional filters.
-         *
-         *     Args:
-         *         request: Current HTTP request, used to build pagination links.
-         *         session: Database session, injected by dependency.
-         *         params: Pagination parameters, injected by dependency.
-         *         ordering: SQLAlchemy ordering expressions, injected by dependency.
-         *         search: Parsed search filter, injected by dependency.
-         *         monster_type: Optional exact match for the monster_type field.
-         *         cr_min: Inclusive minimum challenge rating filter.
-         *         cr_max: Inclusive maximum challenge rating filter.
-         *
-         *     Returns:
-         *         A paginated resultset containing monster summaries and pagination
-         *         metadata.
-         *
-         *     Example:
-         *         GET /v1/monsters?search=dragon&limit=5&offset=10
-         *         GET /v1/monsters?type=undead&cr_min=1&cr_max=5
-         *         GET /v1/monsters?cr_max=0.25&order_by=name:asc
-         *         GET /v1/monsters?order_by=challenge_rating:desc,name:asc
+         * @description List monsters with optional type, challenge-rating, and book filters.
          */
         get: operations["list_monsters_v1_monsters_get"];
         put?: never;
@@ -148,22 +508,7 @@ export interface paths {
         };
         /**
          * Get monster
-         * @description Return full details for a single monster by slug.
-         *
-         *     Args:
-         *         slug: The URL-safe unique identifier for the monster.
-         *         session: Database session, injected by dependency.
-         *         namespace: The source namespace to look in (default: srd-5.1).
-         *
-         *     Returns:
-         *         The full monster details, including all original content fields.
-         *
-         *     Raises:
-         *         AppError: With status 404 if no monster is found.
-         *
-         *     Example:
-         *         GET /v1/monsters/tarrasque
-         *         GET /v1/monsters/giant-spider?namespace=user:1234
+         * @description Get a single monster by slug within a source namespace.
          */
         get: operations["get_monster_v1_monsters__slug__get"];
         put?: never;
@@ -183,27 +528,7 @@ export interface paths {
         };
         /**
          * List spells
-         * @description Return a paginated list of spells with optional filters.
-         *
-         *     Args:
-         *         request: Current HTTP request, used to build pagination links.
-         *         session: Database session, injected by dependency.
-         *         params: Pagination parameters, injected by dependency.
-         *         ordering: SQLAlchemy ordering expressions, injected by dependency.
-         *         search: Parsed search filter, injected by dependency.
-         *         school: Optional exact match for spell school.
-         *         level_min: Optional minimum spell level (inclusive).
-         *         level_max: Optional maximum spell level (inclusive).
-         *
-         *     Returns:
-         *         A paginated resultset containing spell summaries that match the
-         *         provided filters.
-         *
-         *     Example:
-         *         GET /v1/spells?search=fire&level_min=1&level_max=3&school=evocation
-         *         GET /v1/spells?level_max=0
-         *         GET /v1/spells?order_by=name:asc
-         *         GET /v1/spells?order_by=level:desc,name:asc&limit=5&offset=10
+         * @description List spells with optional school, level-range, and book filters.
          */
         get: operations["list_spells_v1_spells_get"];
         put?: never;
@@ -223,22 +548,7 @@ export interface paths {
         };
         /**
          * Get spell
-         * @description Return full details for a single spell by slug.
-         *
-         *     Args:
-         *         slug: The URL-safe unique identifier for the spell.
-         *         session: Database session, injected by dependency.
-         *         namespace: The source namespace to look in (default: srd-5.1).
-         *
-         *     Returns:
-         *         The full spell details, including all original content fields.
-         *
-         *     Raises:
-         *         AppError: With status 404 if no spell is found.
-         *
-         *     Example:
-         *         GET /v1/spells/fireball
-         *         GET /v1/spells/fireball?namespace=user:1234
+         * @description Get a single spell by slug within a source namespace.
          */
         get: operations["get_spell_v1_spells__slug__get"];
         put?: never;
@@ -253,6 +563,107 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /**
+         * AccountDeleteRequest
+         * @description Payload to delete the current account.
+         *
+         *     The current password is required as a re-authentication step, so a
+         *     stolen session alone cannot destroy the account. Deletion is
+         *     irreversible.
+         */
+        AccountDeleteRequest: {
+            /**
+             * Password
+             * @description The account's current password, for re-authentication.
+             */
+            password: string;
+        };
+        /**
+         * AccountExport
+         * @description A portable copy of everything stored for the current account.
+         */
+        AccountExport: {
+            /**
+             * Exportedat
+             * Format: date-time
+             * @description When this export was generated.
+             */
+            exportedAt: string;
+            /** @description The account record (the owner's own view). */
+            account: components["schemas"]["UserResponse"];
+            /**
+             * Books
+             * @description The books the account owns, with their content ids.
+             */
+            books: components["schemas"]["AccountExportBook"][];
+        };
+        /**
+         * AccountExportBook
+         * @description One of the user's owned books, with its content membership ids.
+         *
+         *     Content is referenced by id rather than inlined: the export is a record
+         *     of what the user has collected, not a copy of the SRD catalog.
+         */
+        AccountExportBook: {
+            /**
+             * Id
+             * Format: uuid
+             * @description Unique identifier for the book.
+             */
+            id: string;
+            /**
+             * Name
+             * @description Display name of the book.
+             */
+            name: string;
+            /**
+             * Slug
+             * @description Stable handle for system books; null for user books.
+             */
+            slug: string | null;
+            /**
+             * Description
+             * @description Longer description, if any.
+             */
+            description: string | null;
+            /**
+             * Ispublic
+             * @description Whether the book is readable by anyone.
+             */
+            isPublic: boolean;
+            /**
+             * Issystem
+             * @description Whether this is a read-only system book.
+             */
+            isSystem: boolean;
+            /**
+             * Createdat
+             * Format: date-time
+             * @description When the book was created.
+             */
+            createdAt: string;
+            /**
+             * Updatedat
+             * Format: date-time
+             * @description When the book was last updated.
+             */
+            updatedAt: string;
+            /**
+             * Monsterids
+             * @description Ids of the monsters collected in this book.
+             */
+            monsterIds: string[];
+            /**
+             * Spellids
+             * @description Ids of the spells collected in this book.
+             */
+            spellIds: string[];
+            /**
+             * Itemids
+             * @description Ids of the items collected in this book.
+             */
+            itemIds: string[];
+        };
         /**
          * ActionEntry
          * @description An action-shaped entry (actions, special_abilities, reactions, etc.).
@@ -295,6 +706,195 @@ export interface components {
             condition?: string | null;
         } & {
             [key: string]: unknown;
+        };
+        /**
+         * Author
+         * @description Public author projection -- how a user is shown to *other* users.
+         *
+         *     The only user data exposed when homebrew is published (#185, consumed by
+         *     #177+). Deliberately carries ``username`` alone: it is a unique,
+         *     immutable, stable public handle in Phase 1b, so neither the private
+         *     email nor the internal user id ever needs to leave the owner's own view.
+         *     Adding fields later (e.g. a stable public id, should usernames ever
+         *     become mutable) is an additive, non-breaking change.
+         */
+        Author: {
+            /**
+             * Username
+             * @description The user's public handle.
+             */
+            username: string;
+        };
+        /**
+         * BookCreate
+         * @description Payload to create a book.
+         */
+        BookCreate: {
+            /**
+             * Name
+             * @description Display name for the book.
+             */
+            name: string;
+            /**
+             * Description
+             * @description Optional longer description of the book.
+             */
+            description?: string | null;
+        };
+        /**
+         * BookDetail
+         * @description A single book with the count of content it holds, by resource type.
+         */
+        BookDetail: {
+            /**
+             * Id
+             * Format: uuid
+             * @description Unique identifier for the book.
+             */
+            id: string;
+            /**
+             * Name
+             * @description Display name of the book.
+             */
+            name: string;
+            /**
+             * Slug
+             * @description Stable handle for system books; null for user books.
+             */
+            slug: string | null;
+            /**
+             * Description
+             * @description Longer description, if any.
+             */
+            description: string | null;
+            /**
+             * Ispublic
+             * @description Whether the book is readable by anyone.
+             */
+            isPublic: boolean;
+            /**
+             * Issystem
+             * @description Whether this is a read-only system book (e.g. the SRD).
+             */
+            isSystem: boolean;
+            /** @description Public author projection, or null for a system book. */
+            owner: components["schemas"]["Author"];
+            /**
+             * Createdat
+             * Format: date-time
+             * @description When the book was created.
+             */
+            createdAt: string;
+            /**
+             * Updatedat
+             * Format: date-time
+             * @description When the book was last updated.
+             */
+            updatedAt: string;
+            /**
+             * Monstercount
+             * @description Number of monsters in the book.
+             */
+            monsterCount: number;
+            /**
+             * Spellcount
+             * @description Number of spells in the book.
+             */
+            spellCount: number;
+            /**
+             * Itemcount
+             * @description Number of items in the book.
+             */
+            itemCount: number;
+        };
+        /**
+         * BookMembership
+         * @description A book owned by the requesting user that contains this content.
+         */
+        BookMembership: {
+            /**
+             * Id
+             * Format: uuid
+             * @description Unique identifier for the book.
+             */
+            id: string;
+            /**
+             * Name
+             * @description Display name of the book.
+             */
+            name: string;
+            /**
+             * Slug
+             * @description Stable handle for system books; null for user books.
+             */
+            slug: string | null;
+        };
+        /**
+         * BookSummary
+         * @description A book as shown in list views.
+         */
+        BookSummary: {
+            /**
+             * Id
+             * Format: uuid
+             * @description Unique identifier for the book.
+             */
+            id: string;
+            /**
+             * Name
+             * @description Display name of the book.
+             */
+            name: string;
+            /**
+             * Slug
+             * @description Stable handle for system books; null for user books.
+             */
+            slug: string | null;
+            /**
+             * Description
+             * @description Longer description, if any.
+             */
+            description: string | null;
+            /**
+             * Ispublic
+             * @description Whether the book is readable by anyone.
+             */
+            isPublic: boolean;
+            /**
+             * Issystem
+             * @description Whether this is a read-only system book (e.g. the SRD).
+             */
+            isSystem: boolean;
+            /** @description Public author projection, or null for a system book. */
+            owner: components["schemas"]["Author"];
+            /**
+             * Createdat
+             * Format: date-time
+             * @description When the book was created.
+             */
+            createdAt: string;
+            /**
+             * Updatedat
+             * Format: date-time
+             * @description When the book was last updated.
+             */
+            updatedAt: string;
+        };
+        /**
+         * BookUpdate
+         * @description Payload to update a book. Only the provided fields are changed.
+         */
+        BookUpdate: {
+            /**
+             * Name
+             * @description New display name for the book.
+             */
+            name?: string | null;
+            /**
+             * Description
+             * @description New description for the book.
+             */
+            description?: string | null;
         };
         /**
          * ContentSource
@@ -383,129 +983,285 @@ export interface components {
         /**
          * ItemDetail
          * @description Full item details, used in detail endpoints.
-         *
-         *     Attributes:
-         *         content: The full item data as ingested from the source, with all
-         *             original fields and structure preserved.
-         *         content_source: Metadata about the source of the item data, such as
-         *             the original URL or source file name.
          */
         ItemDetail: {
-            /** Slug */
+            /**
+             * Id
+             * Format: uuid
+             * @description Unique identifier for the item.
+             */
+            id: string;
+            /**
+             * Slug
+             * @description URL-safe unique identifier.
+             */
             slug: string;
-            /** Name */
+            /**
+             * Name
+             * @description The item's name.
+             */
             name: string;
-            /** Itemcategory */
+            /**
+             * Itemcategory
+             * @description Category (e.g. 'weapon', 'potion'), if available.
+             */
             itemCategory: string | null;
-            /** Rarity */
+            /**
+             * Rarity
+             * @description Rarity (e.g. 'rare'); null for mundane items.
+             */
             rarity: string | null;
+            /**
+             * Bookmemberships
+             * @description The signed-in user's own books that contain this entry. Present only when requested via include=book_memberships; omitted for anonymous requests.
+             */
+            bookMemberships?: components["schemas"]["BookMembership"][] | null;
+            /** @description Full source payload, with all original fields preserved. */
             content: components["schemas"]["SrdItemContent"];
+            /** @description Provenance and licensing metadata for the entry. */
             contentSource: components["schemas"]["ContentSource"];
         };
         /**
          * ItemSummary
          * @description Summary info for an item, used in list endpoints.
-         *
-         *     Attributes:
-         *         slug: Unique identifier for the item, used in URLs.
-         *         name: The item's name.
-         *         item_category: The category of the item (e.g. "Weapon", "Potion"),
-         *             if available. This is not guaranteed to be present for all items, as
-         *             it depends on the source data.
-         *         rarity: The rarity of the item (e.g. "Common", "Rare"), if available.
          */
         ItemSummary: {
-            /** Slug */
+            /**
+             * Id
+             * Format: uuid
+             * @description Unique identifier for the item.
+             */
+            id: string;
+            /**
+             * Slug
+             * @description URL-safe unique identifier.
+             */
             slug: string;
-            /** Name */
+            /**
+             * Name
+             * @description The item's name.
+             */
             name: string;
-            /** Itemcategory */
+            /**
+             * Itemcategory
+             * @description Category (e.g. 'weapon', 'potion'), if available.
+             */
             itemCategory: string | null;
-            /** Rarity */
+            /**
+             * Rarity
+             * @description Rarity (e.g. 'rare'); null for mundane items.
+             */
             rarity: string | null;
+            /**
+             * Bookmemberships
+             * @description The signed-in user's own books that contain this entry. Present only when requested via include=book_memberships; omitted for anonymous requests.
+             */
+            bookMemberships?: components["schemas"]["BookMembership"][] | null;
         };
         /**
          * Links
          * @description Prev/next navigation links for a paginated resultset.
-         *
-         *     Attributes:
-         *         prev: Absolute URL for the previous page, or null on the first page.
-         *         next: Absolute URL for the next page, or null on the last page.
          */
         Links: {
-            /** Prev */
+            /**
+             * Prev
+             * @description URL of the previous page, or null on the first page.
+             */
             prev: string | null;
-            /** Next */
+            /**
+             * Next
+             * @description URL of the next page, or null on the last page.
+             */
             next: string | null;
+        };
+        /**
+         * LoginRequest
+         * @description Payload to authenticate with a username-or-email and password.
+         *
+         *     ``identifier`` accepts either the account's username or its email; the
+         *     presence of ``@`` disambiguates (usernames cannot contain ``@``).
+         */
+        LoginRequest: {
+            /**
+             * Identifier
+             * @description Account username or email.
+             */
+            identifier: string;
+            /**
+             * Password
+             * @description Account password.
+             */
+            password: string;
+        };
+        /**
+         * MessageResponse
+         * @description A generic, non-revealing acknowledgement message.
+         */
+        MessageResponse: {
+            /**
+             * Message
+             * @description Human-readable acknowledgement message.
+             */
+            message: string;
         };
         /**
          * MetadataEnvelope
          * @description Envelopes a paginated resultset with metadata.
          */
         MetadataEnvelope: {
+            /** @description Pagination counters. */
             resultset: components["schemas"]["ResultsetMeta"];
+            /** @description Prev/next navigation links. */
             links: components["schemas"]["Links"];
         };
         /**
          * MonsterDetail
          * @description Full monster details, used in detail endpoints.
-         *
-         *     Attributes:
-         *         content: The full monster data as ingested from the source, with all
-         *             original fields and structure preserved.
-         *         content_source: Metadata about the source of the monster data, such as
-         *             the original URL or source file name.
          */
         MonsterDetail: {
-            /** Slug */
+            /**
+             * Id
+             * Format: uuid
+             * @description Unique identifier for the monster.
+             */
+            id: string;
+            /**
+             * Slug
+             * @description URL-safe unique identifier.
+             */
             slug: string;
-            /** Name */
+            /**
+             * Name
+             * @description The monster's name.
+             */
             name: string;
-            /** Monstertype */
+            /**
+             * Monstertype
+             * @description Type or category (e.g. 'dragon').
+             */
             monsterType: string | null;
-            /** Challengerating */
+            /**
+             * Challengerating
+             * @description Challenge rating as a display string (e.g. '1/2', '5').
+             */
             challengeRating: string;
+            /**
+             * Bookmemberships
+             * @description The signed-in user's own books that contain this entry. Present only when requested via include=book_memberships; omitted for anonymous requests.
+             */
+            bookMemberships?: components["schemas"]["BookMembership"][] | null;
+            /** @description Full source payload, with all original fields preserved. */
             content: components["schemas"]["SrdMonsterContent"];
+            /** @description Provenance and licensing metadata for the entry. */
             contentSource: components["schemas"]["ContentSource"];
         };
         /**
          * MonsterSummary
          * @description Summary info for a monster, used in list endpoints.
-         *
-         *     Attributes:
-         *         slug: Unique identifier for the monster, used in URLs.
-         *         name: The monster's name.
-         *         monster_type: The type or category of the monster (e.g. "Dragon").
-         *         challenge_rating: The monster's challenge rating as a display string
-         *             (e.g. "1/2", "5", "10").
          */
         MonsterSummary: {
-            /** Slug */
+            /**
+             * Id
+             * Format: uuid
+             * @description Unique identifier for the monster.
+             */
+            id: string;
+            /**
+             * Slug
+             * @description URL-safe unique identifier.
+             */
             slug: string;
-            /** Name */
+            /**
+             * Name
+             * @description The monster's name.
+             */
             name: string;
-            /** Monstertype */
+            /**
+             * Monstertype
+             * @description Type or category (e.g. 'dragon').
+             */
             monsterType: string | null;
-            /** Challengerating */
+            /**
+             * Challengerating
+             * @description Challenge rating as a display string (e.g. '1/2', '5').
+             */
             challengeRating: string;
+            /**
+             * Bookmemberships
+             * @description The signed-in user's own books that contain this entry. Present only when requested via include=book_memberships; omitted for anonymous requests.
+             */
+            bookMemberships?: components["schemas"]["BookMembership"][] | null;
+        };
+        /** PaginatedResultset[BookSummary] */
+        PaginatedResultset_BookSummary_: {
+            /** @description Pagination metadata and links. */
+            metadata: components["schemas"]["MetadataEnvelope"];
+            /**
+             * Data
+             * @description The records on this page.
+             */
+            data: components["schemas"]["BookSummary"][];
         };
         /** PaginatedResultset[ItemSummary] */
         PaginatedResultset_ItemSummary_: {
+            /** @description Pagination metadata and links. */
             metadata: components["schemas"]["MetadataEnvelope"];
-            /** Data */
+            /**
+             * Data
+             * @description The records on this page.
+             */
             data: components["schemas"]["ItemSummary"][];
         };
         /** PaginatedResultset[MonsterSummary] */
         PaginatedResultset_MonsterSummary_: {
+            /** @description Pagination metadata and links. */
             metadata: components["schemas"]["MetadataEnvelope"];
-            /** Data */
+            /**
+             * Data
+             * @description The records on this page.
+             */
             data: components["schemas"]["MonsterSummary"][];
         };
         /** PaginatedResultset[SpellSummary] */
         PaginatedResultset_SpellSummary_: {
+            /** @description Pagination metadata and links. */
             metadata: components["schemas"]["MetadataEnvelope"];
-            /** Data */
+            /**
+             * Data
+             * @description The records on this page.
+             */
             data: components["schemas"]["SpellSummary"][];
+        };
+        /**
+         * PasswordResetConfirmRequest
+         * @description Payload to set a new password using a reset token.
+         */
+        PasswordResetConfirmRequest: {
+            /**
+             * Token
+             * @description Password-reset token from the email link.
+             */
+            token: string;
+            /**
+             * Password
+             * @description Account password (8-128 characters).
+             */
+            password: string;
+        };
+        /**
+         * PasswordResetRequest
+         * @description Payload to request a password-reset email.
+         *
+         *     ``identifier`` is the account's username or email (same matching as
+         *     login). The response is identical whether or not an account matches, so
+         *     it never reveals which addresses are registered.
+         */
+        PasswordResetRequest: {
+            /**
+             * Identifier
+             * @description Account username or email.
+             */
+            identifier: string;
         };
         /**
          * Proficiency
@@ -535,11 +1291,20 @@ export interface components {
          * @description Metadata about a paginated resultset.
          */
         ResultsetMeta: {
-            /** Count */
+            /**
+             * Count
+             * @description Total records matching the query, across all pages.
+             */
             count: number;
-            /** Offset */
+            /**
+             * Offset
+             * @description Offset of this page.
+             */
             offset: number;
-            /** Limit */
+            /**
+             * Limit
+             * @description Number of records in this page.
+             */
             limit: number;
         };
         /**
@@ -559,6 +1324,28 @@ export interface components {
             truesight?: string | null;
         } & {
             [key: string]: unknown;
+        };
+        /**
+         * SignupRequest
+         * @description Payload to create a new account.
+         */
+        SignupRequest: {
+            /**
+             * Username
+             * @description Public handle. Lowercase letters, digits, hyphen, and underscore only; 3-30 characters.
+             */
+            username: string;
+            /**
+             * Email
+             * Format: email
+             * @description Account email address (kept private).
+             */
+            email: string;
+            /**
+             * Password
+             * @description Account password (8-128 characters).
+             */
+            password: string;
         };
         /**
          * Speed
@@ -585,36 +1372,78 @@ export interface components {
          * @description Full spell details, used in the detail endpoint.
          */
         SpellDetail: {
-            /** Slug */
+            /**
+             * Id
+             * Format: uuid
+             * @description Unique identifier for the spell.
+             */
+            id: string;
+            /**
+             * Slug
+             * @description URL-safe unique identifier.
+             */
             slug: string;
-            /** Name */
+            /**
+             * Name
+             * @description The spell's name.
+             */
             name: string;
-            /** Level */
+            /**
+             * Level
+             * @description Level as a display string (e.g. 'Cantrip', '1st').
+             */
             level: string;
-            /** School */
+            /**
+             * School
+             * @description School of magic (e.g. 'evocation').
+             */
             school: string | null;
+            /**
+             * Bookmemberships
+             * @description The signed-in user's own books that contain this entry. Present only when requested via include=book_memberships; omitted for anonymous requests.
+             */
+            bookMemberships?: components["schemas"]["BookMembership"][] | null;
+            /** @description Full source payload, with all original fields preserved. */
             content: components["schemas"]["SrdSpellContent"];
+            /** @description Provenance and licensing metadata for the entry. */
             contentSource: components["schemas"]["ContentSource"];
         };
         /**
          * SpellSummary
          * @description Summary info for a spell, used in list endpoints.
-         *
-         *     Attributes:
-         *         slug: Unique identifier for the spell, used in URLs.
-         *         name: The spell's name.
-         *         level: The spell's level as a display string (e.g. "Cantrip", "1st").
-         *         school: The spell's school of magic (e.g. "evocation").
          */
         SpellSummary: {
-            /** Slug */
+            /**
+             * Id
+             * Format: uuid
+             * @description Unique identifier for the spell.
+             */
+            id: string;
+            /**
+             * Slug
+             * @description URL-safe unique identifier.
+             */
             slug: string;
-            /** Name */
+            /**
+             * Name
+             * @description The spell's name.
+             */
             name: string;
-            /** Level */
+            /**
+             * Level
+             * @description Level as a display string (e.g. 'Cantrip', '1st').
+             */
             level: string;
-            /** School */
+            /**
+             * School
+             * @description School of magic (e.g. 'evocation').
+             */
             school: string | null;
+            /**
+             * Bookmemberships
+             * @description The signed-in user's own books that contain this entry. Present only when requested via include=book_memberships; omitted for anonymous requests.
+             */
+            bookMemberships?: components["schemas"]["BookMembership"][] | null;
         };
         /**
          * SrdItemContent
@@ -760,6 +1589,44 @@ export interface components {
         } & {
             [key: string]: unknown;
         };
+        /**
+         * UserResponse
+         * @description The owner's own view of their account.
+         *
+         *     Returned only to the authenticated account holder (signup, login,
+         *     ``/me``). ``email`` appears here and nowhere else; other users see the
+         *     ``Author`` projection instead.
+         */
+        UserResponse: {
+            /**
+             * Id
+             * Format: uuid
+             * @description The account's unique identifier.
+             */
+            id: string;
+            /**
+             * Username
+             * @description The account's public handle.
+             */
+            username: string;
+            /**
+             * Email
+             * Format: email
+             * @description The account's private email address.
+             */
+            email: string;
+            /**
+             * Emailverified
+             * @description Whether the email has been verified.
+             */
+            emailVerified: boolean;
+            /**
+             * Createdat
+             * Format: date-time
+             * @description When the account was created.
+             */
+            createdAt: string;
+        };
         /** ValidationError */
         ValidationError: {
             /** Location */
@@ -772,6 +1639,17 @@ export interface components {
             input?: unknown;
             /** Context */
             ctx?: Record<string, never>;
+        };
+        /**
+         * VerifyEmailRequest
+         * @description Payload to confirm an email address with a verification token.
+         */
+        VerifyEmailRequest: {
+            /**
+             * Token
+             * @description Verification token from the email link.
+             */
+            token: string;
         };
     };
     responses: never;
@@ -802,6 +1680,1052 @@ export interface operations {
             };
         };
     };
+    export_account_v1_account_export_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountExport"];
+                };
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    delete_account_v1_account_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AccountDeleteRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CSRF token or re-auth password invalid */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    signup_v1_auth_signup_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SignupRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserResponse"];
+                };
+            };
+            /** @description Username or email already registered */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Too many signup attempts */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    login_v1_auth_login_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LoginRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserResponse"];
+                };
+            };
+            /** @description Invalid credentials */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Too many login attempts */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    logout_v1_auth_logout_post: {
+        parameters: {
+            query?: {
+                /** @description Revoke all of this user's sessions, not just this. */
+                everywhere?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    me_v1_auth_me_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserResponse"];
+                };
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    verify_email_v1_auth_verify_email_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VerifyEmailRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Token is invalid or expired */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    resend_verification_v1_auth_resend_verification_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CSRF token missing or invalid */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Too many resend attempts */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    request_password_reset_v1_auth_password_reset_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PasswordResetRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Too many reset requests */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    confirm_password_reset_v1_auth_password_reset_confirm_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PasswordResetConfirmRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Token is invalid or expired */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_books_v1_books_get: {
+        parameters: {
+            query?: {
+                /** @description Which books to include: 'all' (your books plus public books) or 'owned' (only books you created). */
+                scope?: "all" | "owned";
+                limit?: number;
+                offset?: number;
+                /** @description Comma-separated sort fields in column:direction format. Direction is 'asc' or 'desc' (case-insensitive); omitting direction defaults to 'asc'. Valid columns: created_at, name, updated_at. */
+                order_by?: string | null;
+                /** @description Case-insensitive substring search. Matches against name, description. Results are relevance-ordered: earlier columns rank higher than later ones. */
+                search?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedResultset_BookSummary_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_book_v1_books_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BookCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BookDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_book_v1_books__book_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                book_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BookDetail"];
+                };
+            };
+            /** @description Book not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_book_v1_books__book_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                book_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not the book's owner */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Book not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_book_v1_books__book_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                book_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BookUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BookDetail"];
+                };
+            };
+            /** @description Not the book's owner */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Book not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_book_monsters_v1_books__book_id__monsters_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+                /** @description Comma-separated sort fields in column:direction format. Direction is 'asc' or 'desc' (case-insensitive); omitting direction defaults to 'asc'. Valid columns: challenge_rating, monster_type, name. */
+                order_by?: string | null;
+                /** @description Case-insensitive substring search. Matches against name, monster_type. Results are relevance-ordered: earlier columns rank higher than later ones. */
+                search?: string | null;
+            };
+            header?: never;
+            path: {
+                book_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedResultset_MonsterSummary_"];
+                };
+            };
+            /** @description Book or content not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_book_monster_v1_books__book_id__monsters__monster_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                book_id: string;
+                monster_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not the book's owner */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Book or content not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_book_monster_v1_books__book_id__monsters__monster_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                book_id: string;
+                monster_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not the book's owner */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Book or content not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_book_spells_v1_books__book_id__spells_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+                /** @description Comma-separated sort fields in column:direction format. Direction is 'asc' or 'desc' (case-insensitive); omitting direction defaults to 'asc'. Valid columns: level, name, school. */
+                order_by?: string | null;
+                /** @description Case-insensitive substring search. Matches against name. Results are relevance-ordered: earlier columns rank higher than later ones. */
+                search?: string | null;
+            };
+            header?: never;
+            path: {
+                book_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedResultset_SpellSummary_"];
+                };
+            };
+            /** @description Book or content not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_book_spell_v1_books__book_id__spells__spell_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                book_id: string;
+                spell_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not the book's owner */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Book or content not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_book_spell_v1_books__book_id__spells__spell_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                book_id: string;
+                spell_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not the book's owner */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Book or content not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_book_items_v1_books__book_id__items_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+                /** @description Comma-separated sort fields in column:direction format. Direction is 'asc' or 'desc' (case-insensitive); omitting direction defaults to 'asc'. Valid columns: item_category, name, rarity. */
+                order_by?: string | null;
+                /** @description Case-insensitive substring search. Matches against name, item_category. Results are relevance-ordered: earlier columns rank higher than later ones. */
+                search?: string | null;
+            };
+            header?: never;
+            path: {
+                book_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedResultset_ItemSummary_"];
+                };
+            };
+            /** @description Book or content not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_book_item_v1_books__book_id__items__item_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                book_id: string;
+                item_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not the book's owner */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Book or content not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_book_item_v1_books__book_id__items__item_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                book_id: string;
+                item_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not the book's owner */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Book or content not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_items_v1_items_get: {
         parameters: {
             query?: {
@@ -809,12 +2733,16 @@ export interface operations {
                 item_category?: string | null;
                 /** @description Exact match on item rarity (e.g. 'common'). This is not guaranteed to be present for all items, as it depends on the source data. Set to 'none' to filter for items with no rarity (equipment). */
                 rarity?: string | null;
+                /** @description Filter to items in any of these books (repeat for multiple). Each must be a book you can read, else 404. */
+                book?: string[] | null;
                 limit?: number;
                 offset?: number;
                 /** @description Comma-separated sort fields in column:direction format. Direction is 'asc' or 'desc' (case-insensitive); omitting direction defaults to 'asc'. Valid columns: item_category, name, rarity. */
                 order_by?: string | null;
                 /** @description Case-insensitive substring search. Matches against name, item_category. Results are relevance-ordered: earlier columns rank higher than later ones. */
                 search?: string | null;
+                /** @description Comma-separated optional response expansions. Supported: 'book_memberships' annotates each entry with the signed-in user's own books that contain it. */
+                include?: string | null;
             };
             header?: never;
             path?: never;
@@ -847,6 +2775,8 @@ export interface operations {
             query?: {
                 /** @description The source namespace of the item, used to disambiguate items with the same slug from different sources. Known values: 'srd-5.1', 'srd-2024', 'user:{user_id}'. */
                 namespace?: string;
+                /** @description Comma-separated optional response expansions. Supported: 'book_memberships' annotates each entry with the signed-in user's own books that contain it. */
+                include?: string | null;
             };
             header?: never;
             path: {
@@ -894,12 +2824,16 @@ export interface operations {
                 cr_min?: (number | string) | null;
                 /** @description Inclusive maximum challenge rating. */
                 cr_max?: (number | string) | null;
+                /** @description Filter to monsters in any of these books (repeat for multiple). Each must be a book you can read, else 404. */
+                book?: string[] | null;
                 limit?: number;
                 offset?: number;
                 /** @description Comma-separated sort fields in column:direction format. Direction is 'asc' or 'desc' (case-insensitive); omitting direction defaults to 'asc'. Valid columns: challenge_rating, monster_type, name. */
                 order_by?: string | null;
                 /** @description Case-insensitive substring search. Matches against name, monster_type. Results are relevance-ordered: earlier columns rank higher than later ones. */
                 search?: string | null;
+                /** @description Comma-separated optional response expansions. Supported: 'book_memberships' annotates each entry with the signed-in user's own books that contain it. */
+                include?: string | null;
             };
             header?: never;
             path?: never;
@@ -932,6 +2866,8 @@ export interface operations {
             query?: {
                 /** @description Source namespace to search in. Defaults to the SRD 5.1 namespace. Use 'user:{user_id}' for homebrew content. */
                 namespace?: string;
+                /** @description Comma-separated optional response expansions. Supported: 'book_memberships' annotates each entry with the signed-in user's own books that contain it. */
+                include?: string | null;
             };
             header?: never;
             path: {
@@ -979,12 +2915,16 @@ export interface operations {
                 level_min?: number | null;
                 /** @description Inclusive maximum spell level (0-9). */
                 level_max?: number | null;
+                /** @description Filter to spells in any of these books (repeat for multiple). Each must be a book you can read, else 404. */
+                book?: string[] | null;
                 limit?: number;
                 offset?: number;
                 /** @description Comma-separated sort fields in column:direction format. Direction is 'asc' or 'desc' (case-insensitive); omitting direction defaults to 'asc'. Valid columns: level, name, school. */
                 order_by?: string | null;
                 /** @description Case-insensitive substring search. Matches against name. Results are relevance-ordered: earlier columns rank higher than later ones. */
                 search?: string | null;
+                /** @description Comma-separated optional response expansions. Supported: 'book_memberships' annotates each entry with the signed-in user's own books that contain it. */
+                include?: string | null;
             };
             header?: never;
             path?: never;
@@ -1017,6 +2957,8 @@ export interface operations {
             query?: {
                 /** @description Source namespace to search in. Defaults to the SRD 5.1 namespace. Use 'user:{user_id}' for homebrew content. */
                 namespace?: string;
+                /** @description Comma-separated optional response expansions. Supported: 'book_memberships' annotates each entry with the signed-in user's own books that contain it. */
+                include?: string | null;
             };
             header?: never;
             path: {

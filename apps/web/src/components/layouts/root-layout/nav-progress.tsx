@@ -39,10 +39,10 @@ export function NavProgress() {
 
   return (
     <div
-      ref={containerRef}
       aria-hidden="true"
-      data-phase="idle"
       className={styles['nav-progress']}
+      data-phase="idle"
+      ref={containerRef}
     >
       <div className={styles['bar']} />
     </div>

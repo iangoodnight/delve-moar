@@ -5,7 +5,7 @@ import { Hero } from '@/features/landing/components';
 export default function HomePage() {
   return (
     <Column gap="4">
-      <Head title="Home" description="Homebrew-first TTRPG utilities." />
+      <Head description="Homebrew-first TTRPG utilities." title="Home" />
       <Hero />
     </Column>
   );

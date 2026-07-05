@@ -4,8 +4,12 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { env } from '@/config/env';
+import { initMonitoring } from '@/lib/monitoring';
 
 import { App } from './app';
+
+// initialize error tracking before the app renders; no-op until a DSN is set
+initMonitoring();
 
 if (env.FONT_SOURCE === 'google') {
   await import('@/styles/fonts.google.css');

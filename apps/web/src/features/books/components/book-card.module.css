@@ -1,0 +1,16 @@
+.card {
+  height: 100%;
+}
+
+.description {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.name-link {
+  /* Let a long title wrap rather than stretch the row past the actions. */
+  min-width: 0;
+}

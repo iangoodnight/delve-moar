@@ -6,7 +6,7 @@ import { ItemFilters, ItemGrid } from '@/features/items/components';
 export default function Items() {
   return (
     <Column gap="4">
-      <Head title="Items" description="Browse SRD items." />
+      <Head description="Browse SRD items." title="Items" />
       <H1>Items</H1>
       <ItemFilters />
       <ItemGrid />

@@ -3,14 +3,19 @@
 * Do not edit manually.
 */
 
+import { bookMembershipSchema } from "./bookMembershipSchema.ts";
 import { z } from "zod/v4";
 
 /**
- * @description Summary info for an item, used in list endpoints.\n\nAttributes:\n    slug: Unique identifier for the item, used in URLs.\n    name: The item\'s name.\n    item_category: The category of the item (e.g. \"Weapon\", \"Potion\"),\n        if available. This is not guaranteed to be present for all items, as\n        it depends on the source data.\n    rarity: The rarity of the item (e.g. \"Common\", \"Rare\"), if available.
+ * @description Summary info for an item, used in list endpoints.
  */
 export const itemSummarySchema = z.object({
-    "slug": z.string(),
-"name": z.string(),
-"itemCategory": z.nullable(z.string()),
-"rarity": z.nullable(z.string())
-    }).describe("Summary info for an item, used in list endpoints.\n\nAttributes:\n    slug: Unique identifier for the item, used in URLs.\n    name: The item's name.\n    item_category: The category of the item (e.g. \"Weapon\", \"Potion\"),\n        if available. This is not guaranteed to be present for all items, as\n        it depends on the source data.\n    rarity: The rarity of the item (e.g. \"Common\", \"Rare\"), if available.")
+    "id": z.uuid().describe("Unique identifier for the item."),
+"slug": z.string().describe("URL-safe unique identifier."),
+"name": z.string().describe("The item's name."),
+"itemCategory": z.nullable(z.string().describe("Category (e.g. 'weapon', 'potion'), if available.")),
+"rarity": z.nullable(z.string().describe("Rarity (e.g. 'rare'); null for mundane items.")),
+get "bookMemberships"(){
+                return z.array(bookMembershipSchema.describe("A book owned by the requesting user that contains this content.")).describe("The signed-in user's own books that contain this entry. Present only when requested via include=book_memberships; omitted for anonymous requests.").nullish()
+              }
+    }).describe("Summary info for an item, used in list endpoints.")

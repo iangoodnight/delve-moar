@@ -4,8 +4,9 @@ import { Head } from '@/components/seo/head';
 import { SrdAttribution } from '@/components/srd';
 import { Callout } from '@/components/ui/callout';
 import { Box, Column } from '@/components/ui/layout';
-import { RouterLink } from '@/components/ui/navigation';
+import { ContentBackLink } from '@/components/ui/navigation';
 import { paths } from '@/config/paths';
+import { AddToBookControl } from '@/features/books';
 import { useSpell } from '@/features/spells/api';
 import {
   SpellDetailBlock,
@@ -29,12 +30,12 @@ export default function SpellDetail() {
   return (
     <Column aria-busy={isLoading} mb="8">
       <Head
-        title={spell?.name ?? `Spell ${safeSlug}`}
         description={
           spell?.name
             ? `Details for ${spell.name}.`
             : `Detail page for spell ${safeSlug}.`
         }
+        title={spell?.name ?? `Spell ${safeSlug}`}
       />
       {isLoading && <SpellDetailSkeleton />}
       {isError && isNotFound && (
@@ -49,12 +50,25 @@ export default function SpellDetail() {
       )}
       {spell && (
         <>
-          <SpellDetailBlock spell={spell} />
+          <SpellDetailBlock
+            headerAction={
+              <AddToBookControl
+                key={spell.id}
+                contentId={spell.id}
+                contentType="spell"
+                memberships={spell.bookMemberships}
+              />
+            }
+            spell={spell}
+          />
           <SrdAttribution contentSource={spell.contentSource} />
         </>
       )}
       <Box py="4">
-        <RouterLink to={paths.spells.path}>Back to Spells</RouterLink>
+        <ContentBackLink
+          listHref={paths.spells.path}
+          listLabel="Back to Spells"
+        />
       </Box>
     </Column>
   );

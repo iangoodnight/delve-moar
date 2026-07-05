@@ -24,6 +24,139 @@ For the per-PR convention and the manual release ritual, see the
 
 ### Security
 
+## [0.1.3] - 2026-07-04
+
+### Added
+
+- Server-side authentication for the API (ADR 0010): email/password
+  signup, login, and logout under `/v1/auth`, backed by argon2id
+  password hashing and opaque server-side sessions in HttpOnly cookies
+  (sliding expiry, revocable, with "sign out everywhere"). Requests are
+  protected by a double-submit CSRF token, and a single
+  `get_current_user` seam reads identity so OAuth can be added later
+  without touching handlers. A `GET /v1/auth/me` endpoint returns the
+  current user.
+- IP-based rate limiting on the auth endpoints (ADR 0010 threat model):
+  login and signup return `429 Too Many Requests` with a `Retry-After`
+  header once a per-IP budget is exceeded. Limits are tunable per
+  environment (`RATE_LIMIT_LOGIN`, `RATE_LIMIT_SIGNUP`) and the whole
+  feature can be toggled off (`RATE_LIMIT_ENABLED`). Counters use
+  in-process storage by default, swappable to Redis
+  (`RATE_LIMIT_STORAGE_URI`) without a code change. The limiter is a
+  reusable dependency, ready to apply to password-reset and content
+  writes as those land.
+- Public usernames as the account identity (refining the unreleased
+  ADR 0010 auth core): signup now requires a `username` (lowercase
+  letters, digits, hyphen, and underscore; 3-30 characters; unique),
+  and login accepts either the username or the email in a single
+  `identifier` field. A user's email is returned only in their own
+  `GET /v1/auth/me` view and never to other users, keeping email out
+  of the public author attribution that homebrew publishing will use.
+- Email verification and password reset for accounts (ADR 0010):
+  signup now emails a verification link, `POST /v1/auth/verify-email`
+  confirms the address, and `POST /v1/auth/resend-verification` sends a
+  fresh one. Forgotten passwords are recovered via
+  `POST /v1/auth/password-reset`, which always returns the same
+  acknowledgement so it never reveals whether an account exists, and
+  `POST /v1/auth/password-reset/confirm`, which sets the new password
+  and signs the account out of every active session. Mail goes through
+  a configurable transport (`MAILER_TRANSPORT`): a console transport
+  that logs the message for local development and CI, or SMTP for real
+  delivery. Tokens are single-use and expiring; unverified accounts can
+  still sign in.
+- Web UI for the authentication flows (ADR 0010): signup, login, and
+  logout screens, plus email-verification and password-reset pages
+  that read their token from the link, all wired to the `/v1/auth`
+  API through a credentialed client that attaches the double-submit
+  CSRF token automatically. A session context derives sign-in state
+  from the cached `GET /v1/auth/me` result, so the header reacts to
+  signing in and out without a refresh: anonymous visitors get an
+  account menu with log in / sign up, signed-in users get their
+  account and a log out action. The `/account` route is guarded and
+  returns visitors to where they were headed once they sign in.
+  Server errors surface inline on the relevant field, or as a toast
+  when they do not map to one.
+- Books, owner-defined collections of content (ADR 0014). A book groups
+  monsters, spells, and items, and the SRD catalog is now itself a
+  system book. The `/v1/books` API lets a signed-in user create, list,
+  rename, and delete their own books, browse the public SRD book, and
+  curate content into a book (add or remove monsters, spells, and items;
+  the same content can belong to many books). Listing a book's contents
+  supports the same search and ordering as the catalog endpoints. Reads
+  are scoped to the owner or public books; writes are owner-only and the
+  SRD book is read-only. The browser UI follows in a later change.
+- Book-aware browsing of the SRD catalog (ADR 0014, building on the
+  `/v1/books` API). The monster, spell, and item list endpoints accept a
+  repeatable `book` filter that narrows results to content in any of the
+  given books (each must be one you can read, else 404), and an
+  `include=book_memberships` option that annotates each entry with the
+  signed-in user's own books containing it (omitted for anonymous
+  requests). The `/v1/books` list accepts `scope=owned` to return only
+  the books you created. These power the upcoming book management UI's
+  filtering, "in your books" badges, and add-to-book controls.
+- The monster, spell, and item summaries (and details) now include the
+  content item's `id` (its UUID). The add-to-book and remove-from-book
+  controls need this identifier because the membership endpoints key on
+  the content id, not the slug.
+- Account self-service for signed-in users (#280). A new `/v1/account`
+  API can permanently delete the current account, which requires
+  re-entering the current password and then cascades the account's
+  sessions, email tokens, and owned books (the public SRD system book,
+  which has no owner, is untouched) and signs the browser out.
+  `GET /v1/account/export` returns a portable JSON copy of the account
+  record and the books it owns, listing each book's content by id. The
+  account page surfaces both as a data export and a confirmed, password-
+  gated "delete account" action.
+
+### Changed
+
+- SRD descriptions in the spell, item, and monster detail views now
+  render a limited markdown subset: bold and italic emphasis,
+  blockquotes, links, inline code, and lists. Unsupported markdown
+  (such as tables) and any raw HTML degrade safely to plain text.
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+- SRD description paragraphs in the spell, item, and monster detail
+  views no longer use a hanging indent; body text now wraps to a
+  readable line length instead.
+
+### Security
+
+- Bump `react-router` to 7.17.0 (via `react-router-dom`), clearing three
+  advisories: a turbo-stream deserialization RCE
+  (GHSA-49rj-9fvp-4h2h), a DoS via the `__manifest` endpoint
+  (GHSA-8x6r-g9mw-2r78), and a protocol-relative open redirect
+  (GHSA-2j2x-hqr9-3h42).
+- Pin the transitive `ws` under the Kubb codegen tooling to `>= 8.20.1`
+  via a `pnpm.overrides` entry, clearing an uninitialized-memory
+  disclosure (GHSA-58qx-3vcg-4xpx).
+- Pin the transitive `shell-quote` under the Kubb codegen tooling to
+  `>= 1.8.4` via a `pnpm.overrides` entry, clearing a critical advisory
+  in `quote()` (newlines not escaped in object `.op` values,
+  GHSA-w7jw-789q-3m8p). The package is codegen-time only and never ships
+  at runtime.
+- Pin the transitive `esbuild` under the web build tooling to `^0.28.1`
+  via a `pnpm.overrides` entry, clearing two advisories: a Deno
+  binary-integrity remote code execution via `NPM_CONFIG_REGISTRY`
+  (GHSA-gv7w-rqvm-qjhr) and an arbitrary file read in the dev server on
+  Windows (GHSA-g7r4-m6w7-qqqr). The package is build-time only
+  (Vite/Storybook/Vitest) and never ships at runtime.
+- Pin three more transitive dependencies via `pnpm.overrides`, clearing
+  their advisories: `form-data` to `^4.0.6` (CRLF injection via
+  unescaped multipart field names, GHSA-hmw2-7cc7-3qxx; reachable at
+  runtime through `axios`), `ws` to `^7.5.11` / `^8.21.0` (memory-
+  exhaustion DoS, GHSA-96hv-2xvq-fx4p; build-time only, via Storybook
+  and the Kubb codegen tooling), and `js-yaml` to `^4.2.0`
+  (quadratic-complexity DoS in merge-key handling, GHSA-h67p-54hq-rp68;
+  build-time only, via commitlint). The `ws` pin replaces the earlier
+  Kubb-scoped override so both the Storybook and codegen paths are
+  covered.
+
 ## [0.1.2] - 2026-05-18
 
 The bugfix for the production deploy issues in v0.1.1 did not fully resolve
@@ -55,16 +188,6 @@ fixes so the deploy pipeline produces a live site.
 - api: `cors_allowed_origins` is now annotated with `NoDecode` so the CSV
   `BeforeValidator` receives the raw env value instead of pydantic-settings
   trying to JSON-decode it and crashing on startup. (#137)
-
-### Security
-
-- deps: bump idna from 3.11 to 3.15 (#143) — picks up CVE-2026-45409
-  (quadratic-time DoS via oversize inputs).
-- deps: bump ws from 8.18.0 to 8.20.1 (#134) — fixes an uninitialized
-  memory disclosure in `websocket.close()` when a TypedArray is passed
-  as the reason argument.
-- deps: bump brace-expansion from 5.0.5 to 5.0.6 (#136) — transitive
-  patch bump with an undisclosed fix from the upstream merge commit.
 
 ## [0.1.0] - 2026-05-18
 

@@ -1,9 +1,8 @@
 import type { components } from '@delve-moar/api-types';
 
-import { Column, Section } from '@/components/ui/layout';
-import { H2, Paragraph, Strong } from '@/components/ui/typography';
-
-import styles from './monster-stat-block.module.css';
+import { Markdown } from '@/components/markdown';
+import { Box, Column, Section } from '@/components/ui/layout';
+import { H2 } from '@/components/ui/typography';
 
 type ActionEntry = components['schemas']['ActionEntry'];
 
@@ -12,19 +11,20 @@ interface ActionsBlockProps {
   readonly entries: readonly ActionEntry[];
 }
 
-export function ActionsBlock({ title, entries }: ActionsBlockProps) {
+export function ActionsBlock({ title, entries }: Readonly<ActionsBlockProps>) {
   if (entries.length === 0) return null;
   return (
-    <Section className={styles['actions-block']} size="1">
+    <Section size="1">
       <Column gap="2">
         <H2>{title}</H2>
         {entries.map((entry) => (
-          <Paragraph key={entry.name} ml={{ initial: '0', sm: '4' }}>
-            <Strong>
-              <em>{entry.name}.</em>
-            </Strong>{' '}
-            {entry.desc}
-          </Paragraph>
+          <Box
+            key={entry.name}
+            className="text-constraint"
+            ml={{ initial: '0', sm: '4' }}
+          >
+            <Markdown>{`**${entry.name}.** ${entry.desc}`}</Markdown>
+          </Box>
         ))}
       </Column>
     </Section>

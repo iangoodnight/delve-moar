@@ -48,7 +48,7 @@ export function AbilityScores({ content }: AbilityScoresProps) {
           {ABILITIES.map(({ key, label }) => {
             const score = content[key];
             return (
-              <Box asChild className={styles['ability-cell']} key={key}>
+              <Box key={key} asChild className={styles['ability-cell']}>
                 <li>
                   <Text as="div" className={styles['ability-label']} size="2">
                     {label}

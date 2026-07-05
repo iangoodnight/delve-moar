@@ -1,0 +1,43 @@
+/* sonner reads --normal-* for every toast when richColors is off; the type
+   classes below re-point those vars at Radix scales. Direct-on-toast beats the
+   value inherited from the toaster container, so no !important is needed. */
+.toast {
+  --normal-bg: var(--gray-2);
+  --normal-border: var(--gray-6);
+  --normal-text: var(--gray-12);
+  border-radius: var(--radius-4);
+  box-shadow: var(--shadow-4);
+}
+
+.title {
+  font-weight: 600;
+}
+
+.icon {
+  color: var(--normal-text);
+}
+
+/* declared after .toast so the per-type palette wins the specificity tie */
+.success {
+  --normal-bg: var(--green-2);
+  --normal-border: var(--green-6);
+  --normal-text: var(--green-11);
+}
+
+.error {
+  --normal-bg: var(--red-2);
+  --normal-border: var(--red-6);
+  --normal-text: var(--red-11);
+}
+
+.info {
+  --normal-bg: var(--blue-2);
+  --normal-border: var(--blue-6);
+  --normal-text: var(--blue-11);
+}
+
+.warning {
+  --normal-bg: var(--amber-2);
+  --normal-border: var(--amber-6);
+  --normal-text: var(--amber-11);
+}

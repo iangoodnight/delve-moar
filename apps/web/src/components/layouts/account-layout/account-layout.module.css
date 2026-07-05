@@ -1,0 +1,16 @@
+/* The nav column (12.5rem) and the column gap (--space-6, from gapX="6") must
+   stay in sync with the Grid in account-layout.tsx.
+
+   At xl the viewport gutters are wide enough to hold the nav outside the
+   container, so the content pane fills the full container width (matching the
+   browse pages) while the nav slides into the left gutter. Widening the grid
+   by nav + gap and shifting it left by the same amount makes the 1fr content
+   track resolve to the full container width; the nav lands one gap before the
+   container's left edge. Below xl the gutter is too narrow, so the grid stays
+   inside the container unchanged. */
+@media (min-width: 1640px) {
+  .account-grid {
+    width: calc(100% + 12.5rem + var(--space-6));
+    margin-left: calc(-1 * (12.5rem + var(--space-6)));
+  }
+}

@@ -87,6 +87,78 @@ function createAppRouter(queryClient: QueryClientType) {
             import('./routes/spells/spell-detail').then(convert(queryClient)),
         },
         {
+          // Shared centered-card shell for the auth pages.
+          HydrateFallback: DefaultHydrateFallback,
+          lazy: () =>
+            import('./routes/auth/auth-layout').then(convert(queryClient)),
+          children: [
+            {
+              path: paths.login.path,
+              HydrateFallback: DefaultHydrateFallback,
+              lazy: () =>
+                import('./routes/auth/login').then(convert(queryClient)),
+            },
+            {
+              path: paths.signup.path,
+              HydrateFallback: DefaultHydrateFallback,
+              lazy: () =>
+                import('./routes/auth/signup').then(convert(queryClient)),
+            },
+            {
+              path: paths.forgotPassword.path,
+              HydrateFallback: DefaultHydrateFallback,
+              lazy: () =>
+                import('./routes/auth/forgot-password').then(
+                  convert(queryClient),
+                ),
+            },
+            {
+              path: paths.resetPassword.path,
+              HydrateFallback: DefaultHydrateFallback,
+              lazy: () =>
+                import('./routes/auth/reset-password').then(
+                  convert(queryClient),
+                ),
+            },
+            {
+              path: paths.verifyEmail.path,
+              HydrateFallback: DefaultHydrateFallback,
+              lazy: () =>
+                import('./routes/auth/verify-email').then(convert(queryClient)),
+            },
+          ],
+        },
+        {
+          // Account hub: protected section with a persistent side nav.
+          HydrateFallback: DefaultHydrateFallback,
+          lazy: () =>
+            import('./routes/account/account-layout').then(
+              convert(queryClient),
+            ),
+          children: [
+            {
+              path: paths.account.path,
+              HydrateFallback: DefaultHydrateFallback,
+              lazy: () =>
+                import('./routes/account/profile').then(convert(queryClient)),
+            },
+            {
+              path: paths.accountBooks.path,
+              HydrateFallback: DefaultHydrateFallback,
+              lazy: () =>
+                import('./routes/account/books').then(convert(queryClient)),
+            },
+            {
+              path: paths.accountBookDetail.path,
+              HydrateFallback: DefaultHydrateFallback,
+              lazy: () =>
+                import('./routes/account/book-detail').then(
+                  convert(queryClient),
+                ),
+            },
+          ],
+        },
+        {
           path: '*',
           HydrateFallback: DefaultHydrateFallback,
           lazy: () => import('./routes/not-found').then(convert(queryClient)),

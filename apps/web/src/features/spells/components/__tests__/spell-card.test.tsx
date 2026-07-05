@@ -9,6 +9,7 @@ import type { SpellSummary } from '@/features/spells/api';
 import { SpellCard } from '../spell-card';
 
 const FIREBALL: SpellSummary = {
+  id: 'aa8e3a8f-ecff-4bd8-8599-91be398c01a3',
   slug: 'fireball',
   name: 'Fireball',
   level: '3rd',
@@ -16,6 +17,7 @@ const FIREBALL: SpellSummary = {
 };
 
 const SCHOOLLESS: SpellSummary = {
+  id: 'da9903eb-a661-4b1e-a571-9d6a426d8fd5',
   slug: 'some-spell',
   name: 'Some Spell',
   level: 'Cantrip',

@@ -1,0 +1,10 @@
+/* Capitalize inconsistently-cased SRD names and keep a long one from pushing
+   the badges off the row. */
+.name {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-transform: capitalize;
+}

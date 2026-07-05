@@ -13,13 +13,14 @@ export const getItemV1ItemsSlugGetPathParamsSchema = z.object({
     })
 
 export const getItemV1ItemsSlugGetQueryParamsSchema = z.object({
-    "namespace": z.string().default("srd-5.1").describe("The source namespace of the item, used to disambiguate items with the same slug from different sources. Known values: 'srd-5.1', 'srd-2024', 'user:{user_id}'.")
+    "namespace": z.string().default("srd-5.1").describe("The source namespace of the item, used to disambiguate items with the same slug from different sources. Known values: 'srd-5.1', 'srd-2024', 'user:{user_id}'."),
+"include": z.string().describe("Comma-separated optional response expansions. Supported: 'book_memberships' annotates each entry with the signed-in user's own books that contain it.").nullish()
     })
 
 /**
  * @description Successful Response
  */
-export const getItemV1ItemsSlugGet200Schema = z.lazy(() => itemDetailSchema).describe("Full item details, used in detail endpoints.\n\nAttributes:\n    content: The full item data as ingested from the source, with all\n        original fields and structure preserved.\n    content_source: Metadata about the source of the item data, such as\n        the original URL or source file name.")
+export const getItemV1ItemsSlugGet200Schema = z.lazy(() => itemDetailSchema).describe("Full item details, used in detail endpoints.")
 
 /**
  * @description Item not found

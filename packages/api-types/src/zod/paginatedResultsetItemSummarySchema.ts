@@ -12,6 +12,6 @@ export const paginatedResultsetItemSummarySchema = z.object({
                 return metadataEnvelopeSchema.describe("Envelopes a paginated resultset with metadata.")
               },
 get "data"(){
-                return z.array(itemSummarySchema.describe("Summary info for an item, used in list endpoints.\n\nAttributes:\n    slug: Unique identifier for the item, used in URLs.\n    name: The item's name.\n    item_category: The category of the item (e.g. \"Weapon\", \"Potion\"),\n        if available. This is not guaranteed to be present for all items, as\n        it depends on the source data.\n    rarity: The rarity of the item (e.g. \"Common\", \"Rare\"), if available."))
+                return z.array(itemSummarySchema.describe("Summary info for an item, used in list endpoints.")).describe("The records on this page.")
               }
     })

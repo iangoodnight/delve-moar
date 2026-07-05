@@ -14,13 +14,28 @@ For deeper material (architecture, recipes, glossary), see
 Install the required tools (macOS with Homebrew):
 
 ```bash
-brew bundle          # installs everything listed in Brewfile
+brew bundle          # installs the tools listed in Brewfile
 ```
 
-Or install manually: Node.js 24 (`.nvmrc`), pnpm 9+, Python 3.12 +
-[uv](https://docs.astral.sh/uv/), Go 1.23+, Docker + Docker Compose,
-[go-task](https://taskfile.dev), [pre-commit](https://pre-commit.com),
-`golangci-lint`, `shellcheck`, `shfmt`.
+`brew bundle` does **not** install Docker or Node; provision those
+two separately:
+
+- **Docker Desktop** is required for `task dev` and `task db:up`
+  (both run `docker compose`). Install
+  [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+  and make sure it is running before either task.
+- **Node.js** is pinned to the major in [`.nvmrc`](.nvmrc) (currently
+  24). Use a version manager that honors `.nvmrc`
+  ([fnm](https://github.com/Schniz/fnm) or
+  [nvm](https://github.com/nvm-sh/nvm)) and run `fnm use` / `nvm use`
+  in the repo root. The Brewfile intentionally does not manage Node,
+  so a Homebrew install cannot drift from the pinned major.
+
+Or install everything manually: Node.js 24 (`.nvmrc`), pnpm 10+,
+Python 3.12 + [uv](https://docs.astral.sh/uv/), Go 1.26+, Docker +
+Docker Compose, [go-task](https://taskfile.dev),
+[pre-commit](https://pre-commit.com), `golangci-lint`, `shellcheck`,
+`shfmt`.
 
 Then from the repo root:
 
@@ -47,6 +62,51 @@ task db:migrate  # apply pending Alembic migrations
 ```
 
 A full task list: `task --list`.
+
+## Testing
+
+`task test` runs every suite in parallel: `task test:api`,
+`task test:web`, `task test:cli`, and `task test:shell` are the
+individual tasks.
+
+### Shell scripts
+
+`task test:shell` runs the [bats](https://github.com/bats-core/bats-core)
+suite in [`test/`](test/) against the helper scripts under `scripts/`
+(starting with [`scripts/db_backup.sh`](scripts/db_backup.sh)). The
+tests are hermetic — they stub `docker`, `fly`, and friends onto `PATH`,
+so they need no running Postgres, Fly login, or network, and run
+anywhere `bats-core` is installed (`brew bundle` provisions it). They
+run in CI and on demand, but deliberately not in the git hooks, to keep
+the commit loop fast.
+
+### The API suite needs a running Postgres
+
+Some API tests run against a real Postgres. Start the dev database —
+the `postgres` service in
+[`infra/docker-compose.yml`](infra/docker-compose.yml) — before
+running the suite locally:
+
+```bash
+task db:up      # start only the postgres container
+uv run pytest   # or `task test:api`, from apps/api
+```
+
+The test harness
+([`apps/api/tests/conftest.py`](apps/api/tests/conftest.py)) derives a
+dedicated `<db>_test` database from `DATABASE_URL` — for the default
+`delve_moar`, that is `delve_moar_test` — creates the schema from the
+model metadata, and isolates each test in a transaction that is rolled
+back afterward (`join_transaction_mode="create_savepoint"`). It never
+touches your dev database.
+
+CI provisions this automatically: the API job in
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs a
+`postgres:17-alpine` service and sets `DATABASE_URL` on the pytest
+step, so no extra setup is needed there.
+
+Only the auth tests hit the database — the read-only SRD route tests
+still use a mocked SQLAlchemy session and need no Postgres.
 
 ## Branch model
 
@@ -92,7 +152,7 @@ Conventional Commits, enforced by commitlint as a `commit-msg` hook:
 
 [optional body]
 
-[optional footer, e.g. Closes #123]
+refs: #123
 ```
 
 Common types: `feat`, `fix`, `chore`, `docs`, `refactor`, `test`, `ci`, `build`.
@@ -100,9 +160,15 @@ Common types: `feat`, `fix`, `chore`, `docs`, `refactor`, `test`, `ci`, `build`.
 Common scopes: `web`, `api`, `cli`, `data`, `infra`, `repo`, `deps`.
 
 The subject is imperative, lowercase, no trailing period. The body explains
-**why** more than what. If the PR closes an issue, put `Closes #N` in the
-footer of the PR description (not the commit body), so GitHub auto-closes on
-merge to `dev` (the default branch).
+**why** more than what.
+
+End every commit with a `refs: #<issue>` trailer naming the issue the work
+belongs to. It links the commit to its issue without closing it, so each
+commit on a multi-commit branch still points back. Reserve the closing
+keyword for the PR: put `Closes #<issue>` in the PR description (not the
+commit body) so GitHub auto-closes the issue when the PR merges to `dev`
+(the default branch). Commitlint does not enforce the trailer today (no
+`references-empty` rule); add one only if drift becomes a problem.
 
 ## Pull requests
 
@@ -124,6 +190,62 @@ If your PR changes the DB schema:
 
 - Add the Alembic migration in the same PR.
 - Mention any data backfill or downtime risk in the PR body.
+
+## Reviewing a pull request
+
+Reviewing is as much a part of the workflow as authoring. A reviewer
+confirms the mechanics CI cannot fully judge, makes the calls tooling
+does not catch, and guards what user data the change stores or
+exposes. Approve and merge only when CI is green and the review is
+satisfied.
+
+### Mechanics to confirm
+
+- **CI is green** on the latest push: lint, tests, and the
+  `gen-types-check` type-generation diff job.
+- **CODEOWNERS approval** is present for the paths the PR touches.
+  Merge only once checks are green and the review is approved.
+- **Conventional-commit title and scope.** Squash-merge feature and
+  fix PRs into `dev`; a `dev` to `main` release PR uses a merge commit
+  or rebase, never a squash (see
+  [Cutting a release](#cutting-a-release-manual)).
+- **API changes:** `task gen:types` was run and the regenerated files
+  (`packages/api-types/` and the Go client in
+  `apps/cli/internal/apiclient/`) are committed in the same PR, and
+  the drift check passes.
+- **Schema changes:** an Alembic migration is included, and any
+  backfill or downtime risk is called out in the PR body.
+- **Changelog:** a user-visible change has an entry under
+  `[Unreleased]`, or the "no entry needed" box is honestly checked.
+- **Tests:** new or changed behavior is covered by tests.
+
+### Judgement calls CI cannot catch
+
+Some conventions are not (fully) machine-enforced. Check these by
+hand, and link the relevant record when you flag one:
+
+- **Web architectural boundaries** beyond what ESLint enforces, per
+  [web features layout](docs/architecture/web-features-layout.md).
+- **Coverage qualifying criteria** for pass-through wrappers, per
+  [ADR 0008](docs/decisions/0008-frontend-coverage-policy.md).
+- **Typography token ordering** caveats, per
+  [ADR 0007](docs/decisions/0007-web-typography-system.md).
+- **Owner-only write rule** for resources, per
+  [ADR 0011](docs/decisions/0011-campaign-model.md).
+
+### Privacy and data-exposure review
+
+When a PR introduces or alters what user data is stored or exposed (a
+new table or field on a user-facing entity, a new response schema, or
+a new public projection), run a data-minimization and exposure pass
+before approving:
+
+- Is anything collected that the feature does not need?
+- Is internal identity kept separate from public presentation?
+- Is PII such as email kept out of public projections?
+- Is there a deletion or retention consideration to record?
+
+Raise anything that fails these checks on the PR.
 
 ## Changelog
 
@@ -164,7 +286,10 @@ the tag goes on `main` after the release PR merges.
    2. In `CHANGELOG.md`, rename `[Unreleased]` to `## [X.Y.Z] - YYYY-MM-DD`.
    3. Insert a fresh empty `[Unreleased]` block at the top with the six
       sub-sections.
-   4. Merge the version-bump PR into `dev`.
+   4. In [`SECURITY.md`](SECURITY.md), bump the supported-versions table
+      so the new version is the latest supported and the prior release
+      drops to unsupported.
+   5. Merge the version-bump PR into `dev`.
 2. **Open a `dev` → `main` Release PR** titled `Release vX.Y.Z`. The
    body is the new `[X.Y.Z]` section of the changelog.
 3. **Merge the Release PR with "Create a merge commit" or "Rebase and
@@ -184,7 +309,17 @@ the tag goes on `main` after the release PR merges.
    git checkout main && git pull
    git tag vX.Y.Z && git push origin vX.Y.Z
    ```
-5. **Create a GitHub Release** pointing at the tag, using the new
+5. **If the release runs an Alembic migration, back up production
+   first.** The CD workflow runs `alembic upgrade head` before traffic
+   swaps, so take a logical backup so a bad migration is recoverable:
+   ```bash
+   export PROD_DATABASE_URL=$(fly ssh console -a delvemoar-api -C 'printenv DATABASE_URL')
+   task db:dump
+   ```
+   Keep the dump until the deploy is verified healthy, then delete it.
+   See the
+   [Postgres backup and restore runbook](docs/runbooks/postgres-backup-restore.md).
+6. **Create a GitHub Release** pointing at the tag, using the new
    `[X.Y.Z]` section as the body. The production CD workflow
    fires on the tag and deploys the API to Fly.io; Vercel deploys the
    web automatically on the `main` push. See
@@ -205,6 +340,20 @@ The web TypeScript types in `packages/api-types/` and the Go client in
 `apps/cli/internal/apiclient/` are generated from the API's `openapi.json`,
 not hand-written. If you find yourself editing those files, regenerate them
 with `task gen:types` instead.
+
+### Endpoint docstrings render in Swagger
+
+A FastAPI route handler's docstring becomes the endpoint *description* in
+`openapi.json` and the Swagger UI, where it is the public API
+documentation. Swagger collapses single line breaks, so the Google-style
+`Args:`/`Returns:`/`Raises:` sections we use elsewhere render as an
+unreadable run-on. Keep route-handler docstrings to a short prose
+description (one line, or a summary plus a paragraph) and put the detail
+into FastAPI's native, properly-rendered tools: `summary=`,
+`Query(description=...)`, `Path(...)`, Pydantic `Field(description=...)`,
+and the `responses=` map. Internal helper functions (those not exposed as
+endpoints) keep full Google-style docstrings. The docstring is still
+required (`ruff` pydocstyle), but a one-line summary satisfies it.
 
 ## Web architectural boundaries
 

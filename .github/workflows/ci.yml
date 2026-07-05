@@ -15,11 +15,25 @@ jobs:
       run:
         working-directory: apps/api
 
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: dm
+          POSTGRES_PASSWORD: dm_secret
+          POSTGRES_DB: delve_moar
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
           cache-dependency-glob: apps/api/uv.lock
@@ -38,25 +52,10 @@ jobs:
 
       - name: pytest
         run: uv run pytest
-        # When DB-touching tests are added, uncomment the service container below
-        # and set DATABASE_URL in the env block.
-        #
-        # env:
-        #   DATABASE_URL: postgresql+asyncpg://dm:dm_secret@localhost:5432/delve_moar
-        #
-        # services:
-        #   postgres:
-        #     image: postgres:17-alpine
-        #     env:
-        #       POSTGRES_USER: dm
-        #       POSTGRES_PASSWORD: dm_secret
-        #       POSTGRES_DB: delve_moar
-        #     ports: ["5432:5432"]
-        #     options: >-
-        #       --health-cmd pg_isready
-        #       --health-interval 5s
-        #       --health-timeout 5s
-        #       --health-retries 5
+        env:
+          # Auth tests use a real Postgres; conftest derives a dedicated
+          # "<db>_test" database from this URL (never the dev database).
+          DATABASE_URL: postgresql+asyncpg://dm:dm_secret@localhost:5432/delve_moar
 
   # ── TypeScript web app ─────────────────────────────────────────────────────
   lint-and-test-web:
@@ -67,12 +66,12 @@ jobs:
         working-directory: apps/web
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
 
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version-file: .nvmrc
           cache: pnpm
@@ -90,6 +89,12 @@ jobs:
       - name: Vitest
         run: pnpm test
 
+      - name: Build
+        run: pnpm build
+
+      - name: Build Storybook
+        run: pnpm build-storybook
+
   # ── Go CLI ─────────────────────────────────────────────────────────────────
   lint-and-test-cli:
     name: CLI — lint + test
@@ -99,10 +104,10 @@ jobs:
         working-directory: apps/cli
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version-file: apps/cli/go.mod
           cache: true
@@ -111,12 +116,31 @@ jobs:
         run: go mod verify
 
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v8
+        uses: golangci/golangci-lint-action@v9
         with:
           working-directory: apps/cli
 
       - name: go test
         run: go test -race ./...
+
+  # ── Shell scripts ──────────────────────────────────────────────────────────
+  test-shell:
+    name: Shell — bats
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up Bats
+        uses: bats-core/bats-action@4.0.0
+        with:
+          support-install: false
+          assert-install: false
+          file-install: false
+          detik-install: false
+
+      - name: Run bats
+        run: bats test/
 
   # ── OpenAPI gen-types drift check ──────────────────────────────────────────
   gen-types-check:
@@ -125,18 +149,18 @@ jobs:
     needs: [lint-and-test-api]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
           cache-dependency-glob: apps/api/uv.lock
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
 
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version-file: .nvmrc
           cache: pnpm
@@ -145,7 +169,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version-file: apps/cli/go.mod
           cache: true
@@ -181,9 +205,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
@@ -197,10 +221,10 @@ jobs:
           curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh \
             | sh -s -- -b /usr/local/bin
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
 
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version-file: .nvmrc
           cache: pnpm
