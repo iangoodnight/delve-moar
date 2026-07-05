@@ -1,5 +1,9 @@
 # delve-moar
 
+[![CI (main)](https://github.com/iangoodnight/delve-moar/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/iangoodnight/delve-moar/actions/workflows/ci.yml)
+[![CI (dev)](https://github.com/iangoodnight/delve-moar/actions/workflows/ci.yml/badge.svg?branch=dev)](https://github.com/iangoodnight/delve-moar/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/github/license/iangoodnight/delve-moar)](LICENSE)
+
 A homebrew-first TTRPG utility suite for game masters: catalog,
 encounter builder, and character tools, all self-hosted and SRD-powered.
 
