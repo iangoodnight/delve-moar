@@ -28,6 +28,14 @@ jobs:
       - name: Lint first-parent commits in PR range
         run: |
           set -euo pipefail
+          # A main -> dev back-merge only carries commits that were already
+          # vetted when they first merged; re-linting them fails on historical
+          # release-merge titles (e.g. a squashed "Release vX.Y.Z"). Skip and
+          # exit 0 so a required check still passes.
+          if [ "${{ github.head_ref }}" = "main" ]; then
+            echo "Back-merge from main; commits already vetted. Skipping."
+            exit 0
+          fi
           base="${{ github.event.pull_request.base.sha }}"
           head="${{ github.event.pull_request.head.sha }}"
           mapfile -t commits < <(git log --first-parent --format=%H "$base..$head")
