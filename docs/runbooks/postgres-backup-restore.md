@@ -8,10 +8,14 @@ unrecoverable without a working restore. This runbook exists so that
 recovery needs no tribal knowledge.
 
 Production Postgres is a single-node **legacy Fly Postgres** cluster
-(`delvemoar-db`, region `iad`, one 1 GB encrypted volume
-`vol_49116ojzld8q389r`), created with `fly postgres create` and
-deliberately kept out of Terraform (see
+(`delvemoar-db`, region `iad`, one 1 GB encrypted volume), created with
+`fly postgres create` and deliberately kept out of Terraform (see
 [`infra/terraform/fly/main.tf`](../../infra/terraform/fly/main.tf)).
+
+The `fly` commands in this runbook assume an authenticated session in
+the project's Fly organization; without it they cannot reach the
+cluster. Where a command needs the volume ID (shown below as
+`<vol_id>`), get the current value from `fly volumes list -a delvemoar-db`.
 
 ## What we rely on
 
@@ -23,7 +27,7 @@ Two mechanisms, in order of how recovery actually happens:
    no cost. List them with:
 
    ```sh
-   fly volumes snapshots list vol_49116ojzld8q389r
+   fly volumes snapshots list <vol_id>
    ```
 
    This is the default recovery source for an unplanned loss.
@@ -121,7 +125,7 @@ it is safe to run and inspect before any cutover.
 
 ```sh
 # 1. Pick a snapshot.
-fly volumes snapshots list vol_49116ojzld8q389r
+fly volumes snapshots list <vol_id>
 
 # 2. Create a new cluster seeded from it.
 fly postgres create \

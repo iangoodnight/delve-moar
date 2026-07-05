@@ -1,0 +1,27 @@
+# NOTICE
+
+DelveMoar is an independent, fan-made project. It is not affiliated
+with, endorsed by, or sponsored by Wizards of the Coast LLC.
+
+"Dungeons & Dragons", "D&D", and "Wizards of the Coast" are trademarks
+of Wizards of the Coast LLC. DelveMoar refers to them only nominatively,
+to describe compatibility with the 5th Edition System Reference
+Document.
+
+## Licensing
+
+- Source code: MIT License (see LICENSE).
+- Game content: portions are drawn from the System Reference Document
+  5.1 ("SRD 5.1") by Wizards of the Coast LLC, licensed under Creative
+  Commons Attribution 4.0 International (CC BY 4.0). Full attribution
+  and the data-compilation credit (5e-bits/5e-database) are in
+  apps/api/scripts/SEED_ATTRIBUTION.md.
+
+## SRD 5.1 attribution
+
+This work includes material taken from the System Reference Document 5.1
+("SRD 5.1") by Wizards of the Coast LLC, available at
+<https://dnd.wizards.com/resources/systems-reference-document>. The SRD
+5.1 is licensed under the Creative Commons Attribution 4.0 International
+License, available at
+<https://creativecommons.org/licenses/by/4.0/legalcode>.
