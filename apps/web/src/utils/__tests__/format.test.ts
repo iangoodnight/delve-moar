@@ -1,21 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { capitalize, formatSpellLevel } from '../format';
-
-describe('capitalize', () => {
-  it('uppercases the first letter', () => {
-    expect(capitalize('humanoid')).toBe('Humanoid');
-    expect(capitalize('evocation')).toBe('Evocation');
-  });
-
-  it('leaves an empty string alone', () => {
-    expect(capitalize('')).toBe('');
-  });
-
-  it('leaves an already-capitalized value alone', () => {
-    expect(capitalize('Dragon')).toBe('Dragon');
-  });
-});
+import { formatSpellLevel } from '../format';
 
 describe('formatSpellLevel', () => {
   it('leaves Cantrip on its own', () => {

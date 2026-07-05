@@ -1,9 +1,10 @@
+import { capitalize } from '@goodnight-dev/string';
 import { useInfiniteQuery } from '@tanstack/react-query';
 
 import { paths } from '@/config/paths';
 import { getItemCategoryLabel } from '@/constants/item-categories';
 import { getRarityOption } from '@/constants/item-rarities';
-import { capitalize, formatSpellLevel } from '@/utils/format';
+import { formatSpellLevel } from '@/utils/format';
 
 import { useRemoveContentFromBook } from '../api/content-membership';
 import {

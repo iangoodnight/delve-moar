@@ -46,6 +46,9 @@ importers:
       '@fontsource/major-mono-display':
         specifier: ^5.2.8
         version: 5.2.8
+      '@goodnight-dev/string':
+        specifier: ^0.4.0
+        version: 0.4.0
       '@hookform/resolvers':
         specifier: ^5.4.0
         version: 5.4.0(react-hook-form@7.80.0(react@19.2.7))
@@ -857,6 +860,10 @@ packages:
 
   '@fontsource/major-mono-display@5.2.8':
     resolution: {integrity: sha512-SnuZlOm1y9NT1sdXoAL8RXK3wuNHSmkHTReVmeRRTbBqbT5trIN46DPFoN5gzdf1nY9OYi7fknekEUG94dovKA==}
+
+  '@goodnight-dev/string@0.4.0':
+    resolution: {integrity: sha512-Flu3j6r/UpOUiX6C0dsLyaV96rEfpbign1CWaxwVTc8Xj1T4LP4Xiu8brAkv2Uh+OrjMEtU12QQxThJym1LaZA==}
+    engines: {node: '>=22'}
 
   '@hookform/resolvers@5.4.0':
     resolution: {integrity: sha512-EIsqr/t/qbinPIhGjMdtvutIN1Kk4uwbROE9/UQ93CAVGR7GkA7Y92+fX80OzXi/OB67jVFYwKGO1WzkxmkFZw==}
@@ -6312,6 +6319,8 @@ snapshots:
   '@fontsource/atkinson-hyperlegible@5.2.8': {}
 
   '@fontsource/major-mono-display@5.2.8': {}
+
+  '@goodnight-dev/string@0.4.0': {}
 
   '@hookform/resolvers@5.4.0(react-hook-form@7.80.0(react@19.2.7))':
     dependencies:
