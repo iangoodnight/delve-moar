@@ -39,11 +39,13 @@ See [CONTRIBUTING.md](../CONTRIBUTING.md#cutting-a-release-manual) for
 the full step-by-step. In brief:
 
 1. Bump `VERSION` + date the changelog on `dev` in a PR.
-2. Open a `dev` -> `main` Release PR.
-3. Merge.
+2. Open a `dev` -> `main` Release PR titled `chore(release): vX.Y.Z`.
+3. Merge it as a merge commit, never a squash.
 4. Tag the merge commit: `git tag vX.Y.Z && git push origin vX.Y.Z`.
 5. Create a GitHub Release pointing at the tag. This triggers the CD
    workflow.
+6. Back-merge `main` into `dev` from a dedicated branch (never `main`
+   itself as the PR head), so the next release stays conflict-free.
 
 ## Rollback
 
