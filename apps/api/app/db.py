@@ -13,7 +13,12 @@ from sqlalchemy.ext.asyncio import (
 _factory: async_sessionmaker[AsyncSession] | None = None
 
 
-def init_db(database_url: str) -> None:
+def init_db(
+    database_url: str,
+    *,
+    pool_pre_ping: bool = True,
+    pool_recycle_seconds: int = -1,
+) -> None:
     """Initialize the async database engine and session factory.
 
     Must be called once at application startup before any request is handled.
@@ -21,12 +26,24 @@ def init_db(database_url: str) -> None:
 
     Args:
         database_url: The asyncpg-compatible database connection URL.
+        pool_pre_ping: When True, check a pooled connection for liveness on
+            checkout and transparently replace a dead one. Guards against
+            connections closed server-side while idle (the Fly ``.flycast``
+            proxy) or by a DB restart, which otherwise surface as asyncpg
+            "connection is closed" (#303).
+        pool_recycle_seconds: Maximum age of a pooled connection before it is
+            retired, in seconds. ``-1`` (the default) disables recycling.
 
     Usage:
         init_db("postgresql+asyncpg://user:password@localhost/dbname")
     """
     global _factory
-    engine = create_async_engine(database_url, echo=False)
+    engine = create_async_engine(
+        database_url,
+        echo=False,
+        pool_pre_ping=pool_pre_ping,
+        pool_recycle=pool_recycle_seconds,
+    )
     _factory = async_sessionmaker(engine, expire_on_commit=False)
 
 
