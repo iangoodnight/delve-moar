@@ -22,6 +22,13 @@ For the per-PR convention and the manual release ritual, see the
 
 ### Fixed
 
+- The API no longer returns 500s from stale database connections. The
+  async engine now enables `pool_pre_ping` (a liveness check that
+  transparently reconnects a connection closed server-side, e.g. by the
+  Fly proxy dropping an idle connection or a DB restart) plus a
+  30-minute `pool_recycle` age cap. Both are tunable via
+  `DB_POOL_PRE_PING` and `DB_POOL_RECYCLE_SECONDS`. (#303)
+
 ### Security
 
 ## [0.1.3] - 2026-07-04
