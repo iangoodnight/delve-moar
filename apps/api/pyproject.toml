@@ -4,7 +4,7 @@ version = "0.0.1"
 description = "TTRPG utility API — homebrew-first GM tools"
 requires-python = ">=3.12"
 dependencies = [
-    "fastapi[standard]>=0.138.2",
+    "fastapi[standard]>=0.139.0",
     "sqlalchemy[asyncio]>=2.0.51",
     "asyncpg>=0.29",
     "alembic>=1.18.5",
