@@ -1,13 +1,18 @@
-import { SortAscendingIcon, SortDescendingIcon } from '@phosphor-icons/react';
-import { useEffect, useRef } from 'react';
+import {
+  SortAscendingIcon,
+  SortDescendingIcon,
+  XIcon,
+} from '@phosphor-icons/react';
+import { useEffect, useRef, useState } from 'react';
 
 import { IconButton } from '@/components/ui/button';
 import { Callout } from '@/components/ui/callout';
+import { ConfirmDestructive } from '@/components/ui/confirm-destructive';
 import { TextField } from '@/components/ui/field';
 import { Box, Column, Row } from '@/components/ui/layout';
 import { Spinner } from '@/components/ui/loading';
 import { Select } from '@/components/ui/select';
-import { Label } from '@/components/ui/typography';
+import { Label, Text } from '@/components/ui/typography';
 import { VisuallyHidden } from '@/components/ui/utils';
 
 import type { BookSortOption, SortDirection } from '../constants';
@@ -63,6 +68,10 @@ export function BookContentSection({
   onRemoveRow,
 }: Readonly<BookContentSectionProps>) {
   const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const [pendingRemoval, setPendingRemoval] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
   const {
     rows,
     isLoading,
@@ -193,7 +202,7 @@ export function BookContentSection({
                 href={row.href}
                 name={row.name}
                 onRemove={() => {
-                  onRemoveRow(row.id);
+                  setPendingRemoval({ id: row.id, name: row.name });
                 }}
               />
             ))}
@@ -208,6 +217,34 @@ export function BookContentSection({
           </Row>
         )}
       </Column>
+
+      <ConfirmDestructive
+        confirmText={
+          <>
+            <XIcon aria-hidden="true" weight="bold" /> Remove
+          </>
+        }
+        description={
+          <Text>
+            Remove <Text weight="bold">{pendingRemoval?.name}</Text> from this
+            book? It stays in your account.
+          </Text>
+        }
+        maxWidth="28rem"
+        onConfirm={() => {
+          if (pendingRemoval) {
+            onRemoveRow(pendingRemoval.id);
+          }
+          setPendingRemoval(null);
+        }}
+        onOpenChange={(next) => {
+          if (!next) {
+            setPendingRemoval(null);
+          }
+        }}
+        open={pendingRemoval !== null}
+        title="Remove from book?"
+      />
     </Column>
   );
 }

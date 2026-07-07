@@ -28,6 +28,9 @@ For the per-PR convention and the manual release ritual, see the
   Fly proxy dropping an idle connection or a DB restart) plus a
   30-minute `pool_recycle` age cap. Both are tunable via
   `DB_POOL_PRE_PING` and `DB_POOL_RECYCLE_SECONDS`. (#303)
+- Removing a monster, spell, or item from a book now asks for
+  confirmation first, so a single mis-click no longer drops an entry
+  from a collection. (#302)
 
 ### Security
 
