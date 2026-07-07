@@ -1,13 +1,9 @@
-import {
-  DownloadSimpleIcon,
-  TrashIcon,
-  WarningIcon,
-} from '@phosphor-icons/react';
+import { DownloadSimpleIcon, TrashIcon } from '@phosphor-icons/react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
-import { AlertDialog } from '@/components/ui/dialog';
+import { ConfirmDestructive } from '@/components/ui/confirm-destructive';
 import { Form, FormTextField } from '@/components/ui/form';
 import { Column, Row } from '@/components/ui/layout';
 import { H2, Text } from '@/components/ui/typography';
@@ -66,75 +62,62 @@ export function AccountDangerZone() {
           Export my data
         </Button>
 
-        <AlertDialog.Root onOpenChange={setConfirmOpen} open={confirmOpen}>
-          <AlertDialog.Trigger>
+        <ConfirmDestructive
+          confirmLoading={deleteAccount.isPending}
+          confirmText={
+            <>
+              <TrashIcon aria-hidden="true" weight="bold" /> Delete account
+            </>
+          }
+          description="This permanently deletes your account and the books you own. Your collections cannot be recovered. Enter your password to confirm."
+          formId="delete-account-form"
+          maxWidth="45rem"
+          onOpenChange={setConfirmOpen}
+          open={confirmOpen}
+          title="Delete your account?"
+          trigger={
             <Button color="red" type="button">
               <TrashIcon aria-hidden="true" weight="bold" />
               Delete account
             </Button>
-          </AlertDialog.Trigger>
-          <AlertDialog.Content maxWidth="45rem">
-            <AlertDialog.Title color="red">
-              <Row gap="2">
-                <WarningIcon aria-hidden="true" weight="bold" />
-                Delete your account?
-              </Row>
-            </AlertDialog.Title>
-            <AlertDialog.Description size="2">
-              This permanently deletes your account and the books you own. Your
-              collections cannot be recovered. Enter your password to confirm.
-            </AlertDialog.Description>
-            <Form
-              onSubmit={(values, methods) => {
-                deleteAccount.mutate(
-                  { password: values.password },
-                  {
-                    onSuccess: () => {
-                      setConfirmOpen(false);
-                      void navigate(paths.home.getHref(), { replace: true });
-                    },
-                    onError: (error) => {
-                      // A wrong password shows inline; other failures toast.
-                      const field = deleteAccountFieldForError(error);
-                      if (field !== null) {
-                        methods.setError(field, {
-                          message: getApiErrorMessage(error),
-                        });
-                      }
-                    },
+          }
+        >
+          <Form
+            id="delete-account-form"
+            onSubmit={(values, methods) => {
+              deleteAccount.mutate(
+                { password: values.password },
+                {
+                  onSuccess: () => {
+                    setConfirmOpen(false);
+                    void navigate(paths.home.getHref(), { replace: true });
                   },
-                );
-              }}
-              schema={deleteAccountSchema}
-            >
-              {() => (
-                <Column gap="3" mt="4">
-                  <FormTextField
-                    autoComplete="current-password"
-                    label="Current password"
-                    name="password"
-                    type="password"
-                  />
-                  <Row gap="3" justify="end" mt="1">
-                    <AlertDialog.Cancel>
-                      <Button color="amber" type="button" variant="soft">
-                        Cancel
-                      </Button>
-                    </AlertDialog.Cancel>
-                    <Button
-                      color="red"
-                      loading={deleteAccount.isPending}
-                      type="submit"
-                    >
-                      <TrashIcon aria-hidden="true" weight="bold" />
-                      Delete account
-                    </Button>
-                  </Row>
-                </Column>
-              )}
-            </Form>
-          </AlertDialog.Content>
-        </AlertDialog.Root>
+                  onError: (error) => {
+                    // A wrong password shows inline; other failures toast.
+                    const field = deleteAccountFieldForError(error);
+                    if (field !== null) {
+                      methods.setError(field, {
+                        message: getApiErrorMessage(error),
+                      });
+                    }
+                  },
+                },
+              );
+            }}
+            schema={deleteAccountSchema}
+          >
+            {() => (
+              <Column gap="3" mt="4">
+                <FormTextField
+                  autoComplete="current-password"
+                  label="Current password"
+                  name="password"
+                  type="password"
+                />
+              </Column>
+            )}
+          </Form>
+        </ConfirmDestructive>
       </Row>
     </Column>
   );
