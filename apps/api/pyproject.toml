@@ -12,7 +12,7 @@ dependencies = [
     "argon2-cffi>=25.1.0",
     "limits>=5.8.0",
     "aiosmtplib>=5.1.2",
-    "sentry-sdk[fastapi]>=2.66.0",
+    "sentry-sdk[fastapi]>=2.66.1",
     # Used by the SRD seed script (scripts/seed_srd.py), which runs inside the
     # deployed image; declared directly rather than leaning on
     # fastapi[standard]'s transitive httpx.
