@@ -25,6 +25,7 @@ from app.models import (
 
 ACCOUNT = "/v1/account"
 PASSWORD = "supersecret"
+NEW_PASSWORD = "newsupersecret"
 
 
 def _csrf_header(client: AsyncClient) -> dict[str, str]:
@@ -215,3 +216,128 @@ async def test_export_requires_authentication(db_client: AsyncClient) -> None:
     """An anonymous caller cannot export an account."""
     resp = await db_client.get(f"{ACCOUNT}/export")
     assert resp.status_code == 401
+
+
+# ── change password ──────────────────────────────────────────────────────────
+
+
+async def test_change_password_updates_credentials(
+    db_client: AsyncClient,
+) -> None:
+    """The new password authenticates afterward and the old one does not."""
+    await _signup(db_client, "rotator")
+
+    resp = await db_client.put(
+        f"{ACCOUNT}/password",
+        json={"currentPassword": PASSWORD, "newPassword": NEW_PASSWORD},
+        headers=_csrf_header(db_client),
+    )
+    assert resp.status_code == 204
+
+    db_client.cookies.clear()
+    old = await db_client.post(
+        "/v1/auth/login",
+        json={"identifier": "rotator", "password": PASSWORD},
+    )
+    assert old.status_code == 401
+    new = await db_client.post(
+        "/v1/auth/login",
+        json={"identifier": "rotator", "password": NEW_PASSWORD},
+    )
+    assert new.status_code == 200
+
+
+async def test_change_password_keeps_current_revokes_other_sessions(
+    db_client: AsyncClient,
+) -> None:
+    """This browser stays signed in; every prior session is revoked."""
+    await _signup(db_client, "multi")
+    session_a = db_client.cookies[settings.session_cookie_name]
+
+    # A second sign-in stands in for another device; the jar now holds B.
+    login = await db_client.post(
+        "/v1/auth/login",
+        json={"identifier": "multi", "password": PASSWORD},
+    )
+    assert login.status_code == 200
+    session_b = db_client.cookies[settings.session_cookie_name]
+    assert session_b != session_a
+
+    resp = await db_client.put(
+        f"{ACCOUNT}/password",
+        json={"currentPassword": PASSWORD, "newPassword": NEW_PASSWORD},
+        headers=_csrf_header(db_client),
+    )
+    assert resp.status_code == 204
+
+    # The current browser was re-issued a fresh session and stays signed in.
+    assert (await db_client.get("/v1/auth/me")).status_code == 200
+
+    # Both sessions that existed before the change no longer authenticate.
+    db_client.cookies.set(settings.session_cookie_name, session_a)
+    assert (await db_client.get("/v1/auth/me")).status_code == 401
+    db_client.cookies.set(settings.session_cookie_name, session_b)
+    assert (await db_client.get("/v1/auth/me")).status_code == 401
+
+
+async def test_change_password_wrong_current_is_forbidden(
+    db_client: AsyncClient,
+) -> None:
+    """A wrong current password is rejected and leaves the password intact."""
+    await _signup(db_client, "careful")
+
+    resp = await db_client.put(
+        f"{ACCOUNT}/password",
+        json={
+            "currentPassword": "not-my-password",
+            "newPassword": NEW_PASSWORD,
+        },
+        headers=_csrf_header(db_client),
+    )
+    assert resp.status_code == 403
+    assert resp.json()["errorCode"] == "INVALID_PASSWORD"
+
+    # The original password still works.
+    db_client.cookies.clear()
+    login = await db_client.post(
+        "/v1/auth/login",
+        json={"identifier": "careful", "password": PASSWORD},
+    )
+    assert login.status_code == 200
+
+
+async def test_change_password_requires_csrf(db_client: AsyncClient) -> None:
+    """Without the CSRF header the change is rejected before the password."""
+    await _signup(db_client, "nocsrfpw")
+    resp = await db_client.put(
+        f"{ACCOUNT}/password",
+        json={"currentPassword": PASSWORD, "newPassword": NEW_PASSWORD},
+    )
+    assert resp.status_code == 403
+    assert resp.json()["errorCode"] == "CSRF_FAILED"
+
+
+async def test_change_password_requires_authentication(
+    db_client: AsyncClient,
+) -> None:
+    """With CSRF satisfied but no session, the change is unauthenticated."""
+    db_client.cookies.set(settings.csrf_cookie_name, "anon-token")
+    resp = await db_client.put(
+        f"{ACCOUNT}/password",
+        json={"currentPassword": PASSWORD, "newPassword": NEW_PASSWORD},
+        headers={"X-CSRF-Token": "anon-token"},
+    )
+    assert resp.status_code == 401
+
+
+async def test_change_password_rejects_short_password(
+    db_client: AsyncClient,
+) -> None:
+    """A too-short new password fails validation (422)."""
+    await _signup(db_client, "shortpw")
+    resp = await db_client.put(
+        f"{ACCOUNT}/password",
+        json={"currentPassword": PASSWORD, "newPassword": "short"},
+        headers=_csrf_header(db_client),
+    )
+    assert resp.status_code == 422

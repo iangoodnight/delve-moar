@@ -16,10 +16,10 @@ function renderNav(path = '/account') {
 }
 
 describe('AccountNav', () => {
-  it('links to the profile and books sections', () => {
+  it('links to the account and books sections', () => {
     renderNav();
 
-    expect(screen.getByRole('link', { name: /profile/i })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: /account/i })).toHaveAttribute(
       'href',
       '/account',
     );
@@ -36,7 +36,7 @@ describe('AccountNav', () => {
       'aria-current',
       'page',
     );
-    expect(screen.getByRole('link', { name: /profile/i })).not.toHaveAttribute(
+    expect(screen.getByRole('link', { name: /account/i })).not.toHaveAttribute(
       'aria-current',
     );
   });

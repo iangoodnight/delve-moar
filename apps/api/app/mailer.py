@@ -85,6 +85,29 @@ async def send_verification_email(to: str, token: str) -> None:
     )
 
 
+async def send_email_change_email(to: str, token: str) -> None:
+    """Email the confirmation link for a requested email change (#175).
+
+    Sent to the *new* address: opening the link proves the user controls
+    it, at which point the account's email swaps over.
+
+    Args:
+        to: The requested new email address.
+        token: The raw email-change token.
+    """
+    link = f"{settings.frontend_base_url}/confirm-email-change?token={token}"
+    await send_email(
+        to=to,
+        subject="Confirm your new DelveMoar email",
+        text_body=(
+            "Confirm this address to finish updating your DelveMoar email. "
+            f"Open the link below:\n\n{link}\n\n"
+            "If you did not request this change you can ignore this message; "
+            "your email will not change."
+        ),
+    )
+
+
 async def send_password_reset_email(to: str, token: str) -> None:
     """Email a user the link to reset their password.
 

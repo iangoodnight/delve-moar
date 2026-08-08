@@ -19,6 +19,11 @@ export type MessageResponse = components['schemas']['MessageResponse'];
 export type AccountExport = components['schemas']['AccountExport'];
 export type AccountDeleteRequest =
   components['schemas']['AccountDeleteRequest'];
+export type ChangePasswordRequest =
+  components['schemas']['ChangePasswordRequest'];
+export type ChangeEmailRequest = components['schemas']['ChangeEmailRequest'];
+export type EmailChangeConfirmRequest =
+  components['schemas']['EmailChangeConfirmRequest'];
 
 // Single source of truth for the cached current-user identity. The auth
 // context reads this key; the mutations below keep it in sync.
@@ -95,6 +100,22 @@ export async function deleteAccount(data: AccountDeleteRequest): Promise<void> {
   // axios sends a request body on DELETE via the `data` config; the client's
   // interceptor attaches the CSRF header for the mutating method.
   await apiClient.delete('/v1/account', { data });
+}
+
+export async function changePassword(
+  data: ChangePasswordRequest,
+): Promise<void> {
+  await apiClient.put('/v1/account/password', data);
+}
+
+export function changeEmail(data: ChangeEmailRequest): Promise<User> {
+  return apiClient.put<User>('/v1/account/email', data);
+}
+
+export async function confirmEmailChange(
+  data: EmailChangeConfirmRequest,
+): Promise<void> {
+  await apiClient.post('/v1/auth/email-change/confirm', data);
 }
 
 export function useSignup() {
@@ -176,6 +197,35 @@ export function useDeleteAccount() {
       // The account and its content are gone and the server cleared the
       // cookies. Flip the cache to signed-out immediately, mirroring logout.
       queryClient.setQueryData(USER_QUERY_KEY, null);
+    },
+  });
+}
+
+export function useChangePassword() {
+  return useMutation({ mutationFn: changePassword });
+}
+
+export function useChangeEmail() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: changeEmail,
+    onSuccess: (user) => {
+      // Reflect the newly staged pending email in the cached identity.
+      queryClient.setQueryData(USER_QUERY_KEY, user);
+    },
+  });
+}
+
+export function useConfirmEmailChange() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: confirmEmailChange,
+    // The confirm panel renders success/failure inline, so suppress the
+    // global error toast (mirrors useVerifyEmail).
+    meta: { suppressErrorToast: true },
+    onSuccess: () => {
+      // Email and verification status changed; refetch /me when signed in.
+      void queryClient.invalidateQueries({ queryKey: USER_QUERY_KEY });
     },
   });
 }
