@@ -24,8 +24,11 @@ const meta: Meta<typeof TextArea> = {
     placeholder: 'What is this collection for?',
   },
   decorators: [
+    // A fixed-width column so the (inline-flex) fields grow to fill it via
+    // align-items: stretch, rather than collapsing to their help-text width.
+    // The preview's centered layout keeps the column centered.
     (Story) => (
-      <Column gap="4" style={{ maxWidth: 360 }}>
+      <Column gap="2" width="360px">
         <Story />
       </Column>
     ),
@@ -87,7 +90,7 @@ export const InForm: Story = {
   render: () => (
     <Form onSubmit={() => undefined} schema={bookSchema}>
       {() => (
-        <Column gap="3">
+        <Column gap="2">
           <FormTextArea
             helpText="Optional. Describe what belongs in this book."
             label="Description"
