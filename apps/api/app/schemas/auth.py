@@ -118,6 +118,15 @@ class VerifyEmailRequest(AppSchema):
     )
 
 
+class EmailChangeConfirmRequest(AppSchema):
+    """Payload to confirm a pending email change with its token."""
+
+    token: str = Field(
+        min_length=1,
+        description="Email-change token from the confirmation link.",
+    )
+
+
 class PasswordResetRequest(AppSchema):
     """Payload to request a password-reset email.
 
@@ -159,6 +168,13 @@ class UserResponse(AppSchema):
     id: uuid.UUID = Field(description="The account's unique identifier.")
     username: str = Field(description="The account's public handle.")
     email: EmailStr = Field(description="The account's private email address.")
+    pending_email: EmailStr | None = Field(
+        default=None,
+        description=(
+            "A requested new address awaiting confirmation, if any. "
+            "Owner-only, like ``email``."
+        ),
+    )
     email_verified: bool = Field(
         description="Whether the email has been verified."
     )
@@ -179,6 +195,7 @@ class UserResponse(AppSchema):
             id=user.id,
             username=user.username,
             email=user.email,
+            pending_email=user.pending_email,
             email_verified=user.email_verified_at is not None,
             created_at=user.created_at,
         )

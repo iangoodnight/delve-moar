@@ -21,6 +21,8 @@ VERIFY = "/v1/auth/verify-email"
 RESEND = "/v1/auth/resend-verification"
 RESET_REQUEST = "/v1/auth/password-reset"
 RESET_CONFIRM = "/v1/auth/password-reset/confirm"
+CHANGE_EMAIL = "/v1/account/email"
+CHANGE_CONFIRM = "/v1/auth/email-change/confirm"
 
 PASSWORD = "hunter2hunter"
 NEW_PASSWORD = "brandnewpass1"
@@ -40,8 +42,12 @@ def sent_emails(monkeypatch: pytest.MonkeyPatch) -> SentEmails:
     async def _reset(to: str, token: str) -> None:
         captured.append(("reset", to, token))
 
+    async def _change(to: str, token: str) -> None:
+        captured.append(("email_change", to, token))
+
     monkeypatch.setattr(mailer, "send_verification_email", _verify)
     monkeypatch.setattr(mailer, "send_password_reset_email", _reset)
+    monkeypatch.setattr(mailer, "send_email_change_email", _change)
     return captured
 
 
@@ -284,3 +290,197 @@ async def test_password_reset_confirm_rejects_short_password(
         RESET_CONFIRM, json={"token": token, "password": "short"}
     )
     assert resp.status_code == 422
+
+
+# ── change email: request stages a pending address ───────────────────────────
+
+
+async def test_change_email_stages_pending_and_mails_new_address(
+    db_client: AsyncClient, sent_emails: SentEmails
+) -> None:
+    await db_client.post(SIGNUP, json=_signup("chdm", "ch@x.com"))
+    sent_emails.clear()  # drop the signup verification email
+
+    resp = await db_client.put(
+        CHANGE_EMAIL,
+        json={"newEmail": "new@x.com", "currentPassword": PASSWORD},
+        headers=_csrf_header(db_client),
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    # The live email is unchanged; the new address is only staged.
+    assert body["email"] == "ch@x.com"
+    assert body["pendingEmail"] == "new@x.com"
+
+    assert [(k, to) for (k, to, _t) in sent_emails] == [
+        ("email_change", "new@x.com")
+    ]
+    # /me reflects the pending change too.
+    me = (await db_client.get(ME)).json()
+    assert me["email"] == "ch@x.com"
+    assert me["pendingEmail"] == "new@x.com"
+
+
+async def test_change_email_wrong_password_is_forbidden(
+    db_client: AsyncClient, sent_emails: SentEmails
+) -> None:
+    await db_client.post(SIGNUP, json=_signup("wrongch", "wrongch@x.com"))
+    sent_emails.clear()
+
+    resp = await db_client.put(
+        CHANGE_EMAIL,
+        json={"newEmail": "nope@x.com", "currentPassword": "not-it"},
+        headers=_csrf_header(db_client),
+    )
+    assert resp.status_code == 403
+    assert resp.json()["errorCode"] == "INVALID_PASSWORD"
+    assert sent_emails == []  # nothing staged, nothing sent
+    assert (await db_client.get(ME)).json()["pendingEmail"] is None
+
+
+async def test_change_email_rejects_taken_address(
+    db_client: AsyncClient, sent_emails: SentEmails
+) -> None:
+    # The first signup owns "taken@x.com"; the second is the current user.
+    await db_client.post(SIGNUP, json=_signup("firstowner", "taken@x.com"))
+    await db_client.post(SIGNUP, json=_signup("seconduser", "second@x.com"))
+    sent_emails.clear()
+
+    resp = await db_client.put(
+        CHANGE_EMAIL,
+        json={"newEmail": "taken@x.com", "currentPassword": PASSWORD},
+        headers=_csrf_header(db_client),
+    )
+    assert resp.status_code == 409
+    assert resp.json()["errorCode"] == "EMAIL_TAKEN"
+    assert sent_emails == []
+
+
+async def test_change_email_rejects_unchanged_address(
+    db_client: AsyncClient,
+) -> None:
+    await db_client.post(SIGNUP, json=_signup("samech", "same@x.com"))
+    resp = await db_client.put(
+        CHANGE_EMAIL,
+        # Case-insensitive: the normalized address equals the current one.
+        json={"newEmail": "SAME@x.com", "currentPassword": PASSWORD},
+        headers=_csrf_header(db_client),
+    )
+    assert resp.status_code == 409
+    assert resp.json()["errorCode"] == "EMAIL_UNCHANGED"
+
+
+async def test_change_email_requires_csrf(db_client: AsyncClient) -> None:
+    await db_client.post(SIGNUP, json=_signup("csrfch", "csrfch@x.com"))
+    resp = await db_client.put(
+        CHANGE_EMAIL,
+        json={"newEmail": "x@x.com", "currentPassword": PASSWORD},
+    )
+    assert resp.status_code == 403
+    assert resp.json()["errorCode"] == "CSRF_FAILED"
+
+
+async def test_change_email_requires_authentication(
+    db_client: AsyncClient,
+) -> None:
+    db_client.cookies.set(settings.csrf_cookie_name, "forged")
+    resp = await db_client.put(
+        CHANGE_EMAIL,
+        json={"newEmail": "x@x.com", "currentPassword": PASSWORD},
+        headers={"X-CSRF-Token": "forged"},
+    )
+    assert resp.status_code == 401
+    assert resp.json()["errorCode"] == "UNAUTHENTICATED"
+
+
+# ── change email: confirm swaps the address ──────────────────────────────────
+
+
+async def test_confirm_email_change_swaps_and_verifies(
+    db_client: AsyncClient, sent_emails: SentEmails
+) -> None:
+    await db_client.post(SIGNUP, json=_signup("swapdm", "swap@x.com"))
+    await db_client.put(
+        CHANGE_EMAIL,
+        json={"newEmail": "swapped@x.com", "currentPassword": PASSWORD},
+        headers=_csrf_header(db_client),
+    )
+    token = _token_of(sent_emails, "email_change")
+
+    resp = await db_client.post(CHANGE_CONFIRM, json={"token": token})
+    assert resp.status_code == 204
+
+    body = (await db_client.get(ME)).json()
+    assert body["email"] == "swapped@x.com"
+    assert body["pendingEmail"] is None
+    # Confirming proved control of the new address, so it is verified.
+    assert body["emailVerified"] is True
+
+    # The account now logs in by the new address, not the old one.
+    db_client.cookies.clear()
+    assert (
+        await db_client.post(
+            LOGIN, json={"identifier": "swap@x.com", "password": PASSWORD}
+        )
+    ).status_code == 401
+    assert (
+        await db_client.post(
+            LOGIN,
+            json={"identifier": "swapped@x.com", "password": PASSWORD},
+        )
+    ).status_code == 200
+
+
+async def test_confirm_email_change_rejects_unknown_token(
+    db_client: AsyncClient,
+) -> None:
+    resp = await db_client.post(CHANGE_CONFIRM, json={"token": "nope"})
+    assert resp.status_code == 400
+    assert resp.json()["errorCode"] == "INVALID_TOKEN"
+
+
+async def test_confirm_email_change_token_is_single_use(
+    db_client: AsyncClient, sent_emails: SentEmails
+) -> None:
+    await db_client.post(SIGNUP, json=_signup("oncech", "oncech@x.com"))
+    await db_client.put(
+        CHANGE_EMAIL,
+        json={"newEmail": "oncenew@x.com", "currentPassword": PASSWORD},
+        headers=_csrf_header(db_client),
+    )
+    token = _token_of(sent_emails, "email_change")
+
+    assert (
+        await db_client.post(CHANGE_CONFIRM, json={"token": token})
+    ).status_code == 204
+    replay = await db_client.post(CHANGE_CONFIRM, json={"token": token})
+    assert replay.status_code == 400
+
+
+async def test_confirm_email_change_conflicts_when_taken_meanwhile(
+    db_client: AsyncClient, sent_emails: SentEmails
+) -> None:
+    """If the pending address is registered before confirmation, 409."""
+    await db_client.post(SIGNUP, json=_signup("racer", "racer@x.com"))
+    await db_client.put(
+        CHANGE_EMAIL,
+        json={"newEmail": "later@x.com", "currentPassword": PASSWORD},
+        headers=_csrf_header(db_client),
+    )
+    token = _token_of(sent_emails, "email_change")
+
+    # Another account grabs the address before the change is confirmed.
+    grab = await db_client.post(SIGNUP, json=_signup("sniper", "later@x.com"))
+    assert grab.status_code == 201
+
+    resp = await db_client.post(CHANGE_CONFIRM, json={"token": token})
+    assert resp.status_code == 409
+    assert resp.json()["errorCode"] == "EMAIL_TAKEN"
+
+    # The racer's live email is untouched (the swap was rolled back).
+    db_client.cookies.clear()
+    assert (
+        await db_client.post(
+            LOGIN, json={"identifier": "racer@x.com", "password": PASSWORD}
+        )
+    ).status_code == 200

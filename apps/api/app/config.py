@@ -153,6 +153,7 @@ class Settings(BaseSettings):
     # tokens are 256-bit and unbruteforceable.
     rate_limit_password_reset: str = "5/hour"  # noqa: S105 (rate, not a secret)
     rate_limit_resend_verification: str = "5/hour"
+    rate_limit_email_change: str = "5/hour"
 
     # Email / mailer (#171). Verification and password-reset links are sent
     # through a provider-agnostic seam. ``mailer_transport`` selects the
@@ -175,6 +176,9 @@ class Settings(BaseSettings):
     # since it grants a password change.
     email_verification_ttl_seconds: int = 86_400  # 24 hours
     password_reset_ttl_seconds: int = 3_600  # 1 hour
+    # Change-email confirmation link; short since confirming it swaps the
+    # account's login identity (#175).
+    email_change_ttl_seconds: int = 3_600  # 1 hour
 
     # Observability / error tracking (#167). Sentry is wired through a seam
     # (app/observability.py) that stays inert until sentry_dsn is set, so local
