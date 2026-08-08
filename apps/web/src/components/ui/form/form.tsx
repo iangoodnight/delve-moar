@@ -4,20 +4,25 @@ import type { FieldValues, UseFormReturn } from 'react-hook-form';
 import { FormProvider, useForm } from 'react-hook-form';
 import type { z } from 'zod';
 
-type FormMethods<TSchema extends z.ZodType<FieldValues, FieldValues>> =
-  UseFormReturn<z.input<TSchema>, unknown, z.output<TSchema>>;
+// Generic over the schema's output/input value types (not the schema type):
+// inferring those directly keeps zodResolver from widening to FieldValues,
+// which its zod-4 overload otherwise does when handed a generic schema.
+type FormMethods<
+  TOutput extends FieldValues,
+  TInput extends FieldValues,
+> = UseFormReturn<TInput, unknown, TOutput>;
 
-interface FormProps<TSchema extends z.ZodType<FieldValues, FieldValues>> {
-  readonly schema: TSchema;
+interface FormProps<TOutput extends FieldValues, TInput extends FieldValues> {
+  readonly schema: z.ZodType<TOutput, TInput>;
   // Receives the schema's parsed (output) values plus the RHF methods, so
   // handlers can map server errors onto fields via methods.setError.
   readonly onSubmit: (
-    values: z.output<TSchema>,
-    methods: FormMethods<TSchema>,
+    values: TOutput,
+    methods: FormMethods<TOutput, TInput>,
   ) => unknown;
   // Render-prop exposing the RHF methods. Fields subscribe to their own state
   // via context, so reactive form state is never read here.
-  readonly children: (methods: FormMethods<TSchema>) => ReactNode;
+  readonly children: (methods: FormMethods<TOutput, TInput>) => ReactNode;
   readonly id?: string;
   readonly className?: string;
 }
@@ -27,14 +32,14 @@ interface FormProps<TSchema extends z.ZodType<FieldValues, FieldValues>> {
 // is client-side UX; the API remains the source of truth. The input/output
 // split lets schemas transform (e.g. trim) without losing types: fields
 // register against the input shape, onSubmit receives the parsed output.
-export function Form<TSchema extends z.ZodType<FieldValues, FieldValues>>({
+export function Form<TOutput extends FieldValues, TInput extends FieldValues>({
   schema,
   onSubmit,
   children,
   id,
   className,
-}: Readonly<FormProps<TSchema>>) {
-  const methods = useForm<z.input<TSchema>, unknown, z.output<TSchema>>({
+}: Readonly<FormProps<TOutput, TInput>>) {
+  const methods = useForm<TInput, unknown, TOutput>({
     resolver: zodResolver(schema),
   });
 
