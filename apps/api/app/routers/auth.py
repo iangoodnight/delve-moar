@@ -46,6 +46,7 @@ from app.rate_limit import (
     enforce_signup_rate_limit,
 )
 from app.schemas.auth import (
+    EmailChangeConfirmRequest,
     LoginRequest,
     MessageResponse,
     PasswordResetConfirmRequest,
@@ -106,6 +107,24 @@ def _invalid_token() -> AppError:
             "This link is invalid or has expired. Please request a new one."
         ),
         error_code="INVALID_TOKEN",
+        more_info=f"{settings.public_url}/docs",
+    )
+
+
+def _email_change_conflict() -> AppError:
+    """Build the 409 when a pending email was registered elsewhere first.
+
+    The address passed the change-email pre-check, but another account
+    claimed it before this confirmation; the unique constraint on
+    ``users.email`` catches the race at swap time.
+    """
+    return AppError(
+        status=status.HTTP_409_CONFLICT,
+        developer_message=(
+            "The pending email was registered by another account."
+        ),
+        user_message="That email is already registered.",
+        error_code="EMAIL_TAKEN",
         more_info=f"{settings.public_url}/docs",
     )
 
@@ -307,6 +326,49 @@ async def verify_email(payload: VerifyEmailRequest, db: DbSession) -> None:
         raise _invalid_token()
     user.email_verified_at = datetime.now(UTC)
     await invalidate_tokens(db, user.id, EmailTokenPurpose.EMAIL_VERIFICATION)
+
+
+@router.post(
+    "/email-change/confirm",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Confirm a pending email change",
+    responses={
+        status.HTTP_400_BAD_REQUEST: {
+            "model": ErrorResponse,
+            "description": "Token is invalid or expired",
+        },
+        status.HTTP_409_CONFLICT: {
+            "model": ErrorResponse,
+            "description": "Email already registered by another account",
+        },
+    },
+)
+async def confirm_email_change(
+    payload: EmailChangeConfirmRequest, db: DbSession
+) -> None:
+    """Apply a pending email change using its confirmation token.
+
+    Unauthenticated: possession of the token emailed to the new address is
+    the proof, and the token is single-use. The pending address swaps into
+    ``email`` (marked verified) and the pending slot clears. If another
+    account registered the address in the meantime, the swap is rejected.
+    """
+    user = await consume_token(
+        db, payload.token, EmailTokenPurpose.EMAIL_CHANGE
+    )
+    if user is None or user.pending_email is None:
+        raise _invalid_token()
+    user.email = user.pending_email
+    user.pending_email = None
+    user.email_verified_at = datetime.now(UTC)
+    try:
+        # consume_token already retired the single active EMAIL_CHANGE token,
+        # so committing the swap is all that remains; the unique constraint on
+        # email catches a race with another registration.
+        await db.commit()
+    except IntegrityError as exc:
+        await db.rollback()
+        raise _email_change_conflict() from exc
 
 
 @router.post(

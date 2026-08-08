@@ -65,9 +65,9 @@ export function ConfirmDestructive({
           {description}
         </AlertDialog.Description>
         {children}
-        <Row gap="3" justify="end" mt="4">
+        <Row gap="3" justify="end" mt="4" wrap="wrap-reverse">
           <AlertDialog.Cancel>
-            <Button type="button" variant="soft">
+            <Button color="red" type="button" variant="soft">
               Cancel
             </Button>
           </AlertDialog.Cancel>

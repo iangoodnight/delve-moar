@@ -3,9 +3,9 @@
 import uuid
 from datetime import datetime
 
-from pydantic import Field
+from pydantic import EmailStr, Field
 
-from app.schemas.auth import UserResponse
+from app.schemas.auth import Password, UserResponse
 from app.schemas.base import AppSchema
 
 
@@ -18,6 +18,39 @@ class AccountDeleteRequest(AppSchema):
     """
 
     password: str = Field(
+        min_length=1,
+        max_length=128,
+        description="The account's current password, for re-authentication.",
+    )
+
+
+class ChangePasswordRequest(AppSchema):
+    """Payload to change the signed-in user's password.
+
+    The current password re-authenticates the request, so a stolen session
+    alone cannot rotate it. ``new_password`` follows the shared account
+    password rules.
+    """
+
+    current_password: str = Field(
+        min_length=1,
+        max_length=128,
+        description="The account's current password, for re-authentication.",
+    )
+    new_password: Password
+
+
+class ChangeEmailRequest(AppSchema):
+    """Payload to request an email change.
+
+    The new address is staged, not applied, until it is confirmed via the
+    emailed link. The current password re-authenticates the request.
+    """
+
+    new_email: EmailStr = Field(
+        description="The address to move the account to (kept private)."
+    )
+    current_password: str = Field(
         min_length=1,
         max_length=128,
         description="The account's current password, for re-authentication.",

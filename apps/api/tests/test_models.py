@@ -97,6 +97,7 @@ def test_user_columns() -> None:
         "email",
         "password_hash",
         "email_verified_at",
+        "pending_email",
         "created_at",
         "updated_at",
     }

@@ -25,8 +25,11 @@ const meta: Meta<typeof TextField> = {
     placeholder: 'you@example.com',
   },
   decorators: [
+    // A fixed-width column so the (inline-flex) fields grow to fill it via
+    // align-items: stretch, rather than collapsing to their help-text width.
+    // The preview's centered layout keeps the column centered.
     (Story) => (
-      <Column gap="4" style={{ maxWidth: 360 }}>
+      <Column gap="2" width="360px">
         <Story />
       </Column>
     ),
@@ -97,7 +100,7 @@ export const InForm: Story = {
   render: () => (
     <Form onSubmit={() => undefined} schema={accountSchema}>
       {() => (
-        <Column gap="3">
+        <Column gap="2">
           <FormTextField
             helpText="Lowercase letters, numbers, hyphen, and underscore."
             label="Username"

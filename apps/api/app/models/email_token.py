@@ -20,6 +20,7 @@ class EmailTokenPurpose(StrEnum):
 
     EMAIL_VERIFICATION = "email_verification"
     PASSWORD_RESET = "password_reset"  # noqa: S105 (purpose label, not a secret)
+    EMAIL_CHANGE = "email_change"
 
 
 class EmailToken(Base):

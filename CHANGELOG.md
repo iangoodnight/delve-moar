@@ -14,6 +14,14 @@ For the per-PR convention and the manual release ritual, see the
 
 ### Added
 
+- Account settings: signed-in users can now change their password and
+  their email from the Account page. Changing the
+  password re-authenticates with the current one, then signs out other
+  devices while keeping the current session. Changing the email stages
+  the new address and sends a confirmation link to it; the account's
+  email switches over only once that link is confirmed, so a mistyped
+  address can never capture the account. (#175)
+
 ### Changed
 
 ### Deprecated

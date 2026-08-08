@@ -126,6 +126,14 @@ function createAppRouter(queryClient: QueryClientType) {
               lazy: () =>
                 import('./routes/auth/verify-email').then(convert(queryClient)),
             },
+            {
+              path: paths.confirmEmailChange.path,
+              HydrateFallback: DefaultHydrateFallback,
+              lazy: () =>
+                import('./routes/auth/confirm-email-change').then(
+                  convert(queryClient),
+                ),
+            },
           ],
         },
         {

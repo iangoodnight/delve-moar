@@ -73,6 +73,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/account/password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Change the current account's password
+         * @description Change the password after re-authenticating with the current one.
+         *
+         *     On success every other session is revoked, so a password that leaked
+         *     cannot keep riding an old session on another device, while this browser
+         *     stays signed in on a fresh session. Any outstanding password-reset
+         *     tokens are retired too.
+         */
+        put: operations["change_password_v1_account_password_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/account/email": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Request a change to the current account's email
+         * @description Stage a new email address and email it a confirmation link.
+         *
+         *     The live email does not change yet: the address is stored as pending
+         *     and a confirmation link is sent to it. It becomes the account's email
+         *     only once that link is confirmed (POST /auth/email-change/confirm), so
+         *     a mistyped address cannot capture the account. Requires the current
+         *     password.
+         */
+        put: operations["change_email_v1_account_email_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/auth/signup": {
         parameters: {
             query?: never;
@@ -174,6 +225,31 @@ export interface paths {
          *     the token is single-use.
          */
         post: operations["verify_email_v1_auth_verify_email_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/email-change/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Confirm a pending email change
+         * @description Apply a pending email change using its confirmation token.
+         *
+         *     Unauthenticated: possession of the token emailed to the new address is
+         *     the proof, and the token is single-use. The pending address swaps into
+         *     ``email`` (marked verified) and the pending slot clears. If another
+         *     account registered the address in the meantime, the swap is rejected.
+         */
+        post: operations["confirm_email_change_v1_auth_email_change_confirm_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -897,6 +973,46 @@ export interface components {
             description?: string | null;
         };
         /**
+         * ChangeEmailRequest
+         * @description Payload to request an email change.
+         *
+         *     The new address is staged, not applied, until it is confirmed via the
+         *     emailed link. The current password re-authenticates the request.
+         */
+        ChangeEmailRequest: {
+            /**
+             * Newemail
+             * Format: email
+             * @description The address to move the account to (kept private).
+             */
+            newEmail: string;
+            /**
+             * Currentpassword
+             * @description The account's current password, for re-authentication.
+             */
+            currentPassword: string;
+        };
+        /**
+         * ChangePasswordRequest
+         * @description Payload to change the signed-in user's password.
+         *
+         *     The current password re-authenticates the request, so a stolen session
+         *     alone cannot rotate it. ``new_password`` follows the shared account
+         *     password rules.
+         */
+        ChangePasswordRequest: {
+            /**
+             * Currentpassword
+             * @description The account's current password, for re-authentication.
+             */
+            currentPassword: string;
+            /**
+             * Newpassword
+             * @description Account password (8-128 characters).
+             */
+            newPassword: string;
+        };
+        /**
          * ContentSource
          * @description SRD content source attribution.
          *
@@ -948,6 +1064,17 @@ export interface components {
             damageType: components["schemas"]["SrdReference"];
         } & {
             [key: string]: unknown;
+        };
+        /**
+         * EmailChangeConfirmRequest
+         * @description Payload to confirm a pending email change with its token.
+         */
+        EmailChangeConfirmRequest: {
+            /**
+             * Token
+             * @description Email-change token from the confirmation link.
+             */
+            token: string;
         };
         /**
          * ErrorResponse
@@ -1616,6 +1743,12 @@ export interface components {
              */
             email: string;
             /**
+             * Pendingemail
+             * Format: email
+             * @description A requested new address awaiting confirmation, if any. Owner-only, like ``email``.
+             */
+            pendingEmail?: string | null;
+            /**
              * Emailverified
              * @description Whether the email has been verified.
              */
@@ -1754,6 +1887,124 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    change_password_v1_account_password_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChangePasswordRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CSRF token or current password invalid */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    change_email_v1_account_email_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChangeEmailRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserResponse"];
+                };
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description CSRF token or current password invalid */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Email already registered or unchanged */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Too many change-email requests */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
         };
@@ -1941,6 +2192,55 @@ export interface operations {
             };
             /** @description Token is invalid or expired */
             400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    confirm_email_change_v1_auth_email_change_confirm_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EmailChangeConfirmRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Token is invalid or expired */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Email already registered by another account */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };

@@ -16,7 +16,7 @@ export function AccountNav() {
     <Flex asChild direction={{ initial: 'row', md: 'column' }} gap="1">
       <nav aria-label="Account">
         <NavLink className={linkClass} end to={paths.account.getHref()}>
-          <UserIcon aria-hidden="true" /> Profile
+          <UserIcon aria-hidden="true" /> Account
         </NavLink>
         <NavLink className={linkClass} to={paths.accountBooks.getHref()}>
           <BooksIcon aria-hidden="true" /> My books
