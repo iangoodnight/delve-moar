@@ -24,3 +24,34 @@ export function deleteAccountFieldForError(error: unknown): 'password' | null {
   }
   return null;
 }
+
+// A wrong current password on the change-password form maps to that field;
+// every other failure falls through to the global toast.
+export function changePasswordFieldForError(
+  error: unknown,
+): 'currentPassword' | null {
+  if (error instanceof ApiError && error.errorCode === 'INVALID_PASSWORD') {
+    return 'currentPassword';
+  }
+  return null;
+}
+
+// On the change-email form a wrong password maps to currentPassword, and a
+// taken or unchanged address maps to newEmail; anything else toasts.
+export function changeEmailFieldForError(
+  error: unknown,
+): 'newEmail' | 'currentPassword' | null {
+  if (!(error instanceof ApiError)) {
+    return null;
+  }
+  if (error.errorCode === 'INVALID_PASSWORD') {
+    return 'currentPassword';
+  }
+  if (
+    error.errorCode === 'EMAIL_TAKEN' ||
+    error.errorCode === 'EMAIL_UNCHANGED'
+  ) {
+    return 'newEmail';
+  }
+  return null;
+}
