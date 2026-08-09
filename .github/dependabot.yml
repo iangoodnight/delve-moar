@@ -18,6 +18,14 @@ updates:
     schedule:
       interval: weekly
       day: monday
+    # pnpm 11 enables a 1-day `minimumReleaseAge` by default, so a bump to a
+    # release published in the prior ~24h fails CI on
+    # `pnpm install --frozen-lockfile` (ERR_PNPM_MINIMUM_RELEASE_AGE_VIOLATION).
+    # Hold npm version-update PRs a couple of days so the grouped bump lands
+    # green. npm-only: `minimumReleaseAge` does not apply to the uv / gomod /
+    # github-actions / docker ecosystems, so their entries need no cooldown.
+    cooldown:
+      default-days: 2
     open-pull-requests-limit: 5
     commit-message:
       prefix: chore
