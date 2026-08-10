@@ -79,6 +79,13 @@ The architecture is settled in three ADRs: authentication
 
 Milestone: [Phase 1b - Homebrew and Accounts](https://github.com/iangoodnight/delve-moar/milestone/4).
 
+Shipped to production so far (through v0.1.4): user accounts and
+sessions, email verification and password reset, account settings
+(password and email changes), IP-keyed rate limiting on the auth
+endpoints, and books (owned content collections layered over the SRD).
+Still ahead in this phase: homebrew authoring, campaigns and the
+visibility model, analytics and a staging environment, and CLI parity.
+
 What will be true at the end of Phase 1b: a logged-in DM can create
 their own homebrew content, organize it into campaigns, and share a
 campaign's content with invited players, all private by default.
