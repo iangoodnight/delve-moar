@@ -14,6 +14,20 @@ For the per-PR convention and the manual release ritual, see the
 
 ### Added
 
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+
+## [0.1.4] - 2026-08-09
+
+### Added
+
 - Account settings: signed-in users can now change their password and
   their email from the Account page. Changing the
   password re-authenticates with the current one, then signs out other
