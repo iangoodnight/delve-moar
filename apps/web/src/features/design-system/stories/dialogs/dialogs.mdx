@@ -4,35 +4,68 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 # Dialogs
 
-Two dialog archetypes cover the app. A **form dialog** collects input and
-commits it (change password, change email). A **destructive confirm** guards
-an irreversible action (delete account, delete book, remove content) and is
-built from the shared `ConfirmDestructive`. Both share the same footer and
-field conventions, so a dialog feels the same wherever it appears.
+Two dialog archetypes cover the app, and each is built from a shared
+primitive so a dialog feels the same wherever it appears. A **form dialog**
+collects input and commits it (change password, change email, create or edit
+a book) and is built from `FormDialog`. A **destructive confirm** guards an
+irreversible action (delete account, delete book, remove content) and is
+built from `ConfirmDestructive`. Both share the same footer and field
+conventions.
+
+## Building a form dialog
+
+Reach for `FormDialog` rather than assembling `Dialog` + `Form` + a footer by
+hand. It owns the scaffolding and the conventions below; you pass the
+trigger, the schema, the fields, and the submit wiring:
+
+```tsx
+<FormDialog
+  description="Choose a new password."
+  onSubmit={(values, methods, close) => {
+    changePassword.mutate(values, {
+      onSuccess: () => {
+        close();
+        notify.success('Your password has been changed.');
+      },
+      // A field-bound error stays inline, so the dialog holds open.
+      onError: (error) =>
+        methods.setError('currentPassword', {
+          message: getApiErrorMessage(error),
+        }),
+    });
+  }}
+  schema={changePasswordSchema}
+  submitIcon={<KeyIcon aria-hidden="true" weight="bold" />}
+  submitLabel="Change password"
+  submitting={changePassword.isPending}
+  title="Change password"
+  trigger={children}
+>
+  {() => (
+    <>
+      <FormTextField label="Current password" name="currentPassword" ... />
+      {/* ...more fields */}
+    </>
+  )}
+</FormDialog>
+```
+
+`FormDialog` owns its open state and hands `onSubmit` a `close` callback;
+call it in the mutation's `onSuccess`. It renders the field column and the
+footer for you, so the conventions below cannot drift.
 
 ## The footer
 
-Actions sit in a right-justified row that wraps in reverse on narrow screens,
-so the primary action keeps the trailing edge and Cancel drops beneath it
-rather than either button being clipped:
-
-```tsx
-<Row gap="3" justify="end" mt="2" wrap="wrap-reverse">
-  <Dialog.Close>
-    <FormButton color="red" type="button" variant="soft">
-      Cancel
-    </FormButton>
-  </Dialog.Close>
-  <FormButton loading={pending}>Save</FormButton>
-</Row>
-```
+`FormDialog` renders the actions in a right-justified row that wraps in
+reverse on narrow screens, so the primary action keeps the trailing edge and
+Cancel drops beneath it rather than either button being clipped:
 
 - **Cancel is soft red.** It reads as the way out without looking disabled,
   which a grey button does. It always carries `type="button"` so it dismisses
   the dialog instead of submitting the form.
-- **Cancel matches the primary's size.** When the primary is a `FormButton`
-  (size 3), Cancel is a `FormButton` too; in `ConfirmDestructive` both are the
-  default `Button`. The two buttons in a footer are always the same size.
+- **Cancel matches the primary's size.** Both are `FormButton`s (size 3) in a
+  `FormDialog`; in `ConfirmDestructive` both are the default `Button`. The two
+  buttons in a footer are always the same size.
 - **The primary is solid.** Accent for an ordinary commit, red for a
   destructive one. `ConfirmDestructive` pairs a soft-red Cancel with a
   solid-red confirm; the soft-versus-solid split keeps the dangerous action
@@ -42,16 +75,18 @@ rather than either button being clipped:
 ## Fields
 
 Dialog forms use the same fields as the rest of the app (see the Forms
-overview for their anatomy), with two dialog-specific defaults:
+overview for their anatomy), with two dialog-specific defaults `FormDialog`
+applies:
 
 - **Every field carries help text.** Even an obvious field gets a one-line
   `helpText`, so the reserved message row is never empty and the fields align.
 - **`gap="2"` between fields.** A touch tighter than a full-page form, so a
-  short dialog does not feel sparse.
+  short dialog does not feel sparse. `FormDialog` wraps the fields in this
+  column for you.
 
 ## Dismissal
 
-- A form dialog closes on success (`setOpen(false)` in the mutation's
+- A form dialog closes on success (call the `close` callback in the mutation's
   `onSuccess`) and stays open on a field-bound error so the inline message is
   visible. Cancel and the backdrop dismiss it at any time.
 - `ConfirmDestructive` is an `AlertDialog`: it does not dismiss on a backdrop
