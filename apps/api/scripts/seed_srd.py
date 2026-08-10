@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import re
 import sys
 import time
 from decimal import Decimal
@@ -306,6 +307,62 @@ async def seed_spells(
 
 
 # ---------------------------------------------------------------------------
+# Magic-item metadata preamble parsing
+# ---------------------------------------------------------------------------
+
+# SRD magic items store a metadata line as the first `desc` entry, e.g.
+# "Wondrous item, rare (requires attunement by a wizard)". It restates the
+# item's category and rarity (both kept as structured columns) and is the
+# only place the attunement requirement is recorded.
+#
+# Detect that preamble structurally: a short leading phrase, a comma, then a
+# rarity classification. Anchoring the rarity right after a comma keeps prose
+# mentions of "rare"/"legendary" mid-description from matching, and matching
+# only up to the rarity tolerates the source category typo "Wondous item".
+_MAGIC_ITEM_PREAMBLE_RE = re.compile(
+    r"^.{0,140}?,\s*"
+    r"(?:very\s+rare|rare|uncommon|common|legendary|artifact|varies|rarity\b)",
+    re.IGNORECASE,
+)
+
+# The attunement clause within the preamble. Group 1 keeps any by-restriction
+# ("requires attunement by a spellcaster").
+_ATTUNEMENT_RE = re.compile(r"\((requires attunement[^)]*)\)", re.IGNORECASE)
+
+
+def parse_magic_item_preamble(
+    desc: list[str],
+) -> tuple[str | None, list[str]]:
+    """Split the SRD magic-item metadata preamble off the description.
+
+    The first ``desc`` entry of an SRD magic item is a metadata line such as
+    ``"Wondrous item, rare (requires attunement by a wizard)"``. It duplicates
+    the item's category and rarity (both stored as structured columns) and
+    carries the only record of the attunement requirement.
+
+    When the first line is that preamble, return the parsed attunement clause
+    (with any by-restriction preserved, or ``None`` when the item needs no
+    attunement) and the description with the preamble line removed. When it is
+    not, return the description unchanged with no attunement, so homebrew
+    payloads and future data shapes pass through untouched.
+
+    Args:
+        desc: The item's ``desc`` list from the SRD payload.
+
+    Returns:
+        An ``(attunement, description)`` tuple.
+    """
+    if not desc:
+        return None, desc
+    first = desc[0].strip()
+    if not _MAGIC_ITEM_PREAMBLE_RE.match(first):
+        return None, desc
+    match = _ATTUNEMENT_RE.search(first)
+    attunement = match.group(1).strip() if match is not None else None
+    return attunement, desc[1:]
+
+
+# ---------------------------------------------------------------------------
 # Seed: items
 # ---------------------------------------------------------------------------
 
@@ -444,6 +501,12 @@ async def seed_magic_items(
         rows: list[dict[str, Any]] = []
         for i, entry in enumerate(index, 1):
             detail = await fetch_detail(client, entry["url"])
+            raw_desc = detail.get("desc")
+            if raw_desc:
+                attunement, description = parse_magic_item_preamble(raw_desc)
+                detail["desc"] = description
+                if attunement is not None:
+                    detail["requires_attunement"] = attunement
             rows.append(
                 {
                     "slug": detail["index"],
