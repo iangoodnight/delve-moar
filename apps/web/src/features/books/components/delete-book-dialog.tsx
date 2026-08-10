@@ -2,11 +2,8 @@ import { TrashIcon } from '@phosphor-icons/react';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 
-import { Button } from '@/components/ui/button';
-import { AlertDialog } from '@/components/ui/dialog';
-import { Row } from '@/components/ui/layout';
-import { Tooltip } from '@/components/ui/tooltip';
-import { Text } from '@/components/ui/typography';
+import { ConfirmDestructive } from '@/components/ui/confirm-destructive';
+import { Em, Text } from '@/components/ui/typography';
 import { notify } from '@/lib/notifications';
 
 import { useDeleteBook } from '../api/delete-book';
@@ -29,46 +26,35 @@ export function DeleteBookDialog({
   const deleteBook = useDeleteBook();
 
   return (
-    <AlertDialog.Root onOpenChange={setOpen} open={open}>
-      {tooltip === undefined ? (
-        <AlertDialog.Trigger>{children}</AlertDialog.Trigger>
-      ) : (
-        <Tooltip content={tooltip}>
-          <AlertDialog.Trigger>{children}</AlertDialog.Trigger>
-        </Tooltip>
-      )}
-      <AlertDialog.Content maxWidth="32rem">
-        <AlertDialog.Title>Delete book</AlertDialog.Title>
-        <AlertDialog.Description size="2">
-          <Text>
-            Delete <Text weight="bold">{bookName}</Text>? Its contents stay in
-            your account; only the collection is removed.
-          </Text>
-        </AlertDialog.Description>
-        <Row gap="3" justify="end" mt="4">
-          <AlertDialog.Cancel>
-            <Button color="gray" variant="soft">
-              Cancel
-            </Button>
-          </AlertDialog.Cancel>
-          <Button
-            color="red"
-            loading={deleteBook.isPending}
-            onClick={() => {
-              deleteBook.mutate(bookId, {
-                onSuccess: () => {
-                  setOpen(false);
-                  notify.info(
-                    `Book "${bookName}" deleted. Its contents remain in your account.`,
-                  );
-                },
-              });
-            }}
-          >
-            <TrashIcon aria-hidden="true" weight="bold" /> Delete book
-          </Button>
-        </Row>
-      </AlertDialog.Content>
-    </AlertDialog.Root>
+    <ConfirmDestructive
+      confirmLoading={deleteBook.isPending}
+      confirmText={
+        <>
+          <TrashIcon aria-hidden="true" weight="bold" /> Delete book
+        </>
+      }
+      description={
+        <Text>
+          Are you sure you want to delete the book <Em>{bookName}</Em>? This
+          action cannot be undone. Deleting the book will not delete its
+          contents, which will remain in your account.
+        </Text>
+      }
+      onConfirm={() => {
+        deleteBook.mutate(bookId, {
+          onSuccess: () => {
+            setOpen(false);
+            notify.info(
+              `Book "${bookName}" deleted. Its contents remain in your account.`,
+            );
+          },
+        });
+      }}
+      onOpenChange={setOpen}
+      open={open}
+      title="Delete this book?"
+      trigger={children}
+      {...(tooltip !== undefined && { triggerTooltip: tooltip })}
+    />
   );
 }

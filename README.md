@@ -1,5 +1,10 @@
 # delve-moar
 
+[![CI (main)](https://github.com/iangoodnight/delve-moar/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/iangoodnight/delve-moar/actions/workflows/ci.yml)
+[![CI (dev)](https://github.com/iangoodnight/delve-moar/actions/workflows/ci.yml/badge.svg?branch=dev)](https://github.com/iangoodnight/delve-moar/actions/workflows/ci.yml)
+[![Deploy](https://github.com/iangoodnight/delve-moar/actions/workflows/deploy.yml/badge.svg)](https://github.com/iangoodnight/delve-moar/actions/workflows/deploy.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 A homebrew-first TTRPG utility suite for game masters: catalog,
 encounter builder, and character tools, all self-hosted and SRD-powered.
 
@@ -103,6 +108,14 @@ rule.
 For security issues, see [`SECURITY.md`](SECURITY.md). Do not open a
 public issue for security reports.
 
-## License
+## License and attribution
 
-[MIT](LICENSE).
+Source code is licensed under the [MIT License](LICENSE). Game content is
+drawn from the D&D 5.1 System Reference Document by Wizards of the Coast
+LLC, used under
+[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+
+DelveMoar is an independent, fan-made project and is not affiliated with
+or endorsed by Wizards of the Coast. "Dungeons & Dragons" and "D&D" are
+trademarks of Wizards of the Coast LLC. See [`NOTICE`](NOTICE) for full
+attribution and trademark details.

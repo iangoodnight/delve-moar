@@ -65,7 +65,11 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         Control back to FastAPI after startup tasks complete.
     """
     _configure_app_logging()
-    init_db(settings.database_url)
+    init_db(
+        settings.database_url,
+        pool_pre_ping=settings.db_pool_pre_ping,
+        pool_recycle_seconds=settings.db_pool_recycle_seconds,
+    )
     yield
 
 

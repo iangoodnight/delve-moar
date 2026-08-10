@@ -253,6 +253,31 @@ type BookUpdate struct {
 	Name *string `json:"name,omitempty"`
 }
 
+// ChangeEmailRequest Payload to request an email change.
+//
+// The new address is staged, not applied, until it is confirmed via the
+// emailed link. The current password re-authenticates the request.
+type ChangeEmailRequest struct {
+	// CurrentPassword The account's current password, for re-authentication.
+	CurrentPassword string `json:"currentPassword"`
+
+	// NewEmail The address to move the account to (kept private).
+	NewEmail openapi_types.Email `json:"newEmail"`
+}
+
+// ChangePasswordRequest Payload to change the signed-in user's password.
+//
+// The current password re-authenticates the request, so a stolen session
+// alone cannot rotate it. “new_password“ follows the shared account
+// password rules.
+type ChangePasswordRequest struct {
+	// CurrentPassword The account's current password, for re-authentication.
+	CurrentPassword string `json:"currentPassword"`
+
+	// NewPassword Account password (8-128 characters).
+	NewPassword string `json:"newPassword"`
+}
+
 // ContentSource SRD content source attribution.
 //
 // Attributes:
@@ -288,6 +313,12 @@ type Damage struct {
 	// DamageType An SRD reference link.
 	DamageType           SrdReference           `json:"damageType"`
 	AdditionalProperties map[string]interface{} `json:"-"`
+}
+
+// EmailChangeConfirmRequest Payload to confirm a pending email change with its token.
+type EmailChangeConfirmRequest struct {
+	// Token Email-change token from the confirmation link.
+	Token string `json:"token"`
 }
 
 // ErrorResponse Standard error response schema.
@@ -743,6 +774,9 @@ type UserResponse struct {
 	// Id The account's unique identifier.
 	Id openapi_types.UUID `json:"id"`
 
+	// PendingEmail A requested new address awaiting confirmation, if any. Owner-only, like ``email``.
+	PendingEmail *openapi_types.Email `json:"pendingEmail,omitempty"`
+
 	// Username The account's public handle.
 	Username string `json:"username"`
 }
@@ -952,6 +986,15 @@ type GetSpellV1SpellsSlugGetParams struct {
 
 // DeleteAccountV1AccountDeleteJSONRequestBody defines body for DeleteAccountV1AccountDelete for application/json ContentType.
 type DeleteAccountV1AccountDeleteJSONRequestBody = AccountDeleteRequest
+
+// ChangeEmailV1AccountEmailPutJSONRequestBody defines body for ChangeEmailV1AccountEmailPut for application/json ContentType.
+type ChangeEmailV1AccountEmailPutJSONRequestBody = ChangeEmailRequest
+
+// ChangePasswordV1AccountPasswordPutJSONRequestBody defines body for ChangePasswordV1AccountPasswordPut for application/json ContentType.
+type ChangePasswordV1AccountPasswordPutJSONRequestBody = ChangePasswordRequest
+
+// ConfirmEmailChangeV1AuthEmailChangeConfirmPostJSONRequestBody defines body for ConfirmEmailChangeV1AuthEmailChangeConfirmPost for application/json ContentType.
+type ConfirmEmailChangeV1AuthEmailChangeConfirmPostJSONRequestBody = EmailChangeConfirmRequest
 
 // LoginV1AuthLoginPostJSONRequestBody defines body for LoginV1AuthLoginPost for application/json ContentType.
 type LoginV1AuthLoginPostJSONRequestBody = LoginRequest
@@ -3175,8 +3218,23 @@ type ClientInterface interface {
 
 	DeleteAccountV1AccountDelete(ctx context.Context, body DeleteAccountV1AccountDeleteJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// ChangeEmailV1AccountEmailPutWithBody request with any body
+	ChangeEmailV1AccountEmailPutWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	ChangeEmailV1AccountEmailPut(ctx context.Context, body ChangeEmailV1AccountEmailPutJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// ExportAccountV1AccountExportGet request
 	ExportAccountV1AccountExportGet(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ChangePasswordV1AccountPasswordPutWithBody request with any body
+	ChangePasswordV1AccountPasswordPutWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	ChangePasswordV1AccountPasswordPut(ctx context.Context, body ChangePasswordV1AccountPasswordPutJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ConfirmEmailChangeV1AuthEmailChangeConfirmPostWithBody request with any body
+	ConfirmEmailChangeV1AuthEmailChangeConfirmPostWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	ConfirmEmailChangeV1AuthEmailChangeConfirmPost(ctx context.Context, body ConfirmEmailChangeV1AuthEmailChangeConfirmPostJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// LoginV1AuthLoginPostWithBody request with any body
 	LoginV1AuthLoginPostWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -3313,8 +3371,80 @@ func (c *Client) DeleteAccountV1AccountDelete(ctx context.Context, body DeleteAc
 	return c.Client.Do(req)
 }
 
+func (c *Client) ChangeEmailV1AccountEmailPutWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewChangeEmailV1AccountEmailPutRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ChangeEmailV1AccountEmailPut(ctx context.Context, body ChangeEmailV1AccountEmailPutJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewChangeEmailV1AccountEmailPutRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 func (c *Client) ExportAccountV1AccountExportGet(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewExportAccountV1AccountExportGetRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ChangePasswordV1AccountPasswordPutWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewChangePasswordV1AccountPasswordPutRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ChangePasswordV1AccountPasswordPut(ctx context.Context, body ChangePasswordV1AccountPasswordPutJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewChangePasswordV1AccountPasswordPutRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ConfirmEmailChangeV1AuthEmailChangeConfirmPostWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewConfirmEmailChangeV1AuthEmailChangeConfirmPostRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ConfirmEmailChangeV1AuthEmailChangeConfirmPost(ctx context.Context, body ConfirmEmailChangeV1AuthEmailChangeConfirmPostJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewConfirmEmailChangeV1AuthEmailChangeConfirmPostRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -3812,6 +3942,46 @@ func NewDeleteAccountV1AccountDeleteRequestWithBody(server string, contentType s
 	return req, nil
 }
 
+// NewChangeEmailV1AccountEmailPutRequest calls the generic ChangeEmailV1AccountEmailPut builder with application/json body
+func NewChangeEmailV1AccountEmailPutRequest(server string, body ChangeEmailV1AccountEmailPutJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewChangeEmailV1AccountEmailPutRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewChangeEmailV1AccountEmailPutRequestWithBody generates requests for ChangeEmailV1AccountEmailPut with any type of body
+func NewChangeEmailV1AccountEmailPutRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/account/email")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PUT", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewExportAccountV1AccountExportGetRequest generates requests for ExportAccountV1AccountExportGet
 func NewExportAccountV1AccountExportGetRequest(server string) (*http.Request, error) {
 	var err error
@@ -3835,6 +4005,86 @@ func NewExportAccountV1AccountExportGetRequest(server string) (*http.Request, er
 	if err != nil {
 		return nil, err
 	}
+
+	return req, nil
+}
+
+// NewChangePasswordV1AccountPasswordPutRequest calls the generic ChangePasswordV1AccountPasswordPut builder with application/json body
+func NewChangePasswordV1AccountPasswordPutRequest(server string, body ChangePasswordV1AccountPasswordPutJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewChangePasswordV1AccountPasswordPutRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewChangePasswordV1AccountPasswordPutRequestWithBody generates requests for ChangePasswordV1AccountPasswordPut with any type of body
+func NewChangePasswordV1AccountPasswordPutRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/account/password")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PUT", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewConfirmEmailChangeV1AuthEmailChangeConfirmPostRequest calls the generic ConfirmEmailChangeV1AuthEmailChangeConfirmPost builder with application/json body
+func NewConfirmEmailChangeV1AuthEmailChangeConfirmPostRequest(server string, body ConfirmEmailChangeV1AuthEmailChangeConfirmPostJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewConfirmEmailChangeV1AuthEmailChangeConfirmPostRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewConfirmEmailChangeV1AuthEmailChangeConfirmPostRequestWithBody generates requests for ConfirmEmailChangeV1AuthEmailChangeConfirmPost with any type of body
+func NewConfirmEmailChangeV1AuthEmailChangeConfirmPostRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/auth/email-change/confirm")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
 
 	return req, nil
 }
@@ -5750,8 +6000,23 @@ type ClientWithResponsesInterface interface {
 
 	DeleteAccountV1AccountDeleteWithResponse(ctx context.Context, body DeleteAccountV1AccountDeleteJSONRequestBody, reqEditors ...RequestEditorFn) (*DeleteAccountV1AccountDeleteResponse, error)
 
+	// ChangeEmailV1AccountEmailPutWithBodyWithResponse request with any body
+	ChangeEmailV1AccountEmailPutWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ChangeEmailV1AccountEmailPutResponse, error)
+
+	ChangeEmailV1AccountEmailPutWithResponse(ctx context.Context, body ChangeEmailV1AccountEmailPutJSONRequestBody, reqEditors ...RequestEditorFn) (*ChangeEmailV1AccountEmailPutResponse, error)
+
 	// ExportAccountV1AccountExportGetWithResponse request
 	ExportAccountV1AccountExportGetWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ExportAccountV1AccountExportGetResponse, error)
+
+	// ChangePasswordV1AccountPasswordPutWithBodyWithResponse request with any body
+	ChangePasswordV1AccountPasswordPutWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ChangePasswordV1AccountPasswordPutResponse, error)
+
+	ChangePasswordV1AccountPasswordPutWithResponse(ctx context.Context, body ChangePasswordV1AccountPasswordPutJSONRequestBody, reqEditors ...RequestEditorFn) (*ChangePasswordV1AccountPasswordPutResponse, error)
+
+	// ConfirmEmailChangeV1AuthEmailChangeConfirmPostWithBodyWithResponse request with any body
+	ConfirmEmailChangeV1AuthEmailChangeConfirmPostWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ConfirmEmailChangeV1AuthEmailChangeConfirmPostResponse, error)
+
+	ConfirmEmailChangeV1AuthEmailChangeConfirmPostWithResponse(ctx context.Context, body ConfirmEmailChangeV1AuthEmailChangeConfirmPostJSONRequestBody, reqEditors ...RequestEditorFn) (*ConfirmEmailChangeV1AuthEmailChangeConfirmPostResponse, error)
 
 	// LoginV1AuthLoginPostWithBodyWithResponse request with any body
 	LoginV1AuthLoginPostWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*LoginV1AuthLoginPostResponse, error)
@@ -5898,6 +6163,33 @@ func (r DeleteAccountV1AccountDeleteResponse) StatusCode() int {
 	return 0
 }
 
+type ChangeEmailV1AccountEmailPutResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *UserResponse
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON409      *ErrorResponse
+	JSON422      *HTTPValidationError
+	JSON429      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r ChangeEmailV1AccountEmailPutResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ChangeEmailV1AccountEmailPutResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type ExportAccountV1AccountExportGetResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -5915,6 +6207,54 @@ func (r ExportAccountV1AccountExportGetResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r ExportAccountV1AccountExportGetResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ChangePasswordV1AccountPasswordPutResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON401      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON422      *HTTPValidationError
+}
+
+// Status returns HTTPResponse.Status
+func (r ChangePasswordV1AccountPasswordPutResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ChangePasswordV1AccountPasswordPutResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ConfirmEmailChangeV1AuthEmailChangeConfirmPostResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON400      *ErrorResponse
+	JSON409      *ErrorResponse
+	JSON422      *HTTPValidationError
+}
+
+// Status returns HTTPResponse.Status
+func (r ConfirmEmailChangeV1AuthEmailChangeConfirmPostResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ConfirmEmailChangeV1AuthEmailChangeConfirmPostResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -6612,6 +6952,23 @@ func (c *ClientWithResponses) DeleteAccountV1AccountDeleteWithResponse(ctx conte
 	return ParseDeleteAccountV1AccountDeleteResponse(rsp)
 }
 
+// ChangeEmailV1AccountEmailPutWithBodyWithResponse request with arbitrary body returning *ChangeEmailV1AccountEmailPutResponse
+func (c *ClientWithResponses) ChangeEmailV1AccountEmailPutWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ChangeEmailV1AccountEmailPutResponse, error) {
+	rsp, err := c.ChangeEmailV1AccountEmailPutWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseChangeEmailV1AccountEmailPutResponse(rsp)
+}
+
+func (c *ClientWithResponses) ChangeEmailV1AccountEmailPutWithResponse(ctx context.Context, body ChangeEmailV1AccountEmailPutJSONRequestBody, reqEditors ...RequestEditorFn) (*ChangeEmailV1AccountEmailPutResponse, error) {
+	rsp, err := c.ChangeEmailV1AccountEmailPut(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseChangeEmailV1AccountEmailPutResponse(rsp)
+}
+
 // ExportAccountV1AccountExportGetWithResponse request returning *ExportAccountV1AccountExportGetResponse
 func (c *ClientWithResponses) ExportAccountV1AccountExportGetWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ExportAccountV1AccountExportGetResponse, error) {
 	rsp, err := c.ExportAccountV1AccountExportGet(ctx, reqEditors...)
@@ -6619,6 +6976,40 @@ func (c *ClientWithResponses) ExportAccountV1AccountExportGetWithResponse(ctx co
 		return nil, err
 	}
 	return ParseExportAccountV1AccountExportGetResponse(rsp)
+}
+
+// ChangePasswordV1AccountPasswordPutWithBodyWithResponse request with arbitrary body returning *ChangePasswordV1AccountPasswordPutResponse
+func (c *ClientWithResponses) ChangePasswordV1AccountPasswordPutWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ChangePasswordV1AccountPasswordPutResponse, error) {
+	rsp, err := c.ChangePasswordV1AccountPasswordPutWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseChangePasswordV1AccountPasswordPutResponse(rsp)
+}
+
+func (c *ClientWithResponses) ChangePasswordV1AccountPasswordPutWithResponse(ctx context.Context, body ChangePasswordV1AccountPasswordPutJSONRequestBody, reqEditors ...RequestEditorFn) (*ChangePasswordV1AccountPasswordPutResponse, error) {
+	rsp, err := c.ChangePasswordV1AccountPasswordPut(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseChangePasswordV1AccountPasswordPutResponse(rsp)
+}
+
+// ConfirmEmailChangeV1AuthEmailChangeConfirmPostWithBodyWithResponse request with arbitrary body returning *ConfirmEmailChangeV1AuthEmailChangeConfirmPostResponse
+func (c *ClientWithResponses) ConfirmEmailChangeV1AuthEmailChangeConfirmPostWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ConfirmEmailChangeV1AuthEmailChangeConfirmPostResponse, error) {
+	rsp, err := c.ConfirmEmailChangeV1AuthEmailChangeConfirmPostWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseConfirmEmailChangeV1AuthEmailChangeConfirmPostResponse(rsp)
+}
+
+func (c *ClientWithResponses) ConfirmEmailChangeV1AuthEmailChangeConfirmPostWithResponse(ctx context.Context, body ConfirmEmailChangeV1AuthEmailChangeConfirmPostJSONRequestBody, reqEditors ...RequestEditorFn) (*ConfirmEmailChangeV1AuthEmailChangeConfirmPostResponse, error) {
+	rsp, err := c.ConfirmEmailChangeV1AuthEmailChangeConfirmPost(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseConfirmEmailChangeV1AuthEmailChangeConfirmPostResponse(rsp)
 }
 
 // LoginV1AuthLoginPostWithBodyWithResponse request with arbitrary body returning *LoginV1AuthLoginPostResponse
@@ -6995,6 +7386,67 @@ func ParseDeleteAccountV1AccountDeleteResponse(rsp *http.Response) (*DeleteAccou
 	return response, nil
 }
 
+// ParseChangeEmailV1AccountEmailPutResponse parses an HTTP response from a ChangeEmailV1AccountEmailPutWithResponse call
+func ParseChangeEmailV1AccountEmailPutResponse(rsp *http.Response) (*ChangeEmailV1AccountEmailPutResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ChangeEmailV1AccountEmailPutResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest UserResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest HTTPValidationError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 429:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON429 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseExportAccountV1AccountExportGetResponse parses an HTTP response from a ExportAccountV1AccountExportGetWithResponse call
 func ParseExportAccountV1AccountExportGetResponse(rsp *http.Response) (*ExportAccountV1AccountExportGetResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -7022,6 +7474,86 @@ func ParseExportAccountV1AccountExportGetResponse(rsp *http.Response) (*ExportAc
 			return nil, err
 		}
 		response.JSON401 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseChangePasswordV1AccountPasswordPutResponse parses an HTTP response from a ChangePasswordV1AccountPasswordPutWithResponse call
+func ParseChangePasswordV1AccountPasswordPutResponse(rsp *http.Response) (*ChangePasswordV1AccountPasswordPutResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ChangePasswordV1AccountPasswordPutResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest HTTPValidationError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseConfirmEmailChangeV1AuthEmailChangeConfirmPostResponse parses an HTTP response from a ConfirmEmailChangeV1AuthEmailChangeConfirmPostWithResponse call
+func ParseConfirmEmailChangeV1AuthEmailChangeConfirmPostResponse(rsp *http.Response) (*ConfirmEmailChangeV1AuthEmailChangeConfirmPostResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ConfirmEmailChangeV1AuthEmailChangeConfirmPostResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest HTTPValidationError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
 
 	}
 

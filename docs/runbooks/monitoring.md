@@ -21,7 +21,8 @@ One vendor plus the platform we already run on:
    alert rules.
 2. **Fly managed Grafana** (`fly-metrics.net`) for Postgres metrics
    (connections, CPU/memory, database size). This is built into the Fly
-   organization with no setup; we read it and add one storage alert.
+   organization with no setup. It is view-only: we read the dashboards
+   there, but alert rules must live elsewhere (see below).
 
 Email is the alert channel for now. A chat webhook can be added later in
 Sentry without touching the app.
@@ -100,14 +101,34 @@ monitors.
 
 Open `fly-metrics.net` (or `fly dashboard metrics`), select the
 organization, and open the Postgres dashboard for `delvemoar-db`. It
-shows connection counts, CPU and memory, and database size with no setup.
+shows connection counts, CPU and memory, and database size with no
+setup. This managed Grafana is **view-only**: it renders Fly's
+dashboards but does not let you create or save alert rules, so storage
+alerting has to live outside it (options below).
 
 The cluster is a single **1 GB** volume (see the
 [backup runbook](postgres-backup-restore.md)), so the metric that
-matters most is database size. Add one Grafana alert on disk/volume
-usage crossing roughly 80% of 1 GB, routed to the same email, so storage
-pressure is caught before writes start failing. Connections are worth a
-glance but are not close to the limit at current scale.
+matters most is database size. At current scale this is not a near-term
+risk: the prod DB is SRD-only and well under 1 MB (the backup drill
+dumped roughly 400 KB), and the daily volume snapshots are the backstop.
+A storage alert is a future-growth safety net, not a launch gate.
+Connections are worth a glance but are not close to the limit either.
+
+When you do want the alert, there are three options, cheapest first:
+
+1. **Defer.** Rely on the daily snapshots plus the manual headroom
+   below, and revisit if the database starts growing (homebrew content,
+   more users).
+2. **Real alerting via your own Grafana.** Because the Fly-managed
+   Grafana cannot save alert rules, stand up a separate Grafana (for
+   example the Grafana Cloud free tier) pointed at Fly's Prometheus
+   endpoint (`https://api.fly.io/prometheus/<org-slug>`, with an
+   `Authorization: Bearer <fly readonly token>` header) and configure
+   the ~80%-of-1 GB alert there, routed to the same email.
+3. **One-time manual headroom.** `fly volumes extend <vol_id> -s <GB>`
+   grows the volume (volumes only grow; confirm the flags with
+   `fly volumes extend --help`). Auto-extend is not available for this
+   legacy Fly Postgres volume, so any growth is manual.
 
 ## Alerting
 
@@ -116,7 +137,10 @@ delivery address. The baseline alert rules:
 
 - A new issue (error) is seen in either project.
 - An uptime monitor goes down.
-- (Fly Grafana) Postgres volume usage crosses the storage threshold.
+- (Optional) Postgres volume usage crosses the storage threshold. This
+  cannot be an alert in the Fly-managed Grafana; see [Postgres
+  metrics](#postgres-metrics-fly-grafana) for how to wire it (your own
+  Grafana on Fly's Prometheus) or why it can be deferred.
 
 Sentry's default "alert on a new issue" rule covers the first; the
 uptime alert is attached to the monitors above.

@@ -1,9 +1,11 @@
+import { capitalize } from '@goodnight-dev/string';
 import { useInfiniteQuery } from '@tanstack/react-query';
 
 import { paths } from '@/config/paths';
 import { getItemCategoryLabel } from '@/constants/item-categories';
 import { getRarityOption } from '@/constants/item-rarities';
-import { capitalize, formatSpellLevel } from '@/utils/format';
+import { notify } from '@/lib/notifications';
+import { formatSpellLevel } from '@/utils/format';
 
 import { useRemoveContentFromBook } from '../api/content-membership';
 import {
@@ -23,6 +25,9 @@ import type { BookContentRowData } from './book-content-row';
 import { BookContentSection } from './book-content-section';
 
 const SEARCH_DEBOUNCE_MS = 300;
+
+const REMOVE_ERROR_MESSAGE =
+  'Could not remove that from the book. Please try again.';
 
 // Filter state is owned by BookContents and passed in, so it survives the tab
 // unmount/remount that Radix does on switch.
@@ -79,7 +84,14 @@ export function BookMonstersSection({
         onLoadMore: () => void query.fetchNextPage(),
       }}
       onRemoveRow={(contentId) => {
-        removeMutation.mutate({ bookId, contentType: 'monster', contentId });
+        removeMutation.mutate(
+          { bookId, contentType: 'monster', contentId },
+          {
+            onError: () => {
+              notify.error(REMOVE_ERROR_MESSAGE);
+            },
+          },
+        );
       }}
       search={{
         value: search,
@@ -142,7 +154,14 @@ export function BookSpellsSection({
         onLoadMore: () => void query.fetchNextPage(),
       }}
       onRemoveRow={(contentId) => {
-        removeMutation.mutate({ bookId, contentType: 'spell', contentId });
+        removeMutation.mutate(
+          { bookId, contentType: 'spell', contentId },
+          {
+            onError: () => {
+              notify.error(REMOVE_ERROR_MESSAGE);
+            },
+          },
+        );
       }}
       search={{
         value: search,
@@ -208,7 +227,14 @@ export function BookItemsSection({
         onLoadMore: () => void query.fetchNextPage(),
       }}
       onRemoveRow={(contentId) => {
-        removeMutation.mutate({ bookId, contentType: 'item', contentId });
+        removeMutation.mutate(
+          { bookId, contentType: 'item', contentId },
+          {
+            onError: () => {
+              notify.error(REMOVE_ERROR_MESSAGE);
+            },
+          },
+        );
       }}
       search={{
         value: search,

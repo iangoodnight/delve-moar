@@ -18,6 +18,14 @@ updates:
     schedule:
       interval: weekly
       day: monday
+    # pnpm 11 enables a 1-day `minimumReleaseAge` by default, so a bump to a
+    # release published in the prior ~24h fails CI on
+    # `pnpm install --frozen-lockfile` (ERR_PNPM_MINIMUM_RELEASE_AGE_VIOLATION).
+    # Hold npm version-update PRs a couple of days so the grouped bump lands
+    # green. npm-only: `minimumReleaseAge` does not apply to the uv / gomod /
+    # github-actions / docker ecosystems, so their entries need no cooldown.
+    cooldown:
+      default-days: 2
     open-pull-requests-limit: 5
     commit-message:
       prefix: chore
@@ -27,6 +35,14 @@ updates:
         applies-to: version-updates
         patterns: ["*"]
         update-types: ["minor", "patch"]
+    # TypeScript 7 (the native rewrite) drops the `ts.Extension` enum from the
+    # JS API, which crashes @typescript-eslint/typescript-estree at load and
+    # takes ESLint down. No typescript-eslint release supports TS 7 yet (peer
+    # range caps at `typescript <6.1.0`). Skip the major until it does; minor
+    # and patch bumps still flow through npm-minor-patch above. Tracked in #317.
+    ignore:
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
 
   # ── Python / uv (apps/api) ─────────────────────────────────────────────────
   - package-ecosystem: uv

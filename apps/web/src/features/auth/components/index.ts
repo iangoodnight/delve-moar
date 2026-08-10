@@ -1,6 +1,9 @@
 export { AccountDangerZone } from './account-danger-zone';
 export { AccountPanel } from './account-panel';
 export { AuthCard } from './auth-card';
+export { ChangeEmailDialog } from './change-email-dialog';
+export { ChangePasswordDialog } from './change-password-dialog';
+export { EmailChangeConfirmPanel } from './email-change-confirm-panel';
 export { ForgotPasswordForm } from './forgot-password-form';
 export { LoginForm } from './login-form';
 export { ResetPasswordForm } from './reset-password-form';

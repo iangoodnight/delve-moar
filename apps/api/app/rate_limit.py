@@ -148,6 +148,19 @@ async def enforce_resend_verification_rate_limit(request: Request) -> None:
     )
 
 
+async def enforce_email_change_rate_limit(request: Request) -> None:
+    """Rate-limit dependency for the change-email request endpoint.
+
+    Same anti mail-bombing intent as the password-reset limiter: caps how
+    often one IP can send confirmation emails to a chosen address.
+    """
+    await _enforce(
+        request,
+        scope="email_change",
+        limit=settings.rate_limit_email_change,
+    )
+
+
 async def reset_rate_limits() -> None:
     """Clear all rate-limit counters.
 

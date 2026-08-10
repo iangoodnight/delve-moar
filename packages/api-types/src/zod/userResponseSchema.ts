@@ -12,6 +12,7 @@ export const userResponseSchema = z.object({
     "id": z.uuid().describe("The account's unique identifier."),
 "username": z.string().describe("The account's public handle."),
 "email": z.email().describe("The account's private email address."),
+"pendingEmail": z.email().describe("A requested new address awaiting confirmation, if any. Owner-only, like ``email``.").nullish(),
 "emailVerified": z.boolean().describe("Whether the email has been verified."),
 "createdAt": z.iso.datetime().describe("When the account was created.")
     }).describe("The owner's own view of their account.\n\nReturned only to the authenticated account holder (signup, login,\n``/me``). ``email`` appears here and nowhere else; other users see the\n``Author`` projection instead.")

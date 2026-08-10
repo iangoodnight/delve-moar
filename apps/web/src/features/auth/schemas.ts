@@ -77,6 +77,27 @@ export const resetPasswordSchema = z
   .refine(passwordsMatch, PASSWORD_MISMATCH);
 export type ResetPasswordValues = z.infer<typeof resetPasswordSchema>;
 
+// Changing the password re-authenticates with the current one (present-only;
+// the server verifies it), then applies the new password with the shared rules.
+export const changePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1, 'Enter your current password.'),
+    newPassword,
+    confirmNewPassword: z.string(),
+  })
+  .refine((data) => data.newPassword === data.confirmNewPassword, {
+    message: 'Passwords do not match.',
+    path: ['confirmNewPassword'],
+  });
+export type ChangePasswordValues = z.infer<typeof changePasswordSchema>;
+
+// Changing the email re-authenticates with the current password (present-only).
+export const changeEmailSchema = z.object({
+  newEmail: z.email('Enter a valid email address.'),
+  currentPassword: z.string().min(1, 'Enter your current password.'),
+});
+export type ChangeEmailValues = z.infer<typeof changeEmailSchema>;
+
 // Deleting the account re-authenticates with the current password. It only
 // needs to be present; the server verifies it (no length rules here, since
 // older passwords may predate the current minimum).

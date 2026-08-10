@@ -1,5 +1,5 @@
 import { Theme } from '@radix-ui/themes';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ComponentProps } from 'react';
 import { MemoryRouter } from 'react-router-dom';
@@ -80,7 +80,7 @@ describe('BookContentSection', () => {
     expect(screen.getByRole('link', { name: 'Goblin' })).toBeInTheDocument();
   });
 
-  it('removes a row from the book', async () => {
+  it('confirms before removing a row from the book', async () => {
     const user = userEvent.setup();
     const { props, onRemoveRow } = makeProps();
     renderSection(props);
@@ -88,7 +88,26 @@ describe('BookContentSection', () => {
     await user.click(
       screen.getByRole('button', { name: /remove goblin from this book/i }),
     );
+    // The row control opens a confirmation rather than removing immediately.
+    expect(onRemoveRow).not.toHaveBeenCalled();
+
+    const dialog = await screen.findByRole('alertdialog');
+    await user.click(within(dialog).getByRole('button', { name: 'Remove' }));
     expect(onRemoveRow).toHaveBeenCalledWith(ROWS[0]?.id);
+  });
+
+  it('does not remove when the confirmation is cancelled', async () => {
+    const user = userEvent.setup();
+    const { props, onRemoveRow } = makeProps();
+    renderSection(props);
+
+    await user.click(
+      screen.getByRole('button', { name: /remove goblin from this book/i }),
+    );
+    const dialog = await screen.findByRole('alertdialog');
+    await user.click(within(dialog).getByRole('button', { name: 'Cancel' }));
+
+    expect(onRemoveRow).not.toHaveBeenCalled();
   });
 
   it('reports search input changes', async () => {

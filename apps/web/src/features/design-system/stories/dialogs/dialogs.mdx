@@ -1,0 +1,59 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Design System/Dialogs/Overview" />
+
+# Dialogs
+
+Two dialog archetypes cover the app. A **form dialog** collects input and
+commits it (change password, change email). A **destructive confirm** guards
+an irreversible action (delete account, delete book, remove content) and is
+built from the shared `ConfirmDestructive`. Both share the same footer and
+field conventions, so a dialog feels the same wherever it appears.
+
+## The footer
+
+Actions sit in a right-justified row that wraps in reverse on narrow screens,
+so the primary action keeps the trailing edge and Cancel drops beneath it
+rather than either button being clipped:
+
+```tsx
+<Row gap="3" justify="end" mt="2" wrap="wrap-reverse">
+  <Dialog.Close>
+    <FormButton color="red" type="button" variant="soft">
+      Cancel
+    </FormButton>
+  </Dialog.Close>
+  <FormButton loading={pending}>Save</FormButton>
+</Row>
+```
+
+- **Cancel is soft red.** It reads as the way out without looking disabled,
+  which a grey button does. It always carries `type="button"` so it dismisses
+  the dialog instead of submitting the form.
+- **Cancel matches the primary's size.** When the primary is a `FormButton`
+  (size 3), Cancel is a `FormButton` too; in `ConfirmDestructive` both are the
+  default `Button`. The two buttons in a footer are always the same size.
+- **The primary is solid.** Accent for an ordinary commit, red for a
+  destructive one. `ConfirmDestructive` pairs a soft-red Cancel with a
+  solid-red confirm; the soft-versus-solid split keeps the dangerous action
+  distinct even though both are red.
+- **`wrap-reverse`** keeps both buttons reachable on a phone.
+
+## Fields
+
+Dialog forms use the same fields as the rest of the app (see the Forms
+overview for their anatomy), with two dialog-specific defaults:
+
+- **Every field carries help text.** Even an obvious field gets a one-line
+  `helpText`, so the reserved message row is never empty and the fields align.
+- **`gap="2"` between fields.** A touch tighter than a full-page form, so a
+  short dialog does not feel sparse.
+
+## Dismissal
+
+- A form dialog closes on success (`setOpen(false)` in the mutation's
+  `onSuccess`) and stays open on a field-bound error so the inline message is
+  visible. Cancel and the backdrop dismiss it at any time.
+- `ConfirmDestructive` is an `AlertDialog`: it does not dismiss on a backdrop
+  click, so an irreversible action always takes a deliberate Cancel or
+  confirm.

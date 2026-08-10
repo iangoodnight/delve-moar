@@ -2,7 +2,11 @@ import { describe, expect, it } from 'vitest';
 
 import { ApiError } from '@/lib/api-client';
 
-import { signupFieldForError } from '../error-mapping';
+import {
+  changeEmailFieldForError,
+  changePasswordFieldForError,
+  signupFieldForError,
+} from '../error-mapping';
 
 function apiError(errorCode: string, userMessage = 'A message.'): ApiError {
   return new ApiError({
@@ -30,5 +34,47 @@ describe('signupFieldForError', () => {
 
   it('returns null for a non-ApiError', () => {
     expect(signupFieldForError(new Error('x'))).toBeNull();
+  });
+});
+
+describe('changePasswordFieldForError', () => {
+  it('maps INVALID_PASSWORD to the currentPassword field', () => {
+    expect(changePasswordFieldForError(apiError('INVALID_PASSWORD'))).toBe(
+      'currentPassword',
+    );
+  });
+
+  it('returns null for other error codes', () => {
+    expect(changePasswordFieldForError(apiError('EMAIL_TAKEN'))).toBeNull();
+  });
+
+  it('returns null for a non-ApiError', () => {
+    expect(changePasswordFieldForError(new Error('x'))).toBeNull();
+  });
+});
+
+describe('changeEmailFieldForError', () => {
+  it('maps INVALID_PASSWORD to the currentPassword field', () => {
+    expect(changeEmailFieldForError(apiError('INVALID_PASSWORD'))).toBe(
+      'currentPassword',
+    );
+  });
+
+  it('maps EMAIL_TAKEN to the newEmail field', () => {
+    expect(changeEmailFieldForError(apiError('EMAIL_TAKEN'))).toBe('newEmail');
+  });
+
+  it('maps EMAIL_UNCHANGED to the newEmail field', () => {
+    expect(changeEmailFieldForError(apiError('EMAIL_UNCHANGED'))).toBe(
+      'newEmail',
+    );
+  });
+
+  it('returns null for other error codes', () => {
+    expect(changeEmailFieldForError(apiError('INVALID_TOKEN'))).toBeNull();
+  });
+
+  it('returns null for a non-ApiError', () => {
+    expect(changeEmailFieldForError(new Error('x'))).toBeNull();
   });
 });

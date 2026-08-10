@@ -85,6 +85,16 @@ Conventional values: `area:web`, `area:api`, `area:cli`, `area:data`,
 `area:infra`, `area:chore`, `area:docs`. Used for triage and CODEOWNERS
 context.
 
+### book
+
+An owner-defined collection of catalog content (monsters, spells, and
+items) introduced in [ADR 0014](decisions/0014-book-model.md). Books
+are the unit of grouping and sharing: content lives in a book, and a
+campaign grants its members access by enabling books. The SRD catalog
+is a public, read-only system book; a user's own books are private by
+default with owner-only writes. Every user gets a default "My
+Collection" book.
+
 ### bulletproof-react features layout
 
 The directory shape used by `apps/web/src/`, named after the
@@ -95,10 +105,12 @@ config, types, assets. Cross-feature imports are blocked. See
 
 ### campaign
 
-The container for a DM's homebrew content. Anchors multi-tenancy: a DM's
-homebrew monsters and spells live inside a campaign. The `campaigns`
-table exists from Phase 0 but is not yet surfaced in the UI; campaigns
-are still to come.
+A membership and sharing layer that anchors multi-tenancy. A campaign
+does not hold content directly; per
+[ADR 0014](decisions/0014-book-model.md) it reaches content by enabling
+[books](#book), which grants members read access to that content. The
+`campaigns` table exists from Phase 0 but is not yet surfaced in the UI;
+campaigns are still to come.
 
 ### catalog
 
@@ -116,7 +128,8 @@ See [architecture/openapi-pipeline.md](architecture/openapi-pipeline.md).
 
 A vertical slice of the web app under `apps/web/src/features/<name>/`.
 Self-contained: its own components, hooks, types, and stories. May not
-import from sibling features. Today the only feature is `design-system`.
+import from sibling features. Current features include `auth`, `books`,
+`monsters`, `spells`, and `items`.
 
 ### gen:types
 

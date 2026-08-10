@@ -61,6 +61,12 @@ export const paths = {
     path: '/verify-email',
     getHref: () => '/verify-email',
   },
+  // Target of the email-change confirmation link; reads the token from ?token=.
+  confirmEmailChange: {
+    displayName: 'Confirm email change',
+    path: '/confirm-email-change',
+    getHref: () => '/confirm-email-change',
+  },
   account: {
     displayName: 'Account',
     path: '/account',

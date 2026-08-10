@@ -24,6 +24,38 @@ For the per-PR convention and the manual release ritual, see the
 
 ### Security
 
+## [0.1.4] - 2026-08-09
+
+### Added
+
+- Account settings: signed-in users can now change their password and
+  their email from the Account page. Changing the
+  password re-authenticates with the current one, then signs out other
+  devices while keeping the current session. Changing the email stages
+  the new address and sends a confirmation link to it; the account's
+  email switches over only once that link is confirmed, so a mistyped
+  address can never capture the account. (#175)
+
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+- The API no longer returns 500s from stale database connections. The
+  async engine now enables `pool_pre_ping` (a liveness check that
+  transparently reconnects a connection closed server-side, e.g. by the
+  Fly proxy dropping an idle connection or a DB restart) plus a
+  30-minute `pool_recycle` age cap. Both are tunable via
+  `DB_POOL_PRE_PING` and `DB_POOL_RECYCLE_SECONDS`. (#303)
+- Removing a monster, spell, or item from a book now asks for
+  confirmation first, so a single mis-click no longer drops an entry
+  from a collection. (#302)
+
+### Security
+
 ## [0.1.3] - 2026-07-04
 
 ### Added

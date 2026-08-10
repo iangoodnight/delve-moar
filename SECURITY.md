@@ -13,8 +13,8 @@ security fixes. Older releases and pre-release tags do not.
 | Version          | Supported |
 | ---------------- | --------- |
 | `main` (HEAD)    | yes       |
-| `0.1.3` (latest) | yes       |
-| `< 0.1.3`        | no        |
+| `0.1.4` (latest) | yes       |
+| `< 0.1.4`        | no        |
 
 This table is bumped as part of the release ritual (see the "Cutting a
 release" checklist in `CONTRIBUTING.md`).
@@ -23,15 +23,14 @@ release" checklist in `CONTRIBUTING.md`).
 
 Please **do not** open a public GitHub issue for a security finding.
 
-Send reports by email to:
+The preferred channel is **GitHub Private Vulnerability Reporting
+(PVR)**: open the repository's **Security** tab and choose "Report a
+vulnerability". PVR keeps the report private until a fix ships and lets
+us coordinate the advisory with you in-thread.
+
+If you cannot use PVR, email:
 
 **security@delvemoar.com**
-
-GitHub Private Vulnerability Reporting (PVR) is the preferred channel for
-projects of this kind, but it requires the repository to be public. This
-repo is currently private, so PVR is not available. When the repo goes
-public, PVR will be enabled and become the preferred channel; email will
-remain as a fallback. This document will be updated at that time.
 
 When you report, please include:
 

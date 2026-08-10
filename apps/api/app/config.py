@@ -106,6 +106,16 @@ class Settings(BaseSettings):
     version: str = _read_version()
     public_url: str = "http://localhost:8000"
 
+    # Database connection pool. On Fly the API reaches Postgres over the
+    # `.flycast` proxy (which drops idle connections) and the DB machine
+    # restarts for platform maintenance, so a pooled connection can be dead
+    # when checked back out -- surfacing as asyncpg "connection is closed".
+    # pool_pre_ping runs a cheap liveness check on checkout and transparently
+    # reconnects; keep it on. pool_recycle caps a connection's age as a
+    # secondary guard (seconds; <= 0 disables). See app/db.py.
+    db_pool_pre_ping: bool = True
+    db_pool_recycle_seconds: int = 1800  # 30 minutes
+
     # Auth -- argon2id password-hashing parameters. Defaults are the OWASP
     # minimums; tune upward as hardware allows. They live in config so they
     # can change without a code edit, and check_needs_rehash() upgrades
@@ -143,6 +153,7 @@ class Settings(BaseSettings):
     # tokens are 256-bit and unbruteforceable.
     rate_limit_password_reset: str = "5/hour"  # noqa: S105 (rate, not a secret)
     rate_limit_resend_verification: str = "5/hour"
+    rate_limit_email_change: str = "5/hour"
 
     # Email / mailer (#171). Verification and password-reset links are sent
     # through a provider-agnostic seam. ``mailer_transport`` selects the
@@ -165,6 +176,9 @@ class Settings(BaseSettings):
     # since it grants a password change.
     email_verification_ttl_seconds: int = 86_400  # 24 hours
     password_reset_ttl_seconds: int = 3_600  # 1 hour
+    # Change-email confirmation link; short since confirming it swaps the
+    # account's login identity (#175).
+    email_change_ttl_seconds: int = 3_600  # 1 hour
 
     # Observability / error tracking (#167). Sentry is wired through a seam
     # (app/observability.py) that stays inert until sentry_dsn is set, so local

@@ -19,7 +19,10 @@ class User(Base):
     in the owner's own ``/me`` view. ``password_hash`` holds an argon2id
     encoded hash and is never serialized to API responses.
     ``email_verified_at`` is set once a user completes email verification
-    (#171); the auth core does not yet gate login on it.
+    (#171); the auth core does not yet gate login on it. ``pending_email``
+    stages a requested new address during a change-email flow (#175); the
+    live ``email`` swaps to it only after the new address is verified, so a
+    mistyped address cannot capture the account.
     """
 
     __tablename__ = "users"
@@ -35,6 +38,10 @@ class User(Base):
     email_verified_at: Mapped[datetime | None] = mapped_column(
         sa.TIMESTAMP(timezone=True),
     )
+    # A requested new address awaiting confirmation (#175); nullable and
+    # non-unique -- uniqueness is enforced on ``email`` when the change is
+    # confirmed and the two addresses swap.
+    pending_email: Mapped[str | None] = mapped_column(sa.String(255))
     created_at: Mapped[datetime] = mapped_column(
         sa.TIMESTAMP(timezone=True),
         server_default=sa.text("NOW()"),
