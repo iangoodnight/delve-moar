@@ -31,7 +31,7 @@ two separately:
   in the repo root. The Brewfile intentionally does not manage Node,
   so a Homebrew install cannot drift from the pinned major.
 
-Or install everything manually: Node.js 24 (`.nvmrc`), pnpm 10+,
+Or install everything manually: Node.js 24 (`.nvmrc`), pnpm 11+,
 Python 3.12 + [uv](https://docs.astral.sh/uv/), Go 1.26+, Docker +
 Docker Compose, [go-task](https://taskfile.dev),
 [pre-commit](https://pre-commit.com), `golangci-lint`, `shellcheck`,
