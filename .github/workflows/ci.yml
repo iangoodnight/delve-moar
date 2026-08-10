@@ -68,7 +68,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: pnpm/action-setup@v6.0.9
+      - uses: pnpm/action-setup@v6.0.10
 
       - name: Set up Node
         uses: actions/setup-node@v7
@@ -157,7 +157,7 @@ jobs:
           enable-cache: true
           cache-dependency-glob: apps/api/uv.lock
 
-      - uses: pnpm/action-setup@v6.0.9
+      - uses: pnpm/action-setup@v6.0.10
 
       - name: Set up Node
         uses: actions/setup-node@v7
@@ -221,7 +221,7 @@ jobs:
           curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh \
             | sh -s -- -b /usr/local/bin
 
-      - uses: pnpm/action-setup@v6.0.9
+      - uses: pnpm/action-setup@v6.0.10
 
       - name: Set up Node
         uses: actions/setup-node@v7
