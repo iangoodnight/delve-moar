@@ -7,7 +7,7 @@ import type { z } from 'zod';
 // Generic over the schema's output/input value types (not the schema type):
 // inferring those directly keeps zodResolver from widening to FieldValues,
 // which its zod-4 overload otherwise does when handed a generic schema.
-type FormMethods<
+export type FormMethods<
   TOutput extends FieldValues,
   TInput extends FieldValues,
 > = UseFormReturn<TInput, unknown, TOutput>;
