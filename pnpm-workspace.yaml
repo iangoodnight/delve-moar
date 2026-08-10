@@ -17,17 +17,19 @@ allowBuilds:
   unrs-resolver: true
 
 # Transitive-dependency version pins, mostly CVE remediations (see the
-# Dependabot history) plus the esbuild build-fix pin. `js-yaml@4`, `ws@7`,
-# and `ws@8` are version-scoped selectors so each major keeps its own
-# patched floor without capping consumers that need a newer major
-# (@redocly/openapi-core 2.46+ requires js-yaml 5's API).
+# Dependabot history) plus the esbuild build-fix pin. `brace-expansion@1`,
+# `js-yaml@4`, `ws@7`, and `ws@8` are version-scoped selectors so each
+# major keeps its own patched floor without capping consumers that need a
+# newer major (@redocly/openapi-core 2.46+ wants js-yaml 5; minimatch 10
+# wants brace-expansion 5).
 overrides:
   postcss: '^8.5.10'
   fast-uri: '^3.1.2'
-  shell-quote: '^1.8.4'
+  shell-quote: '^1.9.0'
   esbuild: '^0.28.1'
   form-data: '^4.0.6'
   js-yaml@4: '^4.2.0'
+  brace-expansion@1: '^1.1.18'
   ws@7: '^7.5.11'
   ws@8: '^8.21.0'
   undici: '^7.28.0'
