@@ -337,6 +337,16 @@ the tag goes on `main` after the release PR merges.
    web automatically on the `main` push. See
    [`docs/deploy.md`](docs/deploy.md) for the full deploy and rollback
    runbook.
+
+   **If this release changed the SRD seed** (`scripts/seed_srd.py`, or
+   the content it derives), reseed production once the deploy is
+   verified healthy. The deploy runs migrations but **not** the seed,
+   so a seed change does not take effect on its own:
+   ```bash
+   fly ssh console -a delvemoar-api -C "sh -c 'PYTHONPATH=. uv run python scripts/seed_srd.py all'"
+   ```
+   The seed is idempotent; run the affected target (`monsters`,
+   `spells`, `items`) or `all`.
 7. **Back-merge `main` into `dev`.** Once the deploy is verified
    healthy, merge `main` back into `dev` so `main` stays an ancestor of
    `dev` and the next release is a plain `dev` → `main` PR with no
