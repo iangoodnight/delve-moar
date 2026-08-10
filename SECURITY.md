@@ -13,8 +13,8 @@ security fixes. Older releases and pre-release tags do not.
 | Version          | Supported |
 | ---------------- | --------- |
 | `main` (HEAD)    | yes       |
-| `0.1.3` (latest) | yes       |
-| `< 0.1.3`        | no        |
+| `0.1.4` (latest) | yes       |
+| `< 0.1.4`        | no        |
 
 This table is bumped as part of the release ritual (see the "Cutting a
 release" checklist in `CONTRIBUTING.md`).
