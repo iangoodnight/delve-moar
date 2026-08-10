@@ -6,6 +6,16 @@ on:
   pull_request:
     branches: [main, dev]
 
+# A commit that lands on main/dev while also heading an open PR (e.g. a
+# dev -> main release, or a back-merge) fires both `push` and
+# `pull_request`, running every job twice. Key the concurrency group on
+# the source commit SHA so those two events share a group and the
+# redundant run is cancelled. Feature-branch pushes never match the
+# `push` filter above, so their PRs already run once.
+concurrency:
+  group: ci-${{ github.event.pull_request.head.sha || github.sha }}
+  cancel-in-progress: true
+
 jobs:
   # ── Python API ─────────────────────────────────────────────────────────────
   lint-and-test-api:
