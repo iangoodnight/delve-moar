@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react';
 
-import { TextField } from '@/components/ui/field';
 import { Column, Row } from '@/components/ui/layout';
+import { SearchField } from '@/components/ui/search-field';
 import { Select } from '@/components/ui/select';
 import { Label } from '@/components/ui/typography';
-import { VisuallyHidden } from '@/components/ui/utils';
 import {
   SPELL_LEVEL_OPTIONS,
   SPELL_SCHOOLS,
@@ -28,18 +27,6 @@ export function SpellFilters() {
     setSearchInput(urlSearch);
   }
 
-  const handleSearchKeyDown = (event: React.KeyboardEvent) => {
-    if (event.key === 'Enter') {
-      event.preventDefault();
-      document.querySelector<HTMLElement>('[data-spell]')?.focus();
-    }
-    if (event.key === 'Escape') {
-      event.preventDefault();
-      setSearchInput('');
-      setSearch('');
-    }
-  };
-
   useEffect(() => {
     if (searchInput === urlSearch) return;
     const timer = setTimeout(() => {
@@ -58,17 +45,16 @@ export function SpellFilters() {
       wrap={{ initial: 'wrap-reverse', sm: 'nowrap' }}
     >
       <Column flexBasis={{ initial: '100%', sm: '40%' }}>
-        <Label>
-          <VisuallyHidden>Search spells</VisuallyHidden>
-          <TextField.Root
-            onChange={(event) => {
-              setSearchInput(event.currentTarget.value);
-            }}
-            onKeyDown={handleSearchKeyDown}
-            placeholder="Search spells..."
-            value={searchInput}
-          />
-        </Label>
+        <SearchField
+          aria-label="Search spells"
+          focusOnSlash
+          onChange={setSearchInput}
+          onSubmit={() => {
+            document.querySelector<HTMLElement>('[data-spell]')?.focus();
+          }}
+          placeholder="Search spells..."
+          value={searchInput}
+        />
       </Column>
       <Column flexBasis={{ initial: '100%', sm: 'calc(60% - var(--space-3))' }}>
         <Row

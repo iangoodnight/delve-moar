@@ -2,9 +2,9 @@ import { useEffect, useState } from 'react';
 
 import { TextField } from '@/components/ui/field';
 import { Column, Row } from '@/components/ui/layout';
+import { SearchField } from '@/components/ui/search-field';
 import { Select } from '@/components/ui/select';
 import { Label } from '@/components/ui/typography';
-import { VisuallyHidden } from '@/components/ui/utils';
 import { MONSTER_TYPES } from '@/features/monsters/constants';
 import { useMonsterFilters } from '@/features/monsters/hooks';
 
@@ -38,19 +38,6 @@ export function MonsterFilters() {
     setSearchInput(urlSearch);
   }
 
-  const handleSearchKeyDown = (event: React.KeyboardEvent) => {
-    if (event.key === 'Enter') {
-      // grab the first data-monster from the page and focus it
-      event.preventDefault();
-      document.querySelector<HTMLElement>('[data-monster]')?.focus();
-    }
-    if (event.key === 'Escape') {
-      event.preventDefault();
-      setSearchInput('');
-      setSearch('');
-    }
-  };
-
   // Debounce input -> URL.  The early return makes this a no-op when the
   // input already matches the URL, which covers the case where an external
   // URL change has just been adopted into searchInput by the during-render
@@ -73,17 +60,16 @@ export function MonsterFilters() {
       wrap={{ initial: 'wrap-reverse', sm: 'nowrap' }}
     >
       <Column flexBasis={{ initial: '100%', sm: '50%' }}>
-        <Label>
-          <VisuallyHidden>Search monsters</VisuallyHidden>
-          <TextField.Root
-            onChange={(event) => {
-              setSearchInput(event.currentTarget.value);
-            }}
-            onKeyDown={handleSearchKeyDown}
-            placeholder="Search monsters..."
-            value={searchInput}
-          />
-        </Label>
+        <SearchField
+          aria-label="Search monsters"
+          focusOnSlash
+          onChange={setSearchInput}
+          onSubmit={() => {
+            document.querySelector<HTMLElement>('[data-monster]')?.focus();
+          }}
+          placeholder="Search monsters..."
+          value={searchInput}
+        />
       </Column>
       <Column flexBasis={{ initial: '100%', sm: 'calc(50% - var(--space-3))' }}>
         <Row
