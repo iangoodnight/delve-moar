@@ -18,6 +18,42 @@ import (
 	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
+// Defines values for CampaignDetailRole.
+const (
+	CampaignDetailRoleMember CampaignDetailRole = "member"
+	CampaignDetailRoleOwner  CampaignDetailRole = "owner"
+)
+
+// Valid indicates whether the value is a known member of the CampaignDetailRole enum.
+func (e CampaignDetailRole) Valid() bool {
+	switch e {
+	case CampaignDetailRoleMember:
+		return true
+	case CampaignDetailRoleOwner:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for CampaignSummaryRole.
+const (
+	CampaignSummaryRoleMember CampaignSummaryRole = "member"
+	CampaignSummaryRoleOwner  CampaignSummaryRole = "owner"
+)
+
+// Valid indicates whether the value is a known member of the CampaignSummaryRole enum.
+func (e CampaignSummaryRole) Valid() bool {
+	switch e {
+	case CampaignSummaryRoleMember:
+		return true
+	case CampaignSummaryRoleOwner:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for ListBooksV1BooksGetParamsScope.
 const (
 	All   ListBooksV1BooksGetParamsScope = "all"
@@ -250,6 +286,98 @@ type BookUpdate struct {
 	Description *string `json:"description,omitempty"`
 
 	// Name New display name for the book.
+	Name *string `json:"name,omitempty"`
+}
+
+// CampaignCreate Payload to create a campaign.
+type CampaignCreate struct {
+	// Description Optional longer description of the campaign.
+	Description *string `json:"description,omitempty"`
+
+	// Name Display name for the campaign.
+	Name string `json:"name"`
+}
+
+// CampaignDetail A single campaign with its member and enabled-book counts.
+type CampaignDetail struct {
+	// BookCount Number of books enabled on the campaign.
+	BookCount int `json:"bookCount"`
+
+	// CreatedAt When the campaign was created.
+	CreatedAt time.Time `json:"createdAt"`
+
+	// Description Longer description, if any.
+	Description *string `json:"description"`
+
+	// Id Unique identifier for the campaign.
+	Id openapi_types.UUID `json:"id"`
+
+	// MemberCount Number of members, excluding the owner.
+	MemberCount int `json:"memberCount"`
+
+	// Name Display name of the campaign.
+	Name string `json:"name"`
+
+	// Owner Public author projection -- how a user is shown to *other* users.
+	//
+	// The only user data exposed when homebrew is published (#185, consumed by
+	// #177+). Deliberately carries ``username`` alone: it is a unique,
+	// immutable, stable public handle in Phase 1b, so neither the private
+	// email nor the internal user id ever needs to leave the owner's own view.
+	// Adding fields later (e.g. a stable public id, should usernames ever
+	// become mutable) is an additive, non-breaking change.
+	Owner Author `json:"owner"`
+
+	// Role The viewer's relationship to this campaign.
+	Role CampaignDetailRole `json:"role"`
+
+	// UpdatedAt When the campaign was last updated.
+	UpdatedAt time.Time `json:"updatedAt"`
+}
+
+// CampaignDetailRole The viewer's relationship to this campaign.
+type CampaignDetailRole string
+
+// CampaignSummary A campaign as shown in list views.
+type CampaignSummary struct {
+	// CreatedAt When the campaign was created.
+	CreatedAt time.Time `json:"createdAt"`
+
+	// Description Longer description, if any.
+	Description *string `json:"description"`
+
+	// Id Unique identifier for the campaign.
+	Id openapi_types.UUID `json:"id"`
+
+	// Name Display name of the campaign.
+	Name string `json:"name"`
+
+	// Owner Public author projection -- how a user is shown to *other* users.
+	//
+	// The only user data exposed when homebrew is published (#185, consumed by
+	// #177+). Deliberately carries ``username`` alone: it is a unique,
+	// immutable, stable public handle in Phase 1b, so neither the private
+	// email nor the internal user id ever needs to leave the owner's own view.
+	// Adding fields later (e.g. a stable public id, should usernames ever
+	// become mutable) is an additive, non-breaking change.
+	Owner Author `json:"owner"`
+
+	// Role The viewer's relationship to this campaign.
+	Role CampaignSummaryRole `json:"role"`
+
+	// UpdatedAt When the campaign was last updated.
+	UpdatedAt time.Time `json:"updatedAt"`
+}
+
+// CampaignSummaryRole The viewer's relationship to this campaign.
+type CampaignSummaryRole string
+
+// CampaignUpdate Payload to update a campaign. Only the provided fields are changed.
+type CampaignUpdate struct {
+	// Description New description for the campaign.
+	Description *string `json:"description,omitempty"`
+
+	// Name New display name for the campaign.
 	Name *string `json:"name,omitempty"`
 }
 
@@ -493,6 +621,15 @@ type MonsterSummary struct {
 type PaginatedResultsetBookSummary struct {
 	// Data The records on this page.
 	Data []BookSummary `json:"data"`
+
+	// Metadata Envelopes a paginated resultset with metadata.
+	Metadata MetadataEnvelope `json:"metadata"`
+}
+
+// PaginatedResultsetCampaignSummary defines model for PaginatedResultset_CampaignSummary_.
+type PaginatedResultsetCampaignSummary struct {
+	// Data The records on this page.
+	Data []CampaignSummary `json:"data"`
 
 	// Metadata Envelopes a paginated resultset with metadata.
 	Metadata MetadataEnvelope `json:"metadata"`
@@ -866,6 +1003,30 @@ type ListBookSpellsV1BooksBookIdSpellsGetParams struct {
 	Search *string `form:"search,omitempty" json:"search,omitempty"`
 }
 
+// ListCampaignsV1CampaignsGetParams defines parameters for ListCampaignsV1CampaignsGet.
+type ListCampaignsV1CampaignsGetParams struct {
+	Limit  *int `form:"limit,omitempty" json:"limit,omitempty"`
+	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
+
+	// OrderBy Comma-separated sort fields in column:direction format. Direction is 'asc' or 'desc' (case-insensitive); omitting direction defaults to 'asc'. Valid columns: created_at, name, updated_at.
+	OrderBy *string `form:"order_by,omitempty" json:"order_by,omitempty"`
+
+	// Search Case-insensitive substring search. Matches against name, description. Results are relevance-ordered: earlier columns rank higher than later ones.
+	Search *string `form:"search,omitempty" json:"search,omitempty"`
+}
+
+// ListCampaignBooksV1CampaignsCampaignIdBooksGetParams defines parameters for ListCampaignBooksV1CampaignsCampaignIdBooksGet.
+type ListCampaignBooksV1CampaignsCampaignIdBooksGetParams struct {
+	Limit  *int `form:"limit,omitempty" json:"limit,omitempty"`
+	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
+
+	// OrderBy Comma-separated sort fields in column:direction format. Direction is 'asc' or 'desc' (case-insensitive); omitting direction defaults to 'asc'. Valid columns: name.
+	OrderBy *string `form:"order_by,omitempty" json:"order_by,omitempty"`
+
+	// Search Case-insensitive substring search. Matches against name, description. Results are relevance-ordered: earlier columns rank higher than later ones.
+	Search *string `form:"search,omitempty" json:"search,omitempty"`
+}
+
 // ListItemsV1ItemsGetParams defines parameters for ListItemsV1ItemsGet.
 type ListItemsV1ItemsGetParams struct {
 	// ItemCategory Exact match on item category (e.g. 'weapon'). This is not guaranteed to be present for all items, as it depends on the source data.
@@ -1016,6 +1177,12 @@ type CreateBookV1BooksPostJSONRequestBody = BookCreate
 
 // UpdateBookV1BooksBookIdPatchJSONRequestBody defines body for UpdateBookV1BooksBookIdPatch for application/json ContentType.
 type UpdateBookV1BooksBookIdPatchJSONRequestBody = BookUpdate
+
+// CreateCampaignV1CampaignsPostJSONRequestBody defines body for CreateCampaignV1CampaignsPost for application/json ContentType.
+type CreateCampaignV1CampaignsPostJSONRequestBody = CampaignCreate
+
+// UpdateCampaignV1CampaignsCampaignIdPatchJSONRequestBody defines body for UpdateCampaignV1CampaignsCampaignIdPatch for application/json ContentType.
+type UpdateCampaignV1CampaignsCampaignIdPatchJSONRequestBody = CampaignUpdate
 
 // Getter for additional properties for ActionEntry. Returns the specified
 // element and whether it was found
@@ -3316,6 +3483,34 @@ type ClientInterface interface {
 	// AddBookSpellV1BooksBookIdSpellsSpellIdPut request
 	AddBookSpellV1BooksBookIdSpellsSpellIdPut(ctx context.Context, bookId openapi_types.UUID, spellId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// ListCampaignsV1CampaignsGet request
+	ListCampaignsV1CampaignsGet(ctx context.Context, params *ListCampaignsV1CampaignsGetParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreateCampaignV1CampaignsPostWithBody request with any body
+	CreateCampaignV1CampaignsPostWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	CreateCampaignV1CampaignsPost(ctx context.Context, body CreateCampaignV1CampaignsPostJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeleteCampaignV1CampaignsCampaignIdDelete request
+	DeleteCampaignV1CampaignsCampaignIdDelete(ctx context.Context, campaignId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetCampaignV1CampaignsCampaignIdGet request
+	GetCampaignV1CampaignsCampaignIdGet(ctx context.Context, campaignId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateCampaignV1CampaignsCampaignIdPatchWithBody request with any body
+	UpdateCampaignV1CampaignsCampaignIdPatchWithBody(ctx context.Context, campaignId openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	UpdateCampaignV1CampaignsCampaignIdPatch(ctx context.Context, campaignId openapi_types.UUID, body UpdateCampaignV1CampaignsCampaignIdPatchJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListCampaignBooksV1CampaignsCampaignIdBooksGet request
+	ListCampaignBooksV1CampaignsCampaignIdBooksGet(ctx context.Context, campaignId openapi_types.UUID, params *ListCampaignBooksV1CampaignsCampaignIdBooksGetParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DisableBookV1CampaignsCampaignIdBooksBookIdDelete request
+	DisableBookV1CampaignsCampaignIdBooksBookIdDelete(ctx context.Context, campaignId openapi_types.UUID, bookId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// EnableBookV1CampaignsCampaignIdBooksBookIdPut request
+	EnableBookV1CampaignsCampaignIdBooksBookIdPut(ctx context.Context, campaignId openapi_types.UUID, bookId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// ListItemsV1ItemsGet request
 	ListItemsV1ItemsGet(ctx context.Context, params *ListItemsV1ItemsGetParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -3793,6 +3988,126 @@ func (c *Client) RemoveBookSpellV1BooksBookIdSpellsSpellIdDelete(ctx context.Con
 
 func (c *Client) AddBookSpellV1BooksBookIdSpellsSpellIdPut(ctx context.Context, bookId openapi_types.UUID, spellId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewAddBookSpellV1BooksBookIdSpellsSpellIdPutRequest(c.Server, bookId, spellId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ListCampaignsV1CampaignsGet(ctx context.Context, params *ListCampaignsV1CampaignsGetParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListCampaignsV1CampaignsGetRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CreateCampaignV1CampaignsPostWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateCampaignV1CampaignsPostRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CreateCampaignV1CampaignsPost(ctx context.Context, body CreateCampaignV1CampaignsPostJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateCampaignV1CampaignsPostRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DeleteCampaignV1CampaignsCampaignIdDelete(ctx context.Context, campaignId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteCampaignV1CampaignsCampaignIdDeleteRequest(c.Server, campaignId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetCampaignV1CampaignsCampaignIdGet(ctx context.Context, campaignId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetCampaignV1CampaignsCampaignIdGetRequest(c.Server, campaignId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) UpdateCampaignV1CampaignsCampaignIdPatchWithBody(ctx context.Context, campaignId openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateCampaignV1CampaignsCampaignIdPatchRequestWithBody(c.Server, campaignId, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) UpdateCampaignV1CampaignsCampaignIdPatch(ctx context.Context, campaignId openapi_types.UUID, body UpdateCampaignV1CampaignsCampaignIdPatchJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateCampaignV1CampaignsCampaignIdPatchRequest(c.Server, campaignId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ListCampaignBooksV1CampaignsCampaignIdBooksGet(ctx context.Context, campaignId openapi_types.UUID, params *ListCampaignBooksV1CampaignsCampaignIdBooksGetParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListCampaignBooksV1CampaignsCampaignIdBooksGetRequest(c.Server, campaignId, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DisableBookV1CampaignsCampaignIdBooksBookIdDelete(ctx context.Context, campaignId openapi_types.UUID, bookId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDisableBookV1CampaignsCampaignIdBooksBookIdDeleteRequest(c.Server, campaignId, bookId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) EnableBookV1CampaignsCampaignIdBooksBookIdPut(ctx context.Context, campaignId openapi_types.UUID, bookId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewEnableBookV1CampaignsCampaignIdBooksBookIdPutRequest(c.Server, campaignId, bookId)
 	if err != nil {
 		return nil, err
 	}
@@ -5218,6 +5533,444 @@ func NewAddBookSpellV1BooksBookIdSpellsSpellIdPutRequest(server string, bookId o
 	return req, nil
 }
 
+// NewListCampaignsV1CampaignsGetRequest generates requests for ListCampaignsV1CampaignsGet
+func NewListCampaignsV1CampaignsGetRequest(server string, params *ListCampaignsV1CampaignsGetParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/campaigns")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.Limit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "limit", *params.Limit, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Offset != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "offset", *params.Offset, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.OrderBy != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "order_by", *params.OrderBy, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Search != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "search", *params.Search, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewCreateCampaignV1CampaignsPostRequest calls the generic CreateCampaignV1CampaignsPost builder with application/json body
+func NewCreateCampaignV1CampaignsPostRequest(server string, body CreateCampaignV1CampaignsPostJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCreateCampaignV1CampaignsPostRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewCreateCampaignV1CampaignsPostRequestWithBody generates requests for CreateCampaignV1CampaignsPost with any type of body
+func NewCreateCampaignV1CampaignsPostRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/campaigns")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewDeleteCampaignV1CampaignsCampaignIdDeleteRequest generates requests for DeleteCampaignV1CampaignsCampaignIdDelete
+func NewDeleteCampaignV1CampaignsCampaignIdDeleteRequest(server string, campaignId openapi_types.UUID) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "campaign_id", campaignId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: "uuid"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/campaigns/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetCampaignV1CampaignsCampaignIdGetRequest generates requests for GetCampaignV1CampaignsCampaignIdGet
+func NewGetCampaignV1CampaignsCampaignIdGetRequest(server string, campaignId openapi_types.UUID) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "campaign_id", campaignId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: "uuid"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/campaigns/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewUpdateCampaignV1CampaignsCampaignIdPatchRequest calls the generic UpdateCampaignV1CampaignsCampaignIdPatch builder with application/json body
+func NewUpdateCampaignV1CampaignsCampaignIdPatchRequest(server string, campaignId openapi_types.UUID, body UpdateCampaignV1CampaignsCampaignIdPatchJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewUpdateCampaignV1CampaignsCampaignIdPatchRequestWithBody(server, campaignId, "application/json", bodyReader)
+}
+
+// NewUpdateCampaignV1CampaignsCampaignIdPatchRequestWithBody generates requests for UpdateCampaignV1CampaignsCampaignIdPatch with any type of body
+func NewUpdateCampaignV1CampaignsCampaignIdPatchRequestWithBody(server string, campaignId openapi_types.UUID, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "campaign_id", campaignId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: "uuid"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/campaigns/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PATCH", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewListCampaignBooksV1CampaignsCampaignIdBooksGetRequest generates requests for ListCampaignBooksV1CampaignsCampaignIdBooksGet
+func NewListCampaignBooksV1CampaignsCampaignIdBooksGetRequest(server string, campaignId openapi_types.UUID, params *ListCampaignBooksV1CampaignsCampaignIdBooksGetParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "campaign_id", campaignId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: "uuid"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/campaigns/%s/books", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.Limit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "limit", *params.Limit, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Offset != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "offset", *params.Offset, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.OrderBy != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "order_by", *params.OrderBy, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Search != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "search", *params.Search, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewDisableBookV1CampaignsCampaignIdBooksBookIdDeleteRequest generates requests for DisableBookV1CampaignsCampaignIdBooksBookIdDelete
+func NewDisableBookV1CampaignsCampaignIdBooksBookIdDeleteRequest(server string, campaignId openapi_types.UUID, bookId openapi_types.UUID) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "campaign_id", campaignId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: "uuid"})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "book_id", bookId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: "uuid"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/campaigns/%s/books/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewEnableBookV1CampaignsCampaignIdBooksBookIdPutRequest generates requests for EnableBookV1CampaignsCampaignIdBooksBookIdPut
+func NewEnableBookV1CampaignsCampaignIdBooksBookIdPutRequest(server string, campaignId openapi_types.UUID, bookId openapi_types.UUID) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "campaign_id", campaignId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: "uuid"})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "book_id", bookId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: "uuid"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/campaigns/%s/books/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PUT", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewListItemsV1ItemsGetRequest generates requests for ListItemsV1ItemsGet
 func NewListItemsV1ItemsGetRequest(server string, params *ListItemsV1ItemsGetParams) (*http.Request, error) {
 	var err error
@@ -6098,6 +6851,34 @@ type ClientWithResponsesInterface interface {
 	// AddBookSpellV1BooksBookIdSpellsSpellIdPutWithResponse request
 	AddBookSpellV1BooksBookIdSpellsSpellIdPutWithResponse(ctx context.Context, bookId openapi_types.UUID, spellId openapi_types.UUID, reqEditors ...RequestEditorFn) (*AddBookSpellV1BooksBookIdSpellsSpellIdPutResponse, error)
 
+	// ListCampaignsV1CampaignsGetWithResponse request
+	ListCampaignsV1CampaignsGetWithResponse(ctx context.Context, params *ListCampaignsV1CampaignsGetParams, reqEditors ...RequestEditorFn) (*ListCampaignsV1CampaignsGetResponse, error)
+
+	// CreateCampaignV1CampaignsPostWithBodyWithResponse request with any body
+	CreateCampaignV1CampaignsPostWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateCampaignV1CampaignsPostResponse, error)
+
+	CreateCampaignV1CampaignsPostWithResponse(ctx context.Context, body CreateCampaignV1CampaignsPostJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateCampaignV1CampaignsPostResponse, error)
+
+	// DeleteCampaignV1CampaignsCampaignIdDeleteWithResponse request
+	DeleteCampaignV1CampaignsCampaignIdDeleteWithResponse(ctx context.Context, campaignId openapi_types.UUID, reqEditors ...RequestEditorFn) (*DeleteCampaignV1CampaignsCampaignIdDeleteResponse, error)
+
+	// GetCampaignV1CampaignsCampaignIdGetWithResponse request
+	GetCampaignV1CampaignsCampaignIdGetWithResponse(ctx context.Context, campaignId openapi_types.UUID, reqEditors ...RequestEditorFn) (*GetCampaignV1CampaignsCampaignIdGetResponse, error)
+
+	// UpdateCampaignV1CampaignsCampaignIdPatchWithBodyWithResponse request with any body
+	UpdateCampaignV1CampaignsCampaignIdPatchWithBodyWithResponse(ctx context.Context, campaignId openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateCampaignV1CampaignsCampaignIdPatchResponse, error)
+
+	UpdateCampaignV1CampaignsCampaignIdPatchWithResponse(ctx context.Context, campaignId openapi_types.UUID, body UpdateCampaignV1CampaignsCampaignIdPatchJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateCampaignV1CampaignsCampaignIdPatchResponse, error)
+
+	// ListCampaignBooksV1CampaignsCampaignIdBooksGetWithResponse request
+	ListCampaignBooksV1CampaignsCampaignIdBooksGetWithResponse(ctx context.Context, campaignId openapi_types.UUID, params *ListCampaignBooksV1CampaignsCampaignIdBooksGetParams, reqEditors ...RequestEditorFn) (*ListCampaignBooksV1CampaignsCampaignIdBooksGetResponse, error)
+
+	// DisableBookV1CampaignsCampaignIdBooksBookIdDeleteWithResponse request
+	DisableBookV1CampaignsCampaignIdBooksBookIdDeleteWithResponse(ctx context.Context, campaignId openapi_types.UUID, bookId openapi_types.UUID, reqEditors ...RequestEditorFn) (*DisableBookV1CampaignsCampaignIdBooksBookIdDeleteResponse, error)
+
+	// EnableBookV1CampaignsCampaignIdBooksBookIdPutWithResponse request
+	EnableBookV1CampaignsCampaignIdBooksBookIdPutWithResponse(ctx context.Context, campaignId openapi_types.UUID, bookId openapi_types.UUID, reqEditors ...RequestEditorFn) (*EnableBookV1CampaignsCampaignIdBooksBookIdPutResponse, error)
+
 	// ListItemsV1ItemsGetWithResponse request
 	ListItemsV1ItemsGetWithResponse(ctx context.Context, params *ListItemsV1ItemsGetParams, reqEditors ...RequestEditorFn) (*ListItemsV1ItemsGetResponse, error)
 
@@ -6785,6 +7566,197 @@ func (r AddBookSpellV1BooksBookIdSpellsSpellIdPutResponse) StatusCode() int {
 	return 0
 }
 
+type ListCampaignsV1CampaignsGetResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *PaginatedResultsetCampaignSummary
+	JSON422      *HTTPValidationError
+}
+
+// Status returns HTTPResponse.Status
+func (r ListCampaignsV1CampaignsGetResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListCampaignsV1CampaignsGetResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type CreateCampaignV1CampaignsPostResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON201      *CampaignDetail
+	JSON422      *HTTPValidationError
+}
+
+// Status returns HTTPResponse.Status
+func (r CreateCampaignV1CampaignsPostResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CreateCampaignV1CampaignsPostResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type DeleteCampaignV1CampaignsCampaignIdDeleteResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON422      *HTTPValidationError
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteCampaignV1CampaignsCampaignIdDeleteResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteCampaignV1CampaignsCampaignIdDeleteResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetCampaignV1CampaignsCampaignIdGetResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *CampaignDetail
+	JSON404      *ErrorResponse
+	JSON422      *HTTPValidationError
+}
+
+// Status returns HTTPResponse.Status
+func (r GetCampaignV1CampaignsCampaignIdGetResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetCampaignV1CampaignsCampaignIdGetResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type UpdateCampaignV1CampaignsCampaignIdPatchResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *CampaignDetail
+	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON422      *HTTPValidationError
+}
+
+// Status returns HTTPResponse.Status
+func (r UpdateCampaignV1CampaignsCampaignIdPatchResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r UpdateCampaignV1CampaignsCampaignIdPatchResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ListCampaignBooksV1CampaignsCampaignIdBooksGetResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *PaginatedResultsetBookSummary
+	JSON404      *ErrorResponse
+	JSON422      *HTTPValidationError
+}
+
+// Status returns HTTPResponse.Status
+func (r ListCampaignBooksV1CampaignsCampaignIdBooksGetResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListCampaignBooksV1CampaignsCampaignIdBooksGetResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type DisableBookV1CampaignsCampaignIdBooksBookIdDeleteResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON422      *HTTPValidationError
+}
+
+// Status returns HTTPResponse.Status
+func (r DisableBookV1CampaignsCampaignIdBooksBookIdDeleteResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DisableBookV1CampaignsCampaignIdBooksBookIdDeleteResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type EnableBookV1CampaignsCampaignIdBooksBookIdPutResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON422      *HTTPValidationError
+}
+
+// Status returns HTTPResponse.Status
+func (r EnableBookV1CampaignsCampaignIdBooksBookIdPutResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r EnableBookV1CampaignsCampaignIdBooksBookIdPutResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type ListItemsV1ItemsGetResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -7264,6 +8236,94 @@ func (c *ClientWithResponses) AddBookSpellV1BooksBookIdSpellsSpellIdPutWithRespo
 		return nil, err
 	}
 	return ParseAddBookSpellV1BooksBookIdSpellsSpellIdPutResponse(rsp)
+}
+
+// ListCampaignsV1CampaignsGetWithResponse request returning *ListCampaignsV1CampaignsGetResponse
+func (c *ClientWithResponses) ListCampaignsV1CampaignsGetWithResponse(ctx context.Context, params *ListCampaignsV1CampaignsGetParams, reqEditors ...RequestEditorFn) (*ListCampaignsV1CampaignsGetResponse, error) {
+	rsp, err := c.ListCampaignsV1CampaignsGet(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListCampaignsV1CampaignsGetResponse(rsp)
+}
+
+// CreateCampaignV1CampaignsPostWithBodyWithResponse request with arbitrary body returning *CreateCampaignV1CampaignsPostResponse
+func (c *ClientWithResponses) CreateCampaignV1CampaignsPostWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateCampaignV1CampaignsPostResponse, error) {
+	rsp, err := c.CreateCampaignV1CampaignsPostWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateCampaignV1CampaignsPostResponse(rsp)
+}
+
+func (c *ClientWithResponses) CreateCampaignV1CampaignsPostWithResponse(ctx context.Context, body CreateCampaignV1CampaignsPostJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateCampaignV1CampaignsPostResponse, error) {
+	rsp, err := c.CreateCampaignV1CampaignsPost(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateCampaignV1CampaignsPostResponse(rsp)
+}
+
+// DeleteCampaignV1CampaignsCampaignIdDeleteWithResponse request returning *DeleteCampaignV1CampaignsCampaignIdDeleteResponse
+func (c *ClientWithResponses) DeleteCampaignV1CampaignsCampaignIdDeleteWithResponse(ctx context.Context, campaignId openapi_types.UUID, reqEditors ...RequestEditorFn) (*DeleteCampaignV1CampaignsCampaignIdDeleteResponse, error) {
+	rsp, err := c.DeleteCampaignV1CampaignsCampaignIdDelete(ctx, campaignId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteCampaignV1CampaignsCampaignIdDeleteResponse(rsp)
+}
+
+// GetCampaignV1CampaignsCampaignIdGetWithResponse request returning *GetCampaignV1CampaignsCampaignIdGetResponse
+func (c *ClientWithResponses) GetCampaignV1CampaignsCampaignIdGetWithResponse(ctx context.Context, campaignId openapi_types.UUID, reqEditors ...RequestEditorFn) (*GetCampaignV1CampaignsCampaignIdGetResponse, error) {
+	rsp, err := c.GetCampaignV1CampaignsCampaignIdGet(ctx, campaignId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetCampaignV1CampaignsCampaignIdGetResponse(rsp)
+}
+
+// UpdateCampaignV1CampaignsCampaignIdPatchWithBodyWithResponse request with arbitrary body returning *UpdateCampaignV1CampaignsCampaignIdPatchResponse
+func (c *ClientWithResponses) UpdateCampaignV1CampaignsCampaignIdPatchWithBodyWithResponse(ctx context.Context, campaignId openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateCampaignV1CampaignsCampaignIdPatchResponse, error) {
+	rsp, err := c.UpdateCampaignV1CampaignsCampaignIdPatchWithBody(ctx, campaignId, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateCampaignV1CampaignsCampaignIdPatchResponse(rsp)
+}
+
+func (c *ClientWithResponses) UpdateCampaignV1CampaignsCampaignIdPatchWithResponse(ctx context.Context, campaignId openapi_types.UUID, body UpdateCampaignV1CampaignsCampaignIdPatchJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateCampaignV1CampaignsCampaignIdPatchResponse, error) {
+	rsp, err := c.UpdateCampaignV1CampaignsCampaignIdPatch(ctx, campaignId, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateCampaignV1CampaignsCampaignIdPatchResponse(rsp)
+}
+
+// ListCampaignBooksV1CampaignsCampaignIdBooksGetWithResponse request returning *ListCampaignBooksV1CampaignsCampaignIdBooksGetResponse
+func (c *ClientWithResponses) ListCampaignBooksV1CampaignsCampaignIdBooksGetWithResponse(ctx context.Context, campaignId openapi_types.UUID, params *ListCampaignBooksV1CampaignsCampaignIdBooksGetParams, reqEditors ...RequestEditorFn) (*ListCampaignBooksV1CampaignsCampaignIdBooksGetResponse, error) {
+	rsp, err := c.ListCampaignBooksV1CampaignsCampaignIdBooksGet(ctx, campaignId, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListCampaignBooksV1CampaignsCampaignIdBooksGetResponse(rsp)
+}
+
+// DisableBookV1CampaignsCampaignIdBooksBookIdDeleteWithResponse request returning *DisableBookV1CampaignsCampaignIdBooksBookIdDeleteResponse
+func (c *ClientWithResponses) DisableBookV1CampaignsCampaignIdBooksBookIdDeleteWithResponse(ctx context.Context, campaignId openapi_types.UUID, bookId openapi_types.UUID, reqEditors ...RequestEditorFn) (*DisableBookV1CampaignsCampaignIdBooksBookIdDeleteResponse, error) {
+	rsp, err := c.DisableBookV1CampaignsCampaignIdBooksBookIdDelete(ctx, campaignId, bookId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDisableBookV1CampaignsCampaignIdBooksBookIdDeleteResponse(rsp)
+}
+
+// EnableBookV1CampaignsCampaignIdBooksBookIdPutWithResponse request returning *EnableBookV1CampaignsCampaignIdBooksBookIdPutResponse
+func (c *ClientWithResponses) EnableBookV1CampaignsCampaignIdBooksBookIdPutWithResponse(ctx context.Context, campaignId openapi_types.UUID, bookId openapi_types.UUID, reqEditors ...RequestEditorFn) (*EnableBookV1CampaignsCampaignIdBooksBookIdPutResponse, error) {
+	rsp, err := c.EnableBookV1CampaignsCampaignIdBooksBookIdPut(ctx, campaignId, bookId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseEnableBookV1CampaignsCampaignIdBooksBookIdPutResponse(rsp)
 }
 
 // ListItemsV1ItemsGetWithResponse request returning *ListItemsV1ItemsGetResponse
@@ -8381,6 +9441,319 @@ func ParseAddBookSpellV1BooksBookIdSpellsSpellIdPutResponse(rsp *http.Response) 
 	}
 
 	response := &AddBookSpellV1BooksBookIdSpellsSpellIdPutResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest HTTPValidationError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListCampaignsV1CampaignsGetResponse parses an HTTP response from a ListCampaignsV1CampaignsGetWithResponse call
+func ParseListCampaignsV1CampaignsGetResponse(rsp *http.Response) (*ListCampaignsV1CampaignsGetResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListCampaignsV1CampaignsGetResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PaginatedResultsetCampaignSummary
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest HTTPValidationError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCreateCampaignV1CampaignsPostResponse parses an HTTP response from a CreateCampaignV1CampaignsPostWithResponse call
+func ParseCreateCampaignV1CampaignsPostResponse(rsp *http.Response) (*CreateCampaignV1CampaignsPostResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreateCampaignV1CampaignsPostResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest CampaignDetail
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest HTTPValidationError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteCampaignV1CampaignsCampaignIdDeleteResponse parses an HTTP response from a DeleteCampaignV1CampaignsCampaignIdDeleteWithResponse call
+func ParseDeleteCampaignV1CampaignsCampaignIdDeleteResponse(rsp *http.Response) (*DeleteCampaignV1CampaignsCampaignIdDeleteResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteCampaignV1CampaignsCampaignIdDeleteResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest HTTPValidationError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetCampaignV1CampaignsCampaignIdGetResponse parses an HTTP response from a GetCampaignV1CampaignsCampaignIdGetWithResponse call
+func ParseGetCampaignV1CampaignsCampaignIdGetResponse(rsp *http.Response) (*GetCampaignV1CampaignsCampaignIdGetResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetCampaignV1CampaignsCampaignIdGetResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest CampaignDetail
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest HTTPValidationError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseUpdateCampaignV1CampaignsCampaignIdPatchResponse parses an HTTP response from a UpdateCampaignV1CampaignsCampaignIdPatchWithResponse call
+func ParseUpdateCampaignV1CampaignsCampaignIdPatchResponse(rsp *http.Response) (*UpdateCampaignV1CampaignsCampaignIdPatchResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &UpdateCampaignV1CampaignsCampaignIdPatchResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest CampaignDetail
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest HTTPValidationError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListCampaignBooksV1CampaignsCampaignIdBooksGetResponse parses an HTTP response from a ListCampaignBooksV1CampaignsCampaignIdBooksGetWithResponse call
+func ParseListCampaignBooksV1CampaignsCampaignIdBooksGetResponse(rsp *http.Response) (*ListCampaignBooksV1CampaignsCampaignIdBooksGetResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListCampaignBooksV1CampaignsCampaignIdBooksGetResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PaginatedResultsetBookSummary
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest HTTPValidationError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDisableBookV1CampaignsCampaignIdBooksBookIdDeleteResponse parses an HTTP response from a DisableBookV1CampaignsCampaignIdBooksBookIdDeleteWithResponse call
+func ParseDisableBookV1CampaignsCampaignIdBooksBookIdDeleteResponse(rsp *http.Response) (*DisableBookV1CampaignsCampaignIdBooksBookIdDeleteResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DisableBookV1CampaignsCampaignIdBooksBookIdDeleteResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest HTTPValidationError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseEnableBookV1CampaignsCampaignIdBooksBookIdPutResponse parses an HTTP response from a EnableBookV1CampaignsCampaignIdBooksBookIdPutWithResponse call
+func ParseEnableBookV1CampaignsCampaignIdBooksBookIdPutResponse(rsp *http.Response) (*EnableBookV1CampaignsCampaignIdBooksBookIdPutResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &EnableBookV1CampaignsCampaignIdBooksBookIdPutResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}

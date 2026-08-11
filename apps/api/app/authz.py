@@ -7,10 +7,9 @@ single definition that cannot drift between endpoints.
 
 The rules, per ADR 0011 (campaign model) and ADR 0014 (books):
 
-- Read: a user may read a book they own or a public book. The campaign
-  read branch -- a member may read a book enabled on a campaign they belong
-  to -- is the documented extension point below; it arrives with #176, when
-  campaigns first exist (owner, members, and the campaign-to-book join).
+- Read: a user may read a book they own, a public book, or a book enabled
+  on a campaign they are a member of (the campaign-shared branch, added with
+  #176 -- campaigns, members, and the campaign-to-book join now exist).
 - Write / delete: owner-only, and system books (the SRD catalog) are never
   writable.
 
@@ -23,10 +22,11 @@ than in the content routers.
 
 ## Extension points (kept here so read paths never drift apart)
 
-- Campaign-shared reads (#176): ``readable_books_predicate`` gains a third
-  OR branch -- ``Book.id`` in the set of books enabled on a campaign the user
-  is a member of. Because ``get_readable_book`` is built on the predicate,
-  extending the predicate extends every single-book read automatically.
+- Campaign-shared reads (#176, implemented): ``readable_books_predicate``
+  carries a third OR branch -- books enabled on a campaign the user is a
+  member of (``_campaign_shared_book_ids``). Because ``get_readable_book`` and
+  ``assert_books_readable`` build on the predicate, they picked up campaign
+  sharing with no change to the content routers.
 - Link-token reads (ADR 0012, 1b stretch): an unauthenticated, single-content
   read path. ADR 0012 requires it to funnel through this module so it cannot
   diverge from the campaign path.
@@ -38,30 +38,50 @@ from collections.abc import Sequence
 from typing import Any
 
 from fastapi import status
-from sqlalchemy import ColumnElement, or_, select
+from sqlalchemy import ColumnElement, Select, or_, select
 from sqlalchemy.orm import InstrumentedAttribute
 
 from app.config import settings
 from app.db import DbSession
 from app.exceptions import AppError, get_or_404
-from app.models import Book, User
+from app.models import Book, Campaign, CampaignBook, CampaignMember, User
 from app.schemas.book_membership import BookMembership
 
 
+def _campaign_shared_book_ids(user: User) -> Select[tuple[uuid.UUID]]:
+    """Ids of books shared with the user through a campaign they belong to.
+
+    A book enabled on a campaign (``campaign_books``) is readable by every
+    member of that campaign (``campaign_members``) -- ADR 0011's shared read
+    rule, resolved through enabled books per ADR 0014.
+    """
+    return (
+        select(CampaignBook.book_id)
+        .join(
+            CampaignMember,
+            CampaignMember.campaign_id == CampaignBook.campaign_id,
+        )
+        .where(CampaignMember.user_id == user.id)
+    )
+
+
 def readable_books_predicate(user: User | None) -> ColumnElement[bool]:
-    """SQLAlchemy predicate for books the user may read (owner or public).
+    """SQLAlchemy predicate for books the user may read.
 
-    The single source of truth for "readable": book list queries filter with
-    it directly, and ``get_readable_book`` runs it for one id, so a single-book
-    read and a list read can never disagree.
-
-    Extension point (#176): add ``Book.id.in_(<books enabled on a campaign the
-    user belongs to>)`` as a third OR branch here, and every read path that
-    builds on this predicate picks up campaign sharing without further change.
+    Owner, public, or -- for an authenticated user -- a book enabled on a
+    campaign they are a member of (#176). The single source of truth for
+    "readable": list queries filter with it directly and ``get_readable_book``
+    runs it for one id, so a single-book read and a list read can never
+    disagree, and the content routers' ``book`` filter inherits the campaign
+    branch for free.
     """
     if user is None:
         return Book.is_public.is_(True)
-    return or_(Book.owner_id == user.id, Book.is_public.is_(True))
+    return or_(
+        Book.owner_id == user.id,
+        Book.is_public.is_(True),
+        Book.id.in_(_campaign_shared_book_ids(user)),
+    )
 
 
 async def get_readable_book(
@@ -98,6 +118,64 @@ async def get_writable_book(
             more_info=f"{settings.public_url}/docs",
         )
     return book
+
+
+def readable_campaigns_predicate(user: User) -> ColumnElement[bool]:
+    """SQLAlchemy predicate for campaigns the user may read.
+
+    A campaign the user owns, or one they are a member of. Used by the
+    campaign list query and by ``get_readable_campaign`` for a single id, so
+    the two never disagree.
+    """
+    return or_(
+        Campaign.owner_id == user.id,
+        Campaign.id.in_(
+            select(CampaignMember.campaign_id).where(
+                CampaignMember.user_id == user.id
+            )
+        ),
+    )
+
+
+async def get_readable_campaign(
+    db: DbSession, campaign_id: uuid.UUID, user: User
+) -> Campaign:
+    """Load a campaign the user may read (owner or member), else 404.
+
+    A campaign the user neither owns nor belongs to is indistinguishable from
+    a missing one (both 404), so its existence is never revealed.
+    """
+    campaign = await db.scalar(
+        select(Campaign).where(
+            Campaign.id == campaign_id, readable_campaigns_predicate(user)
+        )
+    )
+    return get_or_404(
+        campaign, resource="campaign", identifier=str(campaign_id)
+    )
+
+
+async def get_writable_campaign(
+    db: DbSession, campaign_id: uuid.UUID, user: User
+) -> Campaign:
+    """Load a campaign the user may modify (owns), else raise.
+
+    404 if the campaign is not even readable (existence stays hidden); 403 if
+    it is readable (the user is a member) but not the owner. Write and delete
+    are owner-only in Phase 1b (ADR 0011).
+    """
+    campaign = await get_readable_campaign(db, campaign_id, user)
+    if campaign.owner_id != user.id:
+        raise AppError(
+            status=status.HTTP_403_FORBIDDEN,
+            developer_message=(
+                f"Campaign '{campaign_id}' is not owned by the user."
+            ),
+            user_message="You can only modify campaigns you own.",
+            error_code="FORBIDDEN",
+            more_info=f"{settings.public_url}/docs",
+        )
+    return campaign
 
 
 async def assert_books_readable(

@@ -2,8 +2,8 @@
 
 Exercises ``app.authz`` in isolation -- owner, public, anonymous, and
 unauthorized cases -- so the read/write rules have a test that does not
-depend on any endpoint wiring. The shared-campaign read branch (ADR 0011)
-is reserved below and filled in with #176, when campaigns first exist.
+depend on any endpoint wiring. Includes the shared-campaign read branch
+(ADR 0011), implemented with #176 now that campaigns exist.
 """
 
 import uuid
@@ -17,11 +17,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.authz import (
     assert_books_readable,
     get_readable_book,
+    get_readable_campaign,
     get_writable_book,
+    get_writable_campaign,
     readable_books_predicate,
+    readable_campaigns_predicate,
 )
 from app.exceptions import AppError
-from app.models import Book, User
+from app.models import Book, Campaign, CampaignBook, CampaignMember, User
 
 
 @dataclass
@@ -253,16 +256,144 @@ async def test_assert_books_readable_rejects_unknown_id(
 # ── reserved: shared-campaign read branch (ADR 0011), lands with #176 ─────────
 
 
-@pytest.mark.skip(
-    reason="campaign infra (owner, members, campaign-book join) lands in #176"
-)
-async def test_campaign_member_can_read_enabled_book() -> None:
-    """A member may read a book enabled on a campaign they belong to.
+# ── shared-campaign read branch (ADR 0011), implemented with #176 ────────────
 
-    ADR 0011's shared-campaign read branch. When #176 adds the campaign
-    OR-branch to ``readable_books_predicate``, implement this: seed a campaign
-    owned by Alice with Bob as a member, enable one of Alice's private books
-    on it, then assert Bob may read that book (and only that one) through both
-    the predicate and ``get_readable_book`` -- while Bob's access to Alice's
-    other private books stays denied.
-    """
+
+async def _campaign(
+    db: AsyncSession, owner: User, name: str = "Campaign"
+) -> Campaign:
+    campaign = Campaign(owner_id=owner.id, name=name)
+    db.add(campaign)
+    await db.flush()
+    return campaign
+
+
+async def _add_member(db: AsyncSession, campaign: Campaign, user: User) -> None:
+    db.add(CampaignMember(campaign_id=campaign.id, user_id=user.id))
+    await db.flush()
+
+
+async def _enable_book(
+    db: AsyncSession, campaign: Campaign, book: Book
+) -> None:
+    db.add(CampaignBook(campaign_id=campaign.id, book_id=book.id))
+    await db.flush()
+
+
+async def _private_book(db: AsyncSession, owner: User, slug: str) -> Book:
+    book = Book(
+        owner_id=owner.id,
+        name=slug,
+        slug=slug,
+        description=None,
+        is_public=False,
+        is_system=False,
+    )
+    db.add(book)
+    await db.flush()
+    return book
+
+
+async def test_campaign_member_can_read_enabled_book(
+    db_session: AsyncSession,
+) -> None:
+    world = await _seed_world(db_session)
+    shared = world.books["alice_private"]
+    # a second private book of Alice's, enabled on nothing
+    unshared = await _private_book(db_session, world.alice, "alice-private-2")
+    campaign = await _campaign(db_session, world.alice, "Curse of Strahd")
+    await _add_member(db_session, campaign, world.bob)
+    await _enable_book(db_session, campaign, shared)
+
+    ids = await _readable_ids(db_session, world.bob)
+    assert shared.id in ids  # enabled on Bob's campaign -> readable
+    assert unshared.id not in ids  # not enabled -> still Alice's alone
+
+    # the single-id read agrees with the predicate
+    got = await get_readable_book(db_session, shared.id, world.bob)
+    assert got.id == shared.id
+    with pytest.raises(AppError):
+        await get_readable_book(db_session, unshared.id, world.bob)
+
+
+async def test_enabled_book_is_not_shared_with_non_members(
+    db_session: AsyncSession,
+) -> None:
+    # a book enabled on a campaign Bob is NOT a member of stays private
+    world = await _seed_world(db_session)
+    shared = world.books["alice_private"]
+    campaign = await _campaign(db_session, world.alice, "Solo Prep")
+    await _enable_book(db_session, campaign, shared)
+
+    assert shared.id not in await _readable_ids(db_session, world.bob)
+
+
+# ── campaign access helpers ──────────────────────────────────────────────────
+
+
+async def test_readable_campaigns_predicate_owner_and_member(
+    db_session: AsyncSession,
+) -> None:
+    world = await _seed_world(db_session)
+    owned = await _campaign(db_session, world.bob, "Bob's Game")
+    member_of = await _campaign(db_session, world.alice, "Alice's Game")
+    await _add_member(db_session, member_of, world.bob)
+    await _campaign(db_session, world.alice, "Alice's Other Game")  # bob absent
+
+    rows = await db_session.scalars(
+        select(Campaign.id).where(readable_campaigns_predicate(world.bob))
+    )
+    assert set(rows) == {owned.id, member_of.id}
+
+
+async def test_get_readable_campaign_owner_member_stranger(
+    db_session: AsyncSession,
+) -> None:
+    world = await _seed_world(db_session)
+    campaign = await _campaign(db_session, world.alice, "Alice's Game")
+    await _add_member(db_session, campaign, world.bob)
+
+    owner_view = await get_readable_campaign(
+        db_session, campaign.id, world.alice
+    )
+    assert owner_view.id == campaign.id
+    member_view = await get_readable_campaign(
+        db_session, campaign.id, world.bob
+    )
+    assert member_view.id == campaign.id
+
+    carol = User(username="carol", email="carol@example.com", password_hash="x")
+    db_session.add(carol)
+    await db_session.flush()
+    with pytest.raises(AppError) as exc:
+        await get_readable_campaign(db_session, campaign.id, carol)
+    assert exc.value.status == status.HTTP_404_NOT_FOUND
+
+
+async def test_get_writable_campaign_owner_only(
+    db_session: AsyncSession,
+) -> None:
+    world = await _seed_world(db_session)
+    campaign = await _campaign(db_session, world.alice, "Alice's Game")
+    await _add_member(db_session, campaign, world.bob)
+
+    writable = await get_writable_campaign(db_session, campaign.id, world.alice)
+    assert writable.id == campaign.id
+    # a member is readable but not the owner -> 403
+    with pytest.raises(AppError) as exc:
+        await get_writable_campaign(db_session, campaign.id, world.bob)
+    assert exc.value.status == status.HTTP_403_FORBIDDEN
+    with pytest.raises(AppError) as missing:
+        await get_writable_campaign(db_session, uuid.uuid4(), world.alice)
+    assert missing.value.status == status.HTTP_404_NOT_FOUND
+
+
+async def test_get_writable_campaign_stranger_is_404_not_403(
+    db_session: AsyncSession,
+) -> None:
+    # a campaign you cannot even read is 404, never 403 (no existence leak)
+    world = await _seed_world(db_session)
+    campaign = await _campaign(db_session, world.alice, "Alice's Game")
+    with pytest.raises(AppError) as exc:
+        await get_writable_campaign(db_session, campaign.id, world.bob)
+    assert exc.value.status == status.HTTP_404_NOT_FOUND
