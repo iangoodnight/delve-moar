@@ -8,6 +8,7 @@ from typing import Any
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.auth.dependencies import CSRF_HEADER_NAME
 from app.config import settings
 from app.db import init_db
 from app.exceptions import register_exception_handlers
@@ -98,8 +99,11 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_allowed_origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    # Requests carry credentials (session + CSRF cookies), so advertise only
+    # the methods the API serves and the headers the SPA actually sends,
+    # rather than "*".
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", CSRF_HEADER_NAME],
 )
 
 register_exception_handlers(app)

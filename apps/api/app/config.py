@@ -83,6 +83,34 @@ def _parse_csv_list(value: str | list[str]) -> list[str]:
     return [item.strip() for item in value.split(",") if item.strip()]
 
 
+def _reject_wildcard_origin(origins: list[str]) -> list[str]:
+    """Reject a wildcard CORS origin.
+
+    The API sends credentials (the session and CSRF cookies), so a ``"*"``
+    origin is both invalid per the CORS spec and unsafe: the middleware would
+    reflect *any* requesting origin, defeating cross-site protection. Fail
+    fast at startup rather than shipping a silently permissive config.
+
+    Self-hosters set ``CORS_ALLOWED_ORIGINS`` to their exact web origin(s).
+
+    Args:
+        origins: The parsed list of allowed origins.
+
+    Returns:
+        The same list, unchanged, when it contains no wildcard.
+
+    Raises:
+        ValueError: If ``"*"`` appears among the origins.
+    """
+    if "*" in origins:
+        raise ValueError(
+            'CORS_ALLOWED_ORIGINS cannot be "*": the API sends credentials '
+            "(session + CSRF cookies), so origins must be listed explicitly "
+            "(e.g. https://app.example.com)."
+        )
+    return origins
+
+
 class Settings(BaseSettings):
     """API configuration -- values are read from environment or .env file."""
 
@@ -98,6 +126,7 @@ class Settings(BaseSettings):
         list[str],
         NoDecode,
         BeforeValidator(_parse_csv_list),
+        AfterValidator(_reject_wildcard_origin),
     ] = ["http://localhost:5173"]
     database_url: Annotated[str, AfterValidator(_coerce_database_url)] = (
         "postgresql+asyncpg://UNSET:UNSET@localhost:5432/UNSET"

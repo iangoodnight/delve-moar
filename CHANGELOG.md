@@ -24,6 +24,13 @@ For the per-PR convention and the manual release ritual, see the
 
 ### Security
 
+- Tightened the API CORS policy now that requests carry credentials
+  (session and CSRF cookies): the allowed methods and request headers
+  are now the explicit set the API serves and the SPA sends
+  (`Content-Type`, `X-CSRF-Token`) rather than `*`, and a `*` value for
+  `CORS_ALLOWED_ORIGINS` is rejected at startup. Allowed origins stay
+  configurable via `CORS_ALLOWED_ORIGINS` for self-hosting. (#360)
+
 ## [0.1.4] - 2026-08-09
 
 ### Added
