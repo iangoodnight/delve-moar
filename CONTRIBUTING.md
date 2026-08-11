@@ -230,8 +230,13 @@ hand, and link the relevant record when you flag one:
   [ADR 0008](docs/decisions/0008-frontend-coverage-policy.md).
 - **Typography token ordering** caveats, per
   [ADR 0007](docs/decisions/0007-web-typography-system.md).
-- **Owner-only write rule** for resources, per
-  [ADR 0011](docs/decisions/0011-campaign-model.md).
+- **Access checks go through the policy module.** The book read and
+  write rules (owner-or-public reads, owner-only writes) live in
+  `apps/api/app/authz.py`, per
+  [ADR 0011](docs/decisions/0011-campaign-model.md); endpoints call its
+  helpers (`get_readable_book`, `get_writable_book`,
+  `readable_books_predicate`) and never hand-roll owner or visibility
+  checks inline.
 
 ### Privacy and data-exposure review
 

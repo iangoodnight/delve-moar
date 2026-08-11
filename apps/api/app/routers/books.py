@@ -14,8 +14,11 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import InstrumentedAttribute
 
 from app.auth.dependencies import CurrentUser, require_csrf
-from app.books_access import readable_books_predicate
-from app.config import settings
+from app.authz import (
+    get_readable_book,
+    get_writable_book,
+    readable_books_predicate,
+)
 from app.db import DbSession
 from app.dependencies import (
     Pagination,
@@ -23,7 +26,7 @@ from app.dependencies import (
     ordering_dep,
     search_dep,
 )
-from app.exceptions import AppError, get_or_404
+from app.exceptions import get_or_404
 from app.models import (
     Book,
     BookItem,
@@ -134,40 +137,6 @@ async def _content_counts(
     return counts[0], counts[1], counts[2]
 
 
-async def _readable_or_404(
-    db: DbSession, book_id: uuid.UUID, user: User
-) -> Book:
-    """Load a book the user may read (owner or public), else 404.
-
-    Private books the user does not own return 404, not 403, so their
-    existence is never revealed.
-    """
-    book = await db.get(Book, book_id)
-    if book is None or not (book.owner_id == user.id or book.is_public):
-        return get_or_404(None, resource="book", identifier=str(book_id))
-    return book
-
-
-async def _writable_or_error(
-    db: DbSession, book_id: uuid.UUID, user: User
-) -> Book:
-    """Load a book the user may modify (owns, not a system book).
-
-    404 if not even readable; 403 if readable (e.g. the public SRD book)
-    but not the user's to change.
-    """
-    book = await _readable_or_404(db, book_id, user)
-    if book.is_system or book.owner_id != user.id:
-        raise AppError(
-            status=status.HTTP_403_FORBIDDEN,
-            developer_message=f"Book '{book_id}' is not owned by the user.",
-            user_message="You can only modify your own books.",
-            error_code="FORBIDDEN",
-            more_info=f"{settings.public_url}/docs",
-        )
-    return book
-
-
 @router.get(
     "",
     response_model=PaginatedResultset[BookSummary],
@@ -247,7 +216,7 @@ async def get_book(
     book_id: uuid.UUID, db: DbSession, user: CurrentUser
 ) -> BookDetail:
     """Get a readable book (owner or public) with its content counts."""
-    book = await _readable_or_404(db, book_id, user)
+    book = await get_readable_book(db, book_id, user)
     return _detail(book, user, await _content_counts(db, book_id))
 
 
@@ -274,7 +243,7 @@ async def update_book(
     user: CurrentUser,
 ) -> BookDetail:
     """Update a book's name and/or description (owner-only)."""
-    book = await _writable_or_error(db, book_id, user)
+    book = await get_writable_book(db, book_id, user)
     for field, value in payload.model_dump(exclude_unset=True).items():
         setattr(book, field, value)
     await db.commit()
@@ -306,7 +275,7 @@ async def delete_book(
     The owned content itself is untouched; only the collection and its
     join rows are removed.
     """
-    book = await _writable_or_error(db, book_id, user)
+    book = await get_writable_book(db, book_id, user)
     await db.delete(book)
     await db.commit()
 
@@ -419,7 +388,7 @@ async def list_book_monsters(
     search: BookMonsterSearch,
 ) -> PaginatedResultset[MonsterSummary]:
     """List the monsters in a readable book."""
-    await _readable_or_404(db, book_id, user)
+    await get_readable_book(db, book_id, user)
     return await _list_content(
         request,
         db,
@@ -448,7 +417,7 @@ async def add_book_monster(
     user: CurrentUser,
 ) -> None:
     """Add a monster to a book the user owns (idempotent)."""
-    book = await _writable_or_error(db, book_id, user)
+    book = await get_writable_book(db, book_id, user)
     await _add_content(
         db,
         book.id,
@@ -474,7 +443,7 @@ async def remove_book_monster(
     user: CurrentUser,
 ) -> None:
     """Remove a monster from a book the user owns (idempotent)."""
-    book = await _writable_or_error(db, book_id, user)
+    book = await get_writable_book(db, book_id, user)
     await _remove_content(
         db, book.id, BookMonster, BookMonster.monster_id, monster_id
     )
@@ -496,7 +465,7 @@ async def list_book_spells(
     search: BookSpellSearch,
 ) -> PaginatedResultset[SpellSummary]:
     """List the spells in a readable book."""
-    await _readable_or_404(db, book_id, user)
+    await get_readable_book(db, book_id, user)
     return await _list_content(
         request,
         db,
@@ -525,7 +494,7 @@ async def add_book_spell(
     user: CurrentUser,
 ) -> None:
     """Add a spell to a book the user owns (idempotent)."""
-    book = await _writable_or_error(db, book_id, user)
+    book = await get_writable_book(db, book_id, user)
     await _add_content(
         db, book.id, Spell, BookSpell, BookSpell.spell_id, spell_id, "spell"
     )
@@ -545,7 +514,7 @@ async def remove_book_spell(
     user: CurrentUser,
 ) -> None:
     """Remove a spell from a book the user owns (idempotent)."""
-    book = await _writable_or_error(db, book_id, user)
+    book = await get_writable_book(db, book_id, user)
     await _remove_content(db, book.id, BookSpell, BookSpell.spell_id, spell_id)
 
 
@@ -565,7 +534,7 @@ async def list_book_items(
     search: BookItemSearch,
 ) -> PaginatedResultset[ItemSummary]:
     """List the items in a readable book."""
-    await _readable_or_404(db, book_id, user)
+    await get_readable_book(db, book_id, user)
     return await _list_content(
         request,
         db,
@@ -594,7 +563,7 @@ async def add_book_item(
     user: CurrentUser,
 ) -> None:
     """Add an item to a book the user owns (idempotent)."""
-    book = await _writable_or_error(db, book_id, user)
+    book = await get_writable_book(db, book_id, user)
     await _add_content(
         db, book.id, Item, BookItem, BookItem.item_id, item_id, "item"
     )
@@ -614,5 +583,5 @@ async def remove_book_item(
     user: CurrentUser,
 ) -> None:
     """Remove an item from a book the user owns (idempotent)."""
-    book = await _writable_or_error(db, book_id, user)
+    book = await get_writable_book(db, book_id, user)
     await _remove_content(db, book.id, BookItem, BookItem.item_id, item_id)
