@@ -1,0 +1,29 @@
+/* the clear button stays hidden until the field is hovered or focused */
+.clear {
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity var(--transition-medium) ease-in-out;
+}
+
+.search-icon {
+  color: inherit;
+  transition: color var(--transition-medium) ease-in-out;
+}
+
+.root:hover,
+.root:focus-within {
+  .clear {
+    visibility: visible;
+    opacity: 1;
+  }
+
+  .search-icon {
+    color: var(--accent-11);
+  }
+}
+
+/* our IconButton is the only clear affordance; drop the native search one */
+.root input[type='search']::-webkit-search-cancel-button,
+.root input[type='search']::-webkit-search-decoration {
+  appearance: none;
+}

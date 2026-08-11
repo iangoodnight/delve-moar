@@ -8,12 +8,11 @@ import { useEffect, useRef, useState } from 'react';
 import { IconButton } from '@/components/ui/button';
 import { Callout } from '@/components/ui/callout';
 import { ConfirmDestructive } from '@/components/ui/confirm-destructive';
-import { TextField } from '@/components/ui/field';
 import { Box, Column, Row } from '@/components/ui/layout';
 import { Spinner } from '@/components/ui/loading';
+import { SearchField } from '@/components/ui/search-field';
 import { Select } from '@/components/ui/select';
-import { Label, Text } from '@/components/ui/typography';
-import { VisuallyHidden } from '@/components/ui/utils';
+import { Text } from '@/components/ui/typography';
 
 import type { BookSortOption, SortDirection } from '../constants';
 
@@ -115,22 +114,13 @@ export function BookContentSection({
           flexGrow="1"
           minWidth="0"
         >
-          <Label>
-            <VisuallyHidden>Search {lowerTitle}</VisuallyHidden>
-            <TextField.Root
-              onChange={(event) => {
-                search.onChange(event.currentTarget.value);
-              }}
-              onKeyDown={(event) => {
-                if (event.key === 'Escape') {
-                  event.preventDefault();
-                  search.onChange('');
-                }
-              }}
-              placeholder={search.placeholder}
-              value={search.value}
-            />
-          </Label>
+          <SearchField
+            aria-label={`Search ${lowerTitle}`}
+            focusOnSlash
+            onChange={search.onChange}
+            placeholder={search.placeholder}
+            value={search.value}
+          />
         </Box>
         <Row flexBasis={{ initial: '100%', sm: 'auto' }} flexShrink="0" gap="2">
           <Box
