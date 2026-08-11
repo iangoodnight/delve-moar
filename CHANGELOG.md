@@ -14,6 +14,12 @@ For the per-PR convention and the manual release ritual, see the
 
 ### Added
 
+- Campaigns (API): create, list, update, and delete campaigns, and
+  enable or disable the books a campaign shares with its members.
+  Members gain read access to the content in a campaign's enabled
+  books; writes are owner-only, and you can only share books you own.
+  Invites and the web UI follow. (#176)
+
 - Privacy-friendly, env-toggleable web analytics (Plausible): off by
   default and inert until `VITE_APP_ANALYTICS_DOMAIN` is set, skipped
   when the visitor sends Do Not Track, and cookieless with no PII.

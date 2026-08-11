@@ -22,7 +22,15 @@ def test_campaign_tablename() -> None:
 
 def test_campaign_columns() -> None:
     cols = {c.key for c in Campaign.__table__.columns}
-    assert cols == {"id", "name", "slug", "created_at", "updated_at"}
+    assert cols == {
+        "id",
+        "owner_id",
+        "name",
+        "slug",
+        "description",
+        "created_at",
+        "updated_at",
+    }
 
 
 def test_monster_tablename() -> None:

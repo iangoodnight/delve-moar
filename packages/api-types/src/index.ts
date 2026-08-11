@@ -515,6 +515,110 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/campaigns": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List campaigns
+         * @description List the campaigns the user owns or is a member of.
+         */
+        get: operations["list_campaigns_v1_campaigns_get"];
+        put?: never;
+        /**
+         * Create a campaign
+         * @description Create a new campaign owned by the current user.
+         */
+        post: operations["create_campaign_v1_campaigns_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/campaigns/{campaign_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get a campaign
+         * @description Get a campaign the user owns or is a member of, with its counts.
+         */
+        get: operations["get_campaign_v1_campaigns__campaign_id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete a campaign
+         * @description Delete a campaign (owner-only).
+         *
+         *     Its membership and enabled-book links cascade; the books themselves and
+         *     their owned content are untouched.
+         */
+        delete: operations["delete_campaign_v1_campaigns__campaign_id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update a campaign
+         * @description Update a campaign's name and/or description (owner-only).
+         */
+        patch: operations["update_campaign_v1_campaigns__campaign_id__patch"];
+        trace?: never;
+    };
+    "/v1/campaigns/{campaign_id}/books": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List a campaign's enabled books
+         * @description List the books enabled on a campaign the user can read.
+         */
+        get: operations["list_campaign_books_v1_campaigns__campaign_id__books_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/campaigns/{campaign_id}/books/{book_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Enable a book on a campaign
+         * @description Enable a book you own on a campaign you own (idempotent).
+         *
+         *     Sharing flows owner-to-members, so you may only enable books you own: a
+         *     book merely shared *to* you through another campaign is not re-shareable.
+         *     ``get_writable_book`` enforces owner-only (404 if you can't read it, 403
+         *     if you can read but do not own it).
+         */
+        put: operations["enable_book_v1_campaigns__campaign_id__books__book_id__put"];
+        post?: never;
+        /**
+         * Disable a book on a campaign
+         * @description Disable a book on a campaign you own (idempotent).
+         */
+        delete: operations["disable_book_v1_campaigns__campaign_id__books__book_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/items": {
         parameters: {
             query?: never;
@@ -973,6 +1077,132 @@ export interface components {
             description?: string | null;
         };
         /**
+         * CampaignCreate
+         * @description Payload to create a campaign.
+         */
+        CampaignCreate: {
+            /**
+             * Name
+             * @description Display name for the campaign.
+             */
+            name: string;
+            /**
+             * Description
+             * @description Optional longer description of the campaign.
+             */
+            description?: string | null;
+        };
+        /**
+         * CampaignDetail
+         * @description A single campaign with its member and enabled-book counts.
+         */
+        CampaignDetail: {
+            /**
+             * Id
+             * Format: uuid
+             * @description Unique identifier for the campaign.
+             */
+            id: string;
+            /**
+             * Name
+             * @description Display name of the campaign.
+             */
+            name: string;
+            /**
+             * Description
+             * @description Longer description, if any.
+             */
+            description: string | null;
+            /** @description Public author projection of the campaign's owner. */
+            owner: components["schemas"]["Author"];
+            /**
+             * Role
+             * @description The viewer's relationship to this campaign.
+             * @enum {string}
+             */
+            role: "owner" | "member";
+            /**
+             * Createdat
+             * Format: date-time
+             * @description When the campaign was created.
+             */
+            createdAt: string;
+            /**
+             * Updatedat
+             * Format: date-time
+             * @description When the campaign was last updated.
+             */
+            updatedAt: string;
+            /**
+             * Membercount
+             * @description Number of members, excluding the owner.
+             */
+            memberCount: number;
+            /**
+             * Bookcount
+             * @description Number of books enabled on the campaign.
+             */
+            bookCount: number;
+        };
+        /**
+         * CampaignSummary
+         * @description A campaign as shown in list views.
+         */
+        CampaignSummary: {
+            /**
+             * Id
+             * Format: uuid
+             * @description Unique identifier for the campaign.
+             */
+            id: string;
+            /**
+             * Name
+             * @description Display name of the campaign.
+             */
+            name: string;
+            /**
+             * Description
+             * @description Longer description, if any.
+             */
+            description: string | null;
+            /** @description Public author projection of the campaign's owner. */
+            owner: components["schemas"]["Author"];
+            /**
+             * Role
+             * @description The viewer's relationship to this campaign.
+             * @enum {string}
+             */
+            role: "owner" | "member";
+            /**
+             * Createdat
+             * Format: date-time
+             * @description When the campaign was created.
+             */
+            createdAt: string;
+            /**
+             * Updatedat
+             * Format: date-time
+             * @description When the campaign was last updated.
+             */
+            updatedAt: string;
+        };
+        /**
+         * CampaignUpdate
+         * @description Payload to update a campaign. Only the provided fields are changed.
+         */
+        CampaignUpdate: {
+            /**
+             * Name
+             * @description New display name for the campaign.
+             */
+            name?: string | null;
+            /**
+             * Description
+             * @description New description for the campaign.
+             */
+            description?: string | null;
+        };
+        /**
          * ChangeEmailRequest
          * @description Payload to request an email change.
          *
@@ -1328,6 +1558,16 @@ export interface components {
              * @description The records on this page.
              */
             data: components["schemas"]["BookSummary"][];
+        };
+        /** PaginatedResultset[CampaignSummary] */
+        PaginatedResultset_CampaignSummary_: {
+            /** @description Pagination metadata and links. */
+            metadata: components["schemas"]["MetadataEnvelope"];
+            /**
+             * Data
+             * @description The records on this page.
+             */
+            data: components["schemas"]["CampaignSummary"][];
         };
         /** PaginatedResultset[ItemSummary] */
         PaginatedResultset_ItemSummary_: {
@@ -3007,6 +3247,358 @@ export interface operations {
                 };
             };
             /** @description Book or content not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_campaigns_v1_campaigns_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+                /** @description Comma-separated sort fields in column:direction format. Direction is 'asc' or 'desc' (case-insensitive); omitting direction defaults to 'asc'. Valid columns: created_at, name, updated_at. */
+                order_by?: string | null;
+                /** @description Case-insensitive substring search. Matches against name, description. Results are relevance-ordered: earlier columns rank higher than later ones. */
+                search?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedResultset_CampaignSummary_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_campaign_v1_campaigns_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CampaignCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CampaignDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_campaign_v1_campaigns__campaign_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CampaignDetail"];
+                };
+            };
+            /** @description Campaign not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_campaign_v1_campaigns__campaign_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not the campaign's owner */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Campaign not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_campaign_v1_campaigns__campaign_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CampaignUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CampaignDetail"];
+                };
+            };
+            /** @description Not the campaign's owner */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Campaign not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_campaign_books_v1_campaigns__campaign_id__books_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+                /** @description Comma-separated sort fields in column:direction format. Direction is 'asc' or 'desc' (case-insensitive); omitting direction defaults to 'asc'. Valid columns: name. */
+                order_by?: string | null;
+                /** @description Case-insensitive substring search. Matches against name, description. Results are relevance-ordered: earlier columns rank higher than later ones. */
+                search?: string | null;
+            };
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedResultset_BookSummary_"];
+                };
+            };
+            /** @description Campaign not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    enable_book_v1_campaigns__campaign_id__books__book_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+                book_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not the campaign's owner */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Campaign not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    disable_book_v1_campaigns__campaign_id__books__book_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+                book_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not the campaign's owner */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Campaign not found */
             404: {
                 headers: {
                     [name: string]: unknown;
