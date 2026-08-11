@@ -161,8 +161,11 @@ Use the output `api_ipv4` and `api_ipv6` values when configuring DNS.
 1. Go to <https://vercel.com/new> and import the GitHub repo.
 2. Set **Root Directory** to `apps/web`.
 3. Vercel auto-detects Vite; confirm framework is "Vite".
-4. Add environment variables (`VITE_API_URL=https://api.delvemoar.com`,
-   `VITE_APP_TITLE=DelveMoar`).
+4. Add environment variables (`VITE_APP_API_URL=https://api.delvemoar.com`,
+   `VITE_APP_TITLE=DelveMoar`). To turn on privacy-friendly analytics,
+   also set `VITE_APP_ANALYTICS_DOMAIN` (and, for a self-hosted
+   Plausible instance, `VITE_APP_ANALYTICS_SRC`); leave them unset to
+   keep analytics off. See [analytics](analytics.md).
 5. Deploy. Note the `VERCEL_ORG_ID` and `VERCEL_PROJECT_ID` for CI
    if you ever want to trigger Vercel deploys from Actions.
 
