@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, Query, Request, status
 from sqlalchemy import select
 
 from app.auth.dependencies import OptionalCurrentUser
-from app.books_access import (
+from app.authz import (
     assert_books_readable,
     attach_book_memberships,
     book_memberships_for,
