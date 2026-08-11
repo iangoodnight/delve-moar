@@ -10,6 +10,14 @@ function createEnv() {
       (value) => (value === '' ? undefined : value),
       z.url().optional(),
     ),
+    // empty/unset disables analytics (dev, CI, opted-out self-hosters); when
+    // set it is the Plausible data-domain. ANALYTICS_SRC points at the script
+    // (cloud default; self-hosters override to their own instance).
+    ANALYTICS_DOMAIN: z.preprocess(
+      (value) => (value === '' ? undefined : value),
+      z.string().optional(),
+    ),
+    ANALYTICS_SRC: z.url().default('https://plausible.io/js/script.js'),
   });
 
   const envVars = Object.entries(import.meta.env).reduce<

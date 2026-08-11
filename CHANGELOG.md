@@ -14,6 +14,13 @@ For the per-PR convention and the manual release ritual, see the
 
 ### Added
 
+- Privacy-friendly, env-toggleable web analytics (Plausible): off by
+  default and inert until `VITE_APP_ANALYTICS_DOMAIN` is set, skipped
+  when the visitor sends Do Not Track, and cookieless with no PII.
+  Self-hosters point `VITE_APP_ANALYTICS_SRC` at their own instance, or
+  leave it unset to disable. What is and is not collected is documented
+  in [`docs/analytics.md`](docs/analytics.md). (#168)
+
 ### Changed
 
 ### Deprecated
