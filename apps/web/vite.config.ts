@@ -31,6 +31,15 @@ export default defineConfig({
     sourcemap: Boolean(sentryAuthToken),
   },
 
+  server: {
+    // usePolling lets Vite's watcher see edits across a Docker bind mount
+    // (macOS doesn't forward native FS events). Inert unless the compose web
+    // service sets VITE_USE_POLLING, so local dev and CI are untouched.
+    ...(process.env.VITE_USE_POLLING === 'true'
+      ? { watch: { usePolling: true } }
+      : {}),
+  },
+
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),

@@ -13,7 +13,7 @@ tasks:
     cmd: docker compose -f infra/docker-compose.yml --env-file .env up --build
 
   dev:api:
-    desc: Start only postgres + API (no web — useful while the UI Dockerfile is absent)
+    desc: Start only postgres + API (skip the web dev server)
     cmd: docker compose -f infra/docker-compose.yml --env-file .env up api --build
 
   # ── Linting ────────────────────────────────────────────────────────────────

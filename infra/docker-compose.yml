@@ -59,11 +59,24 @@ services:
   # ---------------------------------------------------------------------------
   web:
     build:
-      context: ../apps/web
-      dockerfile: Dockerfile
+      # Repo root, not apps/web: the web app is a pnpm workspace member and
+      # needs the root lockfile + packages/ to install @delve-moar/api-types.
+      context: ..
+      dockerfile: apps/web/Dockerfile
     restart: unless-stopped
+    environment:
+      # Runs in the user's browser, so it reaches the API via the host-mapped
+      # port (localhost), not the compose service name.
+      VITE_APP_API_URL: http://localhost:${API_PORT:-8000}
+      # Poll for changes so HMR works across the bind mount (macOS Docker does
+      # not propagate native FS events); read by vite.config.ts.
+      VITE_USE_POLLING: "true"
     ports:
       - "${WEB_PORT:-5173}:5173"
+    volumes:
+      # Mount source only — node_modules lives in the image. Vite watches this
+      # for hot-reload, the same way the api service mounts app/.
+      - ../apps/web/src:/repo/apps/web/src
     depends_on:
       - api
 

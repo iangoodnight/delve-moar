@@ -1,0 +1,30 @@
+# Applies to image builds that use the repo root as the build context.
+# Currently that is only the web dev image (infra/docker-compose.yml). The API
+# and CLI images build from their own app-scoped contexts and are unaffected.
+
+# Installed deps and build output — the image reinstalls and rebuilds these.
+**/node_modules
+**/dist
+**/coverage
+**/storybook-static
+**/.turbo
+**/*.tsbuildinfo
+
+# VCS / editor / CI metadata
+.git
+.github
+.vscode
+
+# App trees the web image never copies.
+apps/api
+apps/cli
+infra
+docs
+planning
+
+# Local env files. The web dev server gets VITE_APP_API_URL from compose, so a
+# stray local .env must not leak into the image and override it.
+**/.env
+**/.env.*
+
+*.log
