@@ -28,6 +28,8 @@ automatically on the corresponding git operations; see
 | Stop only postgres                   | `task db:down`            |
 | Lint everything                      | `task lint`               |
 | Lint one app                         | `task lint:api`, `task lint:web`, `task lint:cli`, `task lint:shell` |
+| Format everything                    | `task format`             |
+| Format one app                       | `task format:api`, `task format:web`, `task format:cli`, `task format:shell` |
 | Test everything                      | `task test`               |
 | Test one suite                       | `task test:api`, `task test:web`, `task test:cli`, `task test:shell` |
 | Build everything                     | `task build`              |

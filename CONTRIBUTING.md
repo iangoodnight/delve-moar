@@ -56,6 +56,7 @@ Common workflows:
 
 ```bash
 task lint        # all three apps + shell scripts in parallel
+task format      # auto-format all three apps + shell scripts
 task test        # all three apps in parallel
 task gen:types   # regenerate api-types and Go client from the live OpenAPI spec
 task db:migrate  # apply pending Alembic migrations
