@@ -1,10 +1,12 @@
+import { useQueryClient } from '@tanstack/react-query';
 import { Link as ReactRouterLink } from 'react-router-dom';
 
 import { Card } from '@/components/ui/card';
 import { Column, Row } from '@/components/ui/layout';
 import { Text } from '@/components/ui/typography';
 import { paths } from '@/config/paths';
-import type { MonsterSummary } from '@/features/monsters/api';
+import { type MonsterSummary, prefetchMonster } from '@/features/monsters/api';
+import { useHoverPrefetch } from '@/hooks/use-hover-prefetch';
 
 import styles from './monster-card.module.css';
 
@@ -13,12 +15,18 @@ interface MonsterCardProps {
 }
 
 export function MonsterCard({ monster }: Readonly<MonsterCardProps>) {
+  const queryClient = useQueryClient();
+  const hover = useHoverPrefetch(() => {
+    prefetchMonster(queryClient, monster.slug);
+  });
+
   return (
     <Card asChild>
       <ReactRouterLink
         className={styles['monster-card']}
         data-monster={monster.slug}
         to={paths.monsterDetail.getHref(monster.slug)}
+        {...hover}
       >
         <Row gap="3" justify="between">
           <Column gap="1">

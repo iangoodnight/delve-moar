@@ -35,6 +35,12 @@ For the per-PR convention and the manual release ritual, see the
   leave it unset to disable. What is and is not collected is documented
   in [`docs/analytics.md`](docs/analytics.md). (#168)
 
+- Hover-intent navigation prefetch: hovering or keyboard-focusing a
+  primary nav link or a content card warms the destination's data before
+  the click, so the next page renders without a loading flash. Prefetch
+  is fire-and-forget, respects the query cache's freshness window, and
+  fires at most once per hover. (#272)
+
 ### Changed
 
 ### Deprecated

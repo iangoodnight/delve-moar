@@ -1,5 +1,6 @@
 import '@testing-library/jest-dom/vitest';
 import 'vitest-axe/extend-expect';
+import { QueryClient } from '@tanstack/react-query';
 import { render } from '@testing-library/react';
 import { expect } from 'vitest';
 import * as axeMatchers from 'vitest-axe/matchers';
@@ -101,4 +102,9 @@ Object.defineProperty(Element.prototype, 'scrollIntoView', {
 
 export function renderWithProvider(ui: React.ReactElement) {
   return render(ui, { wrapper: AppProvider });
+}
+
+// retry-free client for tests that need one in context without AppProvider
+export function createTestQueryClient(): QueryClient {
+  return new QueryClient({ defaultOptions: { queries: { retry: false } } });
 }

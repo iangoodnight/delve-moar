@@ -1,5 +1,9 @@
 import type { components } from '@delve-moar/api-types';
-import { queryOptions, useQuery } from '@tanstack/react-query';
+import {
+  type QueryClient,
+  queryOptions,
+  useQuery,
+} from '@tanstack/react-query';
 
 import { apiClient } from '@/lib/api-client';
 import type { QueryConfig } from '@/lib/react-query';
@@ -25,6 +29,10 @@ export function getItemQueryOptions(slug: string) {
     queryKey: ['items', 'detail', slug] as const,
     queryFn: () => getItem(slug),
   });
+}
+
+export function prefetchItem(queryClient: QueryClient, slug: string): void {
+  void queryClient.prefetchQuery(getItemQueryOptions(slug));
 }
 
 interface UseItemOptions {

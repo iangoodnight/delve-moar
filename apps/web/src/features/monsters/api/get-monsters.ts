@@ -1,5 +1,5 @@
 import type { components } from '@delve-moar/api-types';
-import { infiniteQueryOptions } from '@tanstack/react-query';
+import { infiniteQueryOptions, type QueryClient } from '@tanstack/react-query';
 
 import { apiClient } from '@/lib/api-client';
 
@@ -45,4 +45,14 @@ export function getMonstersInfiniteQueryOptions(filters: MonsterFilters) {
       return offset + limit < count ? offset + limit : undefined;
     },
   });
+}
+
+// {} matches the unfiltered list's cache key (react-query drops undefined keys)
+export function prefetchMonsters(
+  queryClient: QueryClient,
+  filters: MonsterFilters = {},
+): void {
+  void queryClient.prefetchInfiniteQuery(
+    getMonstersInfiniteQueryOptions(filters),
+  );
 }

@@ -1,5 +1,5 @@
 import type { components } from '@delve-moar/api-types';
-import { infiniteQueryOptions } from '@tanstack/react-query';
+import { infiniteQueryOptions, type QueryClient } from '@tanstack/react-query';
 
 import { apiClient } from '@/lib/api-client';
 
@@ -38,4 +38,12 @@ export function getItemsInfiniteQueryOptions(filters: ItemFilters) {
       return offset + limit < count ? offset + limit : undefined;
     },
   });
+}
+
+// {} matches the unfiltered list's cache key (react-query drops undefined keys)
+export function prefetchItems(
+  queryClient: QueryClient,
+  filters: ItemFilters = {},
+): void {
+  void queryClient.prefetchInfiniteQuery(getItemsInfiniteQueryOptions(filters));
 }
