@@ -18,7 +18,15 @@ For the per-PR convention and the manual release ritual, see the
   enable or disable the books a campaign shares with its members.
   Members gain read access to the content in a campaign's enabled
   books; writes are owner-only, and you can only share books you own.
-  Invites and the web UI follow. (#176)
+  The web UI follows. (#176)
+
+- Campaign membership (API): invite users to a campaign by their public
+  handle, list and revoke pending invites, and view the member roster.
+  Invitees list, accept, and decline their own invites, and any member
+  can leave a campaign. Accepting is what creates membership and grants
+  read access. Invites go by handle only (never email, so no address is
+  disclosed), expire after a configurable window, and are revocable.
+  The web UI follows. (#176)
 
 - Privacy-friendly, env-toggleable web analytics (Plausible): off by
   default and inert until `VITE_APP_ANALYTICS_DOMAIN` is set, skipped

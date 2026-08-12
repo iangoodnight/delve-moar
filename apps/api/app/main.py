@@ -18,6 +18,7 @@ from app.routers import (
     account,
     auth,
     books,
+    campaign_invites,
     campaigns,
     health,
     items,
@@ -117,6 +118,7 @@ app.include_router(account.router, prefix=V1_PREFIX)
 app.include_router(auth.router, prefix=V1_PREFIX)
 app.include_router(books.router, prefix=V1_PREFIX)
 app.include_router(campaigns.router, prefix=V1_PREFIX)
+app.include_router(campaign_invites.router, prefix=V1_PREFIX)
 app.include_router(items.router, prefix=V1_PREFIX)
 app.include_router(monsters.router, prefix=V1_PREFIX)
 app.include_router(spells.router, prefix=V1_PREFIX)

@@ -55,8 +55,8 @@ class CampaignMember(Base):
     """A user's membership in a campaign: read access to its enabled books.
 
     The owner is not stored here (ownership is ``campaigns.owner_id``); these
-    rows are the invited readers. The invite flow that populates them lands
-    in a follow-up; the authz read rule already reads from this table.
+    rows are the accepted readers. A row is created when an invitee accepts a
+    ``CampaignInvite``; the authz read rule reads membership from this table.
     """
 
     __tablename__ = "campaign_members"
@@ -93,6 +93,54 @@ class CampaignBook(Base):
         sa.ForeignKey("books.id", ondelete="CASCADE"),
         primary_key=True,
         index=True,
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        sa.TIMESTAMP(timezone=True),
+        server_default=sa.text("NOW()"),
+    )
+
+
+class CampaignInvite(Base):
+    """A pending invitation for a user to join a campaign (#176).
+
+    A separate table from ``campaign_members`` on purpose: an invite grants
+    nothing until the invitee accepts. Membership (and the book read access it
+    carries) is created only when accept moves a row into ``campaign_members``,
+    so the authz predicate that treats every ``campaign_members`` row as a
+    member can never leak access to someone who was merely invited. Invites
+    are addressed by the invitee's *resolved* account (owner-only invite by
+    public handle, #185), expire after a TTL, and are deleted on
+    accept/decline/revoke -- there is no lingering "declined" state to leak.
+    The inviter is the campaign owner (owner-only writes in Phase 1b), so it
+    is derived from ``campaigns.owner_id`` rather than stored here.
+    """
+
+    __tablename__ = "campaign_invites"
+    __table_args__ = (
+        sa.UniqueConstraint(
+            "campaign_id",
+            "invitee_user_id",
+            name="uq_campaign_invites_campaign_invitee",
+        ),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        sa.Uuid(native_uuid=True),
+        primary_key=True,
+        server_default=sa.text("gen_random_uuid()"),
+    )
+    campaign_id: Mapped[uuid.UUID] = mapped_column(
+        sa.Uuid(native_uuid=True),
+        sa.ForeignKey("campaigns.id", ondelete="CASCADE"),
+        index=True,
+    )
+    invitee_user_id: Mapped[uuid.UUID] = mapped_column(
+        sa.Uuid(native_uuid=True),
+        sa.ForeignKey("users.id", ondelete="CASCADE"),
+        index=True,
+    )
+    expires_at: Mapped[datetime] = mapped_column(
+        sa.TIMESTAMP(timezone=True),
     )
     created_at: Mapped[datetime] = mapped_column(
         sa.TIMESTAMP(timezone=True),

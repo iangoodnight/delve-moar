@@ -35,6 +35,7 @@ than in the content routers.
 import uuid
 from collections import defaultdict
 from collections.abc import Sequence
+from datetime import UTC, datetime
 from typing import Any
 
 from fastapi import status
@@ -44,7 +45,14 @@ from sqlalchemy.orm import InstrumentedAttribute
 from app.config import settings
 from app.db import DbSession
 from app.exceptions import AppError, get_or_404
-from app.models import Book, Campaign, CampaignBook, CampaignMember, User
+from app.models import (
+    Book,
+    Campaign,
+    CampaignBook,
+    CampaignInvite,
+    CampaignMember,
+    User,
+)
 from app.schemas.book_membership import BookMembership
 
 
@@ -172,6 +180,57 @@ async def get_writable_campaign(
                 f"Campaign '{campaign_id}' is not owned by the user."
             ),
             user_message="You can only modify campaigns you own.",
+            error_code="FORBIDDEN",
+            more_info=f"{settings.public_url}/docs",
+        )
+    return campaign
+
+
+async def get_own_invite(
+    db: DbSession, invite_id: uuid.UUID, user: User
+) -> CampaignInvite:
+    """Load a pending invite addressed to the user, else 404.
+
+    An invite that is unknown, addressed to someone else, or expired is
+    indistinguishable from a missing one (all 404), so an invite's existence
+    is never revealed to anyone but its own invitee. Backs accept and decline.
+    """
+    invite = await db.scalar(
+        select(CampaignInvite).where(
+            CampaignInvite.id == invite_id,
+            CampaignInvite.invitee_user_id == user.id,
+            CampaignInvite.expires_at > datetime.now(UTC),
+        )
+    )
+    return get_or_404(invite, resource="invite", identifier=str(invite_id))
+
+
+async def authorize_member_removal(
+    db: DbSession,
+    campaign_id: uuid.UUID,
+    target_handle: str,
+    user: User,
+) -> Campaign:
+    """Authorize removing the ``target_handle`` member from a campaign.
+
+    404 if the campaign is not even readable to the caller (existence stays
+    hidden). Otherwise the owner may remove any member, and a member may
+    remove only themselves (leaving); anything else is 403. Members are
+    addressed by their public handle -- unique and stable in Phase 1b -- so no
+    internal user id has to be exposed to make removal possible. Returns the
+    campaign so the caller can act on it.
+    """
+    campaign = await get_readable_campaign(db, campaign_id, user)
+    is_owner = campaign.owner_id == user.id
+    is_self = target_handle == user.username
+    if not (is_owner or is_self):
+        raise AppError(
+            status=status.HTTP_403_FORBIDDEN,
+            developer_message=(
+                "Only the owner may remove other members; members may remove "
+                "only themselves."
+            ),
+            user_message="You can only remove yourself from this campaign.",
             error_code="FORBIDDEN",
             more_info=f"{settings.public_url}/docs",
         )

@@ -8,6 +8,7 @@ depend on any endpoint wiring. Includes the shared-campaign read branch
 
 import uuid
 from dataclasses import dataclass
+from datetime import UTC, datetime, timedelta
 
 import pytest
 from fastapi import status
@@ -16,6 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.authz import (
     assert_books_readable,
+    get_own_invite,
     get_readable_book,
     get_readable_campaign,
     get_writable_book,
@@ -24,7 +26,14 @@ from app.authz import (
     readable_campaigns_predicate,
 )
 from app.exceptions import AppError
-from app.models import Book, Campaign, CampaignBook, CampaignMember, User
+from app.models import (
+    Book,
+    Campaign,
+    CampaignBook,
+    CampaignInvite,
+    CampaignMember,
+    User,
+)
 
 
 @dataclass
@@ -396,4 +405,71 @@ async def test_get_writable_campaign_stranger_is_404_not_403(
     campaign = await _campaign(db_session, world.alice, "Alice's Game")
     with pytest.raises(AppError) as exc:
         await get_writable_campaign(db_session, campaign.id, world.bob)
+    assert exc.value.status == status.HTTP_404_NOT_FOUND
+
+
+# ── get_own_invite (campaign invites, #176) ──────────────────────────────────
+
+
+async def _make_invite(
+    db: AsyncSession,
+    campaign: Campaign,
+    invitee: User,
+    *,
+    expires_in: timedelta = timedelta(days=7),
+) -> CampaignInvite:
+    invite = CampaignInvite(
+        campaign_id=campaign.id,
+        invitee_user_id=invitee.id,
+        expires_at=datetime.now(UTC) + expires_in,
+    )
+    db.add(invite)
+    await db.flush()
+    return invite
+
+
+async def test_get_own_invite_returns_invitees_pending_invite(
+    db_session: AsyncSession,
+) -> None:
+    world = await _seed_world(db_session)
+    campaign = await _campaign(db_session, world.alice, "Alice's Game")
+    invite = await _make_invite(db_session, campaign, world.bob)
+    got = await get_own_invite(db_session, invite.id, world.bob)
+    assert got.id == invite.id
+
+
+async def test_get_own_invite_hides_another_users_invite_as_404(
+    db_session: AsyncSession,
+) -> None:
+    world = await _seed_world(db_session)
+    campaign = await _campaign(db_session, world.alice, "Alice's Game")
+    invite = await _make_invite(db_session, campaign, world.bob)
+    carol = User(username="carol", email="carol@example.com", password_hash="x")
+    db_session.add(carol)
+    await db_session.flush()
+    with pytest.raises(AppError) as exc:
+        await get_own_invite(db_session, invite.id, carol)
+    assert exc.value.status == status.HTTP_404_NOT_FOUND
+
+
+async def test_get_own_invite_missing_is_404(
+    db_session: AsyncSession,
+) -> None:
+    world = await _seed_world(db_session)
+    with pytest.raises(AppError) as exc:
+        await get_own_invite(db_session, uuid.uuid4(), world.bob)
+    assert exc.value.status == status.HTTP_404_NOT_FOUND
+
+
+async def test_get_own_invite_expired_is_404(
+    db_session: AsyncSession,
+) -> None:
+    # an expired invite is indistinguishable from a missing one (both 404)
+    world = await _seed_world(db_session)
+    campaign = await _campaign(db_session, world.alice, "Alice's Game")
+    invite = await _make_invite(
+        db_session, campaign, world.bob, expires_in=timedelta(days=-1)
+    )
+    with pytest.raises(AppError) as exc:
+        await get_own_invite(db_session, invite.id, world.bob)
     assert exc.value.status == status.HTTP_404_NOT_FOUND

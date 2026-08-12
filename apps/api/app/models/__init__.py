@@ -5,7 +5,12 @@ which is required for Alembic autogenerate and runtime schema awareness.
 """
 
 from app.models.book import Book, BookItem, BookMonster, BookSpell
-from app.models.campaign import Campaign, CampaignBook, CampaignMember
+from app.models.campaign import (
+    Campaign,
+    CampaignBook,
+    CampaignInvite,
+    CampaignMember,
+)
 from app.models.email_token import EmailToken, EmailTokenPurpose
 from app.models.item import Item
 from app.models.monster import Monster
@@ -20,6 +25,7 @@ __all__ = [
     "BookSpell",
     "Campaign",
     "CampaignBook",
+    "CampaignInvite",
     "CampaignMember",
     "EmailToken",
     "EmailTokenPurpose",

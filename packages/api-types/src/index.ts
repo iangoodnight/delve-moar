@@ -619,6 +619,177 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/campaigns/{campaign_id}/invites": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List a campaign's pending invites
+         * @description List a campaign's pending, unexpired invites (owner-only).
+         */
+        get: operations["list_invites_v1_campaigns__campaign_id__invites_get"];
+        put?: never;
+        /**
+         * Invite a user to a campaign
+         * @description Invite a user to a campaign by their public handle (owner-only).
+         *
+         *     Invites go by handle, never email, so this never reveals which private
+         *     addresses are registered. An unknown handle is 404; inviting yourself, an
+         *     existing member, or an already-invited handle is rejected. The invite
+         *     grants nothing until the invitee accepts it.
+         */
+        post: operations["invite_member_v1_campaigns__campaign_id__invites_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/campaigns/{campaign_id}/invites/{invite_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Revoke a pending invite
+         * @description Revoke a pending invite on a campaign you own (idempotent).
+         *
+         *     Scoped to the campaign in the path, so an invite id from another campaign
+         *     is a no-op rather than a cross-campaign delete.
+         */
+        delete: operations["revoke_invite_v1_campaigns__campaign_id__invites__invite_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/campaigns/{campaign_id}/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List a campaign's members
+         * @description List the members of a campaign you can read (owner or member).
+         *
+         *     The roster carries public handles only. The owner is not a membership
+         *     row, so they are not listed here.
+         */
+        get: operations["list_members_v1_campaigns__campaign_id__members_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/campaigns/{campaign_id}/members/{handle}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Remove a member, or leave a campaign
+         * @description Remove a member from a campaign, or leave one (idempotent).
+         *
+         *     Members are addressed by their public handle. The owner may remove any
+         *     member; a member may remove only themselves. Removing a member revokes the
+         *     read access their membership granted. Removing a non-member (or an unknown
+         *     handle) is a no-op.
+         */
+        delete: operations["remove_member_v1_campaigns__campaign_id__members__handle__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/campaign-invites": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List my pending invites
+         * @description List the current user's pending, unexpired campaign invites.
+         *
+         *     Each carries the campaign name and its owner's public handle, so the
+         *     invitee knows who invited them and to what; no data about other members
+         *     is exposed.
+         */
+        get: operations["list_my_invites_v1_campaign_invites_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/campaign-invites/{invite_id}/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Accept an invite
+         * @description Accept an invite addressed to you, becoming a member of the campaign.
+         *
+         *     Membership is created (granting read access to the campaign's enabled
+         *     books) and the invite is consumed, atomically. An invite that is unknown,
+         *     expired, or addressed to someone else is a 404.
+         */
+        post: operations["accept_invite_v1_campaign_invites__invite_id__accept_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/campaign-invites/{invite_id}/decline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Decline an invite
+         * @description Decline an invite addressed to you (the invite is deleted).
+         *
+         *     An invite that is unknown, expired, or addressed to someone else is a 404,
+         *     so declining never confirms another user's invite exists.
+         */
+        post: operations["decline_invite_v1_campaign_invites__invite_id__decline_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/items": {
         parameters: {
             query?: never;
@@ -1145,6 +1316,68 @@ export interface components {
             bookCount: number;
         };
         /**
+         * CampaignInviteCreate
+         * @description Payload to invite a user to a campaign by their public handle.
+         *
+         *     Invites go by handle, never email: the username is the public identity
+         *     (#185), so this never discloses which private email addresses exist.
+         */
+        CampaignInviteCreate: {
+            /**
+             * Handle
+             * @description Public handle. Lowercase letters, digits, hyphen, and underscore only; 3-30 characters.
+             */
+            handle: string;
+        };
+        /**
+         * CampaignInviteSummary
+         * @description A pending invite, as the campaign owner sees it.
+         *
+         *     Carries the invitee's public handle only -- never their email or id.
+         */
+        CampaignInviteSummary: {
+            /**
+             * Id
+             * Format: uuid
+             * @description Unique identifier for the invite.
+             */
+            id: string;
+            /**
+             * Campaignid
+             * Format: uuid
+             * @description The campaign the invite is for.
+             */
+            campaignId: string;
+            /** @description Public author projection of the invited user. */
+            invitee: components["schemas"]["Author"];
+            /**
+             * Expiresat
+             * Format: date-time
+             * @description When the invite lapses if not accepted.
+             */
+            expiresAt: string;
+            /**
+             * Createdat
+             * Format: date-time
+             * @description When the invite was created.
+             */
+            createdAt: string;
+        };
+        /**
+         * CampaignMemberSummary
+         * @description A member of a campaign, as shown in the roster.
+         */
+        CampaignMemberSummary: {
+            /** @description Public author projection of the member. */
+            user: components["schemas"]["Author"];
+            /**
+             * Joinedat
+             * Format: date-time
+             * @description When the member joined (accepted their invite).
+             */
+            joinedAt: string;
+        };
+        /**
          * CampaignSummary
          * @description A campaign as shown in list views.
          */
@@ -1548,6 +1781,46 @@ export interface components {
              * @description The signed-in user's own books that contain this entry. Present only when requested via include=book_memberships; omitted for anonymous requests.
              */
             bookMemberships?: components["schemas"]["BookMembership"][] | null;
+        };
+        /**
+         * MyCampaignInvite
+         * @description A pending invite addressed to the current user.
+         *
+         *     Shows the campaign and its owner's public handle so the invitee knows who
+         *     invited them and to what; no data about other members is exposed.
+         */
+        MyCampaignInvite: {
+            /**
+             * Id
+             * Format: uuid
+             * @description Unique identifier for the invite.
+             */
+            id: string;
+            /**
+             * Campaignid
+             * Format: uuid
+             * @description The campaign the invite is for.
+             */
+            campaignId: string;
+            /**
+             * Campaignname
+             * @description Name of the campaign.
+             */
+            campaignName: string;
+            /** @description Public author projection of the campaign's owner. */
+            owner: components["schemas"]["Author"];
+            /**
+             * Expiresat
+             * Format: date-time
+             * @description When the invite lapses if not accepted.
+             */
+            expiresAt: string;
+            /**
+             * Createdat
+             * Format: date-time
+             * @description When the invite was created.
+             */
+            createdAt: string;
         };
         /** PaginatedResultset[BookSummary] */
         PaginatedResultset_BookSummary_: {
@@ -3599,6 +3872,367 @@ export interface operations {
                 };
             };
             /** @description Campaign not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_invites_v1_campaigns__campaign_id__invites_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CampaignInviteSummary"][];
+                };
+            };
+            /** @description Not the campaign's owner */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Campaign not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    invite_member_v1_campaigns__campaign_id__invites_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CampaignInviteCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CampaignInviteSummary"];
+                };
+            };
+            /** @description Cannot invite yourself */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not the campaign's owner */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Campaign or user not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description That user is already a member or already invited */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Too many invites */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    revoke_invite_v1_campaigns__campaign_id__invites__invite_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+                invite_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not the campaign's owner */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Campaign not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_members_v1_campaigns__campaign_id__members_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CampaignMemberSummary"][];
+                };
+            };
+            /** @description Campaign not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_member_v1_campaigns__campaign_id__members__handle__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: string;
+                handle: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not the campaign's owner */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Campaign not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_my_invites_v1_campaign_invites_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyCampaignInvite"][];
+                };
+            };
+        };
+    };
+    accept_invite_v1_campaign_invites__invite_id__accept_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invite_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invite not found, expired, or not addressed to you */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    decline_invite_v1_campaign_invites__invite_id__decline_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invite_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invite not found, expired, or not addressed to you */
             404: {
                 headers: {
                     [name: string]: unknown;

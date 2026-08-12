@@ -338,6 +338,58 @@ type CampaignDetail struct {
 // CampaignDetailRole The viewer's relationship to this campaign.
 type CampaignDetailRole string
 
+// CampaignInviteCreate Payload to invite a user to a campaign by their public handle.
+//
+// Invites go by handle, never email: the username is the public identity
+// (#185), so this never discloses which private email addresses exist.
+type CampaignInviteCreate struct {
+	// Handle Public handle. Lowercase letters, digits, hyphen, and underscore only; 3-30 characters.
+	Handle string `json:"handle"`
+}
+
+// CampaignInviteSummary A pending invite, as the campaign owner sees it.
+//
+// Carries the invitee's public handle only -- never their email or id.
+type CampaignInviteSummary struct {
+	// CampaignId The campaign the invite is for.
+	CampaignId openapi_types.UUID `json:"campaignId"`
+
+	// CreatedAt When the invite was created.
+	CreatedAt time.Time `json:"createdAt"`
+
+	// ExpiresAt When the invite lapses if not accepted.
+	ExpiresAt time.Time `json:"expiresAt"`
+
+	// Id Unique identifier for the invite.
+	Id openapi_types.UUID `json:"id"`
+
+	// Invitee Public author projection -- how a user is shown to *other* users.
+	//
+	// The only user data exposed when homebrew is published (#185, consumed by
+	// #177+). Deliberately carries ``username`` alone: it is a unique,
+	// immutable, stable public handle in Phase 1b, so neither the private
+	// email nor the internal user id ever needs to leave the owner's own view.
+	// Adding fields later (e.g. a stable public id, should usernames ever
+	// become mutable) is an additive, non-breaking change.
+	Invitee Author `json:"invitee"`
+}
+
+// CampaignMemberSummary A member of a campaign, as shown in the roster.
+type CampaignMemberSummary struct {
+	// JoinedAt When the member joined (accepted their invite).
+	JoinedAt time.Time `json:"joinedAt"`
+
+	// User Public author projection -- how a user is shown to *other* users.
+	//
+	// The only user data exposed when homebrew is published (#185, consumed by
+	// #177+). Deliberately carries ``username`` alone: it is a unique,
+	// immutable, stable public handle in Phase 1b, so neither the private
+	// email nor the internal user id ever needs to leave the owner's own view.
+	// Adding fields later (e.g. a stable public id, should usernames ever
+	// become mutable) is an additive, non-breaking change.
+	User Author `json:"user"`
+}
+
 // CampaignSummary A campaign as shown in list views.
 type CampaignSummary struct {
 	// CreatedAt When the campaign was created.
@@ -615,6 +667,37 @@ type MonsterSummary struct {
 
 	// Slug URL-safe unique identifier.
 	Slug string `json:"slug"`
+}
+
+// MyCampaignInvite A pending invite addressed to the current user.
+//
+// Shows the campaign and its owner's public handle so the invitee knows who
+// invited them and to what; no data about other members is exposed.
+type MyCampaignInvite struct {
+	// CampaignId The campaign the invite is for.
+	CampaignId openapi_types.UUID `json:"campaignId"`
+
+	// CampaignName Name of the campaign.
+	CampaignName string `json:"campaignName"`
+
+	// CreatedAt When the invite was created.
+	CreatedAt time.Time `json:"createdAt"`
+
+	// ExpiresAt When the invite lapses if not accepted.
+	ExpiresAt time.Time `json:"expiresAt"`
+
+	// Id Unique identifier for the invite.
+	Id openapi_types.UUID `json:"id"`
+
+	// Owner Public author projection -- how a user is shown to *other* users.
+	//
+	// The only user data exposed when homebrew is published (#185, consumed by
+	// #177+). Deliberately carries ``username`` alone: it is a unique,
+	// immutable, stable public handle in Phase 1b, so neither the private
+	// email nor the internal user id ever needs to leave the owner's own view.
+	// Adding fields later (e.g. a stable public id, should usernames ever
+	// become mutable) is an additive, non-breaking change.
+	Owner Author `json:"owner"`
 }
 
 // PaginatedResultsetBookSummary defines model for PaginatedResultset_BookSummary_.
@@ -1183,6 +1266,9 @@ type CreateCampaignV1CampaignsPostJSONRequestBody = CampaignCreate
 
 // UpdateCampaignV1CampaignsCampaignIdPatchJSONRequestBody defines body for UpdateCampaignV1CampaignsCampaignIdPatch for application/json ContentType.
 type UpdateCampaignV1CampaignsCampaignIdPatchJSONRequestBody = CampaignUpdate
+
+// InviteMemberV1CampaignsCampaignIdInvitesPostJSONRequestBody defines body for InviteMemberV1CampaignsCampaignIdInvitesPost for application/json ContentType.
+type InviteMemberV1CampaignsCampaignIdInvitesPostJSONRequestBody = CampaignInviteCreate
 
 // Getter for additional properties for ActionEntry. Returns the specified
 // element and whether it was found
@@ -3483,6 +3569,15 @@ type ClientInterface interface {
 	// AddBookSpellV1BooksBookIdSpellsSpellIdPut request
 	AddBookSpellV1BooksBookIdSpellsSpellIdPut(ctx context.Context, bookId openapi_types.UUID, spellId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// ListMyInvitesV1CampaignInvitesGet request
+	ListMyInvitesV1CampaignInvitesGet(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AcceptInviteV1CampaignInvitesInviteIdAcceptPost request
+	AcceptInviteV1CampaignInvitesInviteIdAcceptPost(ctx context.Context, inviteId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeclineInviteV1CampaignInvitesInviteIdDeclinePost request
+	DeclineInviteV1CampaignInvitesInviteIdDeclinePost(ctx context.Context, inviteId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// ListCampaignsV1CampaignsGet request
 	ListCampaignsV1CampaignsGet(ctx context.Context, params *ListCampaignsV1CampaignsGetParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -3510,6 +3605,23 @@ type ClientInterface interface {
 
 	// EnableBookV1CampaignsCampaignIdBooksBookIdPut request
 	EnableBookV1CampaignsCampaignIdBooksBookIdPut(ctx context.Context, campaignId openapi_types.UUID, bookId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListInvitesV1CampaignsCampaignIdInvitesGet request
+	ListInvitesV1CampaignsCampaignIdInvitesGet(ctx context.Context, campaignId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// InviteMemberV1CampaignsCampaignIdInvitesPostWithBody request with any body
+	InviteMemberV1CampaignsCampaignIdInvitesPostWithBody(ctx context.Context, campaignId openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	InviteMemberV1CampaignsCampaignIdInvitesPost(ctx context.Context, campaignId openapi_types.UUID, body InviteMemberV1CampaignsCampaignIdInvitesPostJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// RevokeInviteV1CampaignsCampaignIdInvitesInviteIdDelete request
+	RevokeInviteV1CampaignsCampaignIdInvitesInviteIdDelete(ctx context.Context, campaignId openapi_types.UUID, inviteId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListMembersV1CampaignsCampaignIdMembersGet request
+	ListMembersV1CampaignsCampaignIdMembersGet(ctx context.Context, campaignId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// RemoveMemberV1CampaignsCampaignIdMembersHandleDelete request
+	RemoveMemberV1CampaignsCampaignIdMembersHandleDelete(ctx context.Context, campaignId openapi_types.UUID, handle string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// ListItemsV1ItemsGet request
 	ListItemsV1ItemsGet(ctx context.Context, params *ListItemsV1ItemsGetParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -3998,6 +4110,42 @@ func (c *Client) AddBookSpellV1BooksBookIdSpellsSpellIdPut(ctx context.Context, 
 	return c.Client.Do(req)
 }
 
+func (c *Client) ListMyInvitesV1CampaignInvitesGet(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListMyInvitesV1CampaignInvitesGetRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) AcceptInviteV1CampaignInvitesInviteIdAcceptPost(ctx context.Context, inviteId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAcceptInviteV1CampaignInvitesInviteIdAcceptPostRequest(c.Server, inviteId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DeclineInviteV1CampaignInvitesInviteIdDeclinePost(ctx context.Context, inviteId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeclineInviteV1CampaignInvitesInviteIdDeclinePostRequest(c.Server, inviteId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 func (c *Client) ListCampaignsV1CampaignsGet(ctx context.Context, params *ListCampaignsV1CampaignsGetParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewListCampaignsV1CampaignsGetRequest(c.Server, params)
 	if err != nil {
@@ -4108,6 +4256,78 @@ func (c *Client) DisableBookV1CampaignsCampaignIdBooksBookIdDelete(ctx context.C
 
 func (c *Client) EnableBookV1CampaignsCampaignIdBooksBookIdPut(ctx context.Context, campaignId openapi_types.UUID, bookId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewEnableBookV1CampaignsCampaignIdBooksBookIdPutRequest(c.Server, campaignId, bookId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ListInvitesV1CampaignsCampaignIdInvitesGet(ctx context.Context, campaignId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListInvitesV1CampaignsCampaignIdInvitesGetRequest(c.Server, campaignId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) InviteMemberV1CampaignsCampaignIdInvitesPostWithBody(ctx context.Context, campaignId openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewInviteMemberV1CampaignsCampaignIdInvitesPostRequestWithBody(c.Server, campaignId, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) InviteMemberV1CampaignsCampaignIdInvitesPost(ctx context.Context, campaignId openapi_types.UUID, body InviteMemberV1CampaignsCampaignIdInvitesPostJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewInviteMemberV1CampaignsCampaignIdInvitesPostRequest(c.Server, campaignId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) RevokeInviteV1CampaignsCampaignIdInvitesInviteIdDelete(ctx context.Context, campaignId openapi_types.UUID, inviteId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewRevokeInviteV1CampaignsCampaignIdInvitesInviteIdDeleteRequest(c.Server, campaignId, inviteId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ListMembersV1CampaignsCampaignIdMembersGet(ctx context.Context, campaignId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListMembersV1CampaignsCampaignIdMembersGetRequest(c.Server, campaignId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) RemoveMemberV1CampaignsCampaignIdMembersHandleDelete(ctx context.Context, campaignId openapi_types.UUID, handle string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewRemoveMemberV1CampaignsCampaignIdMembersHandleDeleteRequest(c.Server, campaignId, handle)
 	if err != nil {
 		return nil, err
 	}
@@ -5533,6 +5753,101 @@ func NewAddBookSpellV1BooksBookIdSpellsSpellIdPutRequest(server string, bookId o
 	return req, nil
 }
 
+// NewListMyInvitesV1CampaignInvitesGetRequest generates requests for ListMyInvitesV1CampaignInvitesGet
+func NewListMyInvitesV1CampaignInvitesGetRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/campaign-invites")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewAcceptInviteV1CampaignInvitesInviteIdAcceptPostRequest generates requests for AcceptInviteV1CampaignInvitesInviteIdAcceptPost
+func NewAcceptInviteV1CampaignInvitesInviteIdAcceptPostRequest(server string, inviteId openapi_types.UUID) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "invite_id", inviteId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: "uuid"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/campaign-invites/%s/accept", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewDeclineInviteV1CampaignInvitesInviteIdDeclinePostRequest generates requests for DeclineInviteV1CampaignInvitesInviteIdDeclinePost
+func NewDeclineInviteV1CampaignInvitesInviteIdDeclinePostRequest(server string, inviteId openapi_types.UUID) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "invite_id", inviteId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: "uuid"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/campaign-invites/%s/decline", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewListCampaignsV1CampaignsGetRequest generates requests for ListCampaignsV1CampaignsGet
 func NewListCampaignsV1CampaignsGetRequest(server string, params *ListCampaignsV1CampaignsGetParams) (*http.Request, error) {
 	var err error
@@ -5964,6 +6279,203 @@ func NewEnableBookV1CampaignsCampaignIdBooksBookIdPutRequest(server string, camp
 	}
 
 	req, err := http.NewRequest("PUT", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewListInvitesV1CampaignsCampaignIdInvitesGetRequest generates requests for ListInvitesV1CampaignsCampaignIdInvitesGet
+func NewListInvitesV1CampaignsCampaignIdInvitesGetRequest(server string, campaignId openapi_types.UUID) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "campaign_id", campaignId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: "uuid"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/campaigns/%s/invites", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewInviteMemberV1CampaignsCampaignIdInvitesPostRequest calls the generic InviteMemberV1CampaignsCampaignIdInvitesPost builder with application/json body
+func NewInviteMemberV1CampaignsCampaignIdInvitesPostRequest(server string, campaignId openapi_types.UUID, body InviteMemberV1CampaignsCampaignIdInvitesPostJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewInviteMemberV1CampaignsCampaignIdInvitesPostRequestWithBody(server, campaignId, "application/json", bodyReader)
+}
+
+// NewInviteMemberV1CampaignsCampaignIdInvitesPostRequestWithBody generates requests for InviteMemberV1CampaignsCampaignIdInvitesPost with any type of body
+func NewInviteMemberV1CampaignsCampaignIdInvitesPostRequestWithBody(server string, campaignId openapi_types.UUID, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "campaign_id", campaignId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: "uuid"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/campaigns/%s/invites", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewRevokeInviteV1CampaignsCampaignIdInvitesInviteIdDeleteRequest generates requests for RevokeInviteV1CampaignsCampaignIdInvitesInviteIdDelete
+func NewRevokeInviteV1CampaignsCampaignIdInvitesInviteIdDeleteRequest(server string, campaignId openapi_types.UUID, inviteId openapi_types.UUID) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "campaign_id", campaignId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: "uuid"})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "invite_id", inviteId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: "uuid"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/campaigns/%s/invites/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewListMembersV1CampaignsCampaignIdMembersGetRequest generates requests for ListMembersV1CampaignsCampaignIdMembersGet
+func NewListMembersV1CampaignsCampaignIdMembersGetRequest(server string, campaignId openapi_types.UUID) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "campaign_id", campaignId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: "uuid"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/campaigns/%s/members", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewRemoveMemberV1CampaignsCampaignIdMembersHandleDeleteRequest generates requests for RemoveMemberV1CampaignsCampaignIdMembersHandleDelete
+func NewRemoveMemberV1CampaignsCampaignIdMembersHandleDeleteRequest(server string, campaignId openapi_types.UUID, handle string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "campaign_id", campaignId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: "uuid"})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "handle", handle, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/campaigns/%s/members/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -6851,6 +7363,15 @@ type ClientWithResponsesInterface interface {
 	// AddBookSpellV1BooksBookIdSpellsSpellIdPutWithResponse request
 	AddBookSpellV1BooksBookIdSpellsSpellIdPutWithResponse(ctx context.Context, bookId openapi_types.UUID, spellId openapi_types.UUID, reqEditors ...RequestEditorFn) (*AddBookSpellV1BooksBookIdSpellsSpellIdPutResponse, error)
 
+	// ListMyInvitesV1CampaignInvitesGetWithResponse request
+	ListMyInvitesV1CampaignInvitesGetWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListMyInvitesV1CampaignInvitesGetResponse, error)
+
+	// AcceptInviteV1CampaignInvitesInviteIdAcceptPostWithResponse request
+	AcceptInviteV1CampaignInvitesInviteIdAcceptPostWithResponse(ctx context.Context, inviteId openapi_types.UUID, reqEditors ...RequestEditorFn) (*AcceptInviteV1CampaignInvitesInviteIdAcceptPostResponse, error)
+
+	// DeclineInviteV1CampaignInvitesInviteIdDeclinePostWithResponse request
+	DeclineInviteV1CampaignInvitesInviteIdDeclinePostWithResponse(ctx context.Context, inviteId openapi_types.UUID, reqEditors ...RequestEditorFn) (*DeclineInviteV1CampaignInvitesInviteIdDeclinePostResponse, error)
+
 	// ListCampaignsV1CampaignsGetWithResponse request
 	ListCampaignsV1CampaignsGetWithResponse(ctx context.Context, params *ListCampaignsV1CampaignsGetParams, reqEditors ...RequestEditorFn) (*ListCampaignsV1CampaignsGetResponse, error)
 
@@ -6878,6 +7399,23 @@ type ClientWithResponsesInterface interface {
 
 	// EnableBookV1CampaignsCampaignIdBooksBookIdPutWithResponse request
 	EnableBookV1CampaignsCampaignIdBooksBookIdPutWithResponse(ctx context.Context, campaignId openapi_types.UUID, bookId openapi_types.UUID, reqEditors ...RequestEditorFn) (*EnableBookV1CampaignsCampaignIdBooksBookIdPutResponse, error)
+
+	// ListInvitesV1CampaignsCampaignIdInvitesGetWithResponse request
+	ListInvitesV1CampaignsCampaignIdInvitesGetWithResponse(ctx context.Context, campaignId openapi_types.UUID, reqEditors ...RequestEditorFn) (*ListInvitesV1CampaignsCampaignIdInvitesGetResponse, error)
+
+	// InviteMemberV1CampaignsCampaignIdInvitesPostWithBodyWithResponse request with any body
+	InviteMemberV1CampaignsCampaignIdInvitesPostWithBodyWithResponse(ctx context.Context, campaignId openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*InviteMemberV1CampaignsCampaignIdInvitesPostResponse, error)
+
+	InviteMemberV1CampaignsCampaignIdInvitesPostWithResponse(ctx context.Context, campaignId openapi_types.UUID, body InviteMemberV1CampaignsCampaignIdInvitesPostJSONRequestBody, reqEditors ...RequestEditorFn) (*InviteMemberV1CampaignsCampaignIdInvitesPostResponse, error)
+
+	// RevokeInviteV1CampaignsCampaignIdInvitesInviteIdDeleteWithResponse request
+	RevokeInviteV1CampaignsCampaignIdInvitesInviteIdDeleteWithResponse(ctx context.Context, campaignId openapi_types.UUID, inviteId openapi_types.UUID, reqEditors ...RequestEditorFn) (*RevokeInviteV1CampaignsCampaignIdInvitesInviteIdDeleteResponse, error)
+
+	// ListMembersV1CampaignsCampaignIdMembersGetWithResponse request
+	ListMembersV1CampaignsCampaignIdMembersGetWithResponse(ctx context.Context, campaignId openapi_types.UUID, reqEditors ...RequestEditorFn) (*ListMembersV1CampaignsCampaignIdMembersGetResponse, error)
+
+	// RemoveMemberV1CampaignsCampaignIdMembersHandleDeleteWithResponse request
+	RemoveMemberV1CampaignsCampaignIdMembersHandleDeleteWithResponse(ctx context.Context, campaignId openapi_types.UUID, handle string, reqEditors ...RequestEditorFn) (*RemoveMemberV1CampaignsCampaignIdMembersHandleDeleteResponse, error)
 
 	// ListItemsV1ItemsGetWithResponse request
 	ListItemsV1ItemsGetWithResponse(ctx context.Context, params *ListItemsV1ItemsGetParams, reqEditors ...RequestEditorFn) (*ListItemsV1ItemsGetResponse, error)
@@ -7566,6 +8104,74 @@ func (r AddBookSpellV1BooksBookIdSpellsSpellIdPutResponse) StatusCode() int {
 	return 0
 }
 
+type ListMyInvitesV1CampaignInvitesGetResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *[]MyCampaignInvite
+}
+
+// Status returns HTTPResponse.Status
+func (r ListMyInvitesV1CampaignInvitesGetResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListMyInvitesV1CampaignInvitesGetResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type AcceptInviteV1CampaignInvitesInviteIdAcceptPostResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON404      *ErrorResponse
+	JSON422      *HTTPValidationError
+}
+
+// Status returns HTTPResponse.Status
+func (r AcceptInviteV1CampaignInvitesInviteIdAcceptPostResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r AcceptInviteV1CampaignInvitesInviteIdAcceptPostResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type DeclineInviteV1CampaignInvitesInviteIdDeclinePostResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON404      *ErrorResponse
+	JSON422      *HTTPValidationError
+}
+
+// Status returns HTTPResponse.Status
+func (r DeclineInviteV1CampaignInvitesInviteIdDeclinePostResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeclineInviteV1CampaignInvitesInviteIdDeclinePostResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type ListCampaignsV1CampaignsGetResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -7751,6 +8357,131 @@ func (r EnableBookV1CampaignsCampaignIdBooksBookIdPutResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r EnableBookV1CampaignsCampaignIdBooksBookIdPutResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ListInvitesV1CampaignsCampaignIdInvitesGetResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *[]CampaignInviteSummary
+	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON422      *HTTPValidationError
+}
+
+// Status returns HTTPResponse.Status
+func (r ListInvitesV1CampaignsCampaignIdInvitesGetResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListInvitesV1CampaignsCampaignIdInvitesGetResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type InviteMemberV1CampaignsCampaignIdInvitesPostResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON201      *CampaignInviteSummary
+	JSON400      *ErrorResponse
+	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON409      *ErrorResponse
+	JSON422      *HTTPValidationError
+	JSON429      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r InviteMemberV1CampaignsCampaignIdInvitesPostResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r InviteMemberV1CampaignsCampaignIdInvitesPostResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type RevokeInviteV1CampaignsCampaignIdInvitesInviteIdDeleteResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON422      *HTTPValidationError
+}
+
+// Status returns HTTPResponse.Status
+func (r RevokeInviteV1CampaignsCampaignIdInvitesInviteIdDeleteResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r RevokeInviteV1CampaignsCampaignIdInvitesInviteIdDeleteResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ListMembersV1CampaignsCampaignIdMembersGetResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *[]CampaignMemberSummary
+	JSON404      *ErrorResponse
+	JSON422      *HTTPValidationError
+}
+
+// Status returns HTTPResponse.Status
+func (r ListMembersV1CampaignsCampaignIdMembersGetResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListMembersV1CampaignsCampaignIdMembersGetResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type RemoveMemberV1CampaignsCampaignIdMembersHandleDeleteResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON403      *ErrorResponse
+	JSON404      *ErrorResponse
+	JSON422      *HTTPValidationError
+}
+
+// Status returns HTTPResponse.Status
+func (r RemoveMemberV1CampaignsCampaignIdMembersHandleDeleteResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r RemoveMemberV1CampaignsCampaignIdMembersHandleDeleteResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -8238,6 +8969,33 @@ func (c *ClientWithResponses) AddBookSpellV1BooksBookIdSpellsSpellIdPutWithRespo
 	return ParseAddBookSpellV1BooksBookIdSpellsSpellIdPutResponse(rsp)
 }
 
+// ListMyInvitesV1CampaignInvitesGetWithResponse request returning *ListMyInvitesV1CampaignInvitesGetResponse
+func (c *ClientWithResponses) ListMyInvitesV1CampaignInvitesGetWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListMyInvitesV1CampaignInvitesGetResponse, error) {
+	rsp, err := c.ListMyInvitesV1CampaignInvitesGet(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListMyInvitesV1CampaignInvitesGetResponse(rsp)
+}
+
+// AcceptInviteV1CampaignInvitesInviteIdAcceptPostWithResponse request returning *AcceptInviteV1CampaignInvitesInviteIdAcceptPostResponse
+func (c *ClientWithResponses) AcceptInviteV1CampaignInvitesInviteIdAcceptPostWithResponse(ctx context.Context, inviteId openapi_types.UUID, reqEditors ...RequestEditorFn) (*AcceptInviteV1CampaignInvitesInviteIdAcceptPostResponse, error) {
+	rsp, err := c.AcceptInviteV1CampaignInvitesInviteIdAcceptPost(ctx, inviteId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAcceptInviteV1CampaignInvitesInviteIdAcceptPostResponse(rsp)
+}
+
+// DeclineInviteV1CampaignInvitesInviteIdDeclinePostWithResponse request returning *DeclineInviteV1CampaignInvitesInviteIdDeclinePostResponse
+func (c *ClientWithResponses) DeclineInviteV1CampaignInvitesInviteIdDeclinePostWithResponse(ctx context.Context, inviteId openapi_types.UUID, reqEditors ...RequestEditorFn) (*DeclineInviteV1CampaignInvitesInviteIdDeclinePostResponse, error) {
+	rsp, err := c.DeclineInviteV1CampaignInvitesInviteIdDeclinePost(ctx, inviteId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeclineInviteV1CampaignInvitesInviteIdDeclinePostResponse(rsp)
+}
+
 // ListCampaignsV1CampaignsGetWithResponse request returning *ListCampaignsV1CampaignsGetResponse
 func (c *ClientWithResponses) ListCampaignsV1CampaignsGetWithResponse(ctx context.Context, params *ListCampaignsV1CampaignsGetParams, reqEditors ...RequestEditorFn) (*ListCampaignsV1CampaignsGetResponse, error) {
 	rsp, err := c.ListCampaignsV1CampaignsGet(ctx, params, reqEditors...)
@@ -8324,6 +9082,59 @@ func (c *ClientWithResponses) EnableBookV1CampaignsCampaignIdBooksBookIdPutWithR
 		return nil, err
 	}
 	return ParseEnableBookV1CampaignsCampaignIdBooksBookIdPutResponse(rsp)
+}
+
+// ListInvitesV1CampaignsCampaignIdInvitesGetWithResponse request returning *ListInvitesV1CampaignsCampaignIdInvitesGetResponse
+func (c *ClientWithResponses) ListInvitesV1CampaignsCampaignIdInvitesGetWithResponse(ctx context.Context, campaignId openapi_types.UUID, reqEditors ...RequestEditorFn) (*ListInvitesV1CampaignsCampaignIdInvitesGetResponse, error) {
+	rsp, err := c.ListInvitesV1CampaignsCampaignIdInvitesGet(ctx, campaignId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListInvitesV1CampaignsCampaignIdInvitesGetResponse(rsp)
+}
+
+// InviteMemberV1CampaignsCampaignIdInvitesPostWithBodyWithResponse request with arbitrary body returning *InviteMemberV1CampaignsCampaignIdInvitesPostResponse
+func (c *ClientWithResponses) InviteMemberV1CampaignsCampaignIdInvitesPostWithBodyWithResponse(ctx context.Context, campaignId openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*InviteMemberV1CampaignsCampaignIdInvitesPostResponse, error) {
+	rsp, err := c.InviteMemberV1CampaignsCampaignIdInvitesPostWithBody(ctx, campaignId, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseInviteMemberV1CampaignsCampaignIdInvitesPostResponse(rsp)
+}
+
+func (c *ClientWithResponses) InviteMemberV1CampaignsCampaignIdInvitesPostWithResponse(ctx context.Context, campaignId openapi_types.UUID, body InviteMemberV1CampaignsCampaignIdInvitesPostJSONRequestBody, reqEditors ...RequestEditorFn) (*InviteMemberV1CampaignsCampaignIdInvitesPostResponse, error) {
+	rsp, err := c.InviteMemberV1CampaignsCampaignIdInvitesPost(ctx, campaignId, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseInviteMemberV1CampaignsCampaignIdInvitesPostResponse(rsp)
+}
+
+// RevokeInviteV1CampaignsCampaignIdInvitesInviteIdDeleteWithResponse request returning *RevokeInviteV1CampaignsCampaignIdInvitesInviteIdDeleteResponse
+func (c *ClientWithResponses) RevokeInviteV1CampaignsCampaignIdInvitesInviteIdDeleteWithResponse(ctx context.Context, campaignId openapi_types.UUID, inviteId openapi_types.UUID, reqEditors ...RequestEditorFn) (*RevokeInviteV1CampaignsCampaignIdInvitesInviteIdDeleteResponse, error) {
+	rsp, err := c.RevokeInviteV1CampaignsCampaignIdInvitesInviteIdDelete(ctx, campaignId, inviteId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseRevokeInviteV1CampaignsCampaignIdInvitesInviteIdDeleteResponse(rsp)
+}
+
+// ListMembersV1CampaignsCampaignIdMembersGetWithResponse request returning *ListMembersV1CampaignsCampaignIdMembersGetResponse
+func (c *ClientWithResponses) ListMembersV1CampaignsCampaignIdMembersGetWithResponse(ctx context.Context, campaignId openapi_types.UUID, reqEditors ...RequestEditorFn) (*ListMembersV1CampaignsCampaignIdMembersGetResponse, error) {
+	rsp, err := c.ListMembersV1CampaignsCampaignIdMembersGet(ctx, campaignId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListMembersV1CampaignsCampaignIdMembersGetResponse(rsp)
+}
+
+// RemoveMemberV1CampaignsCampaignIdMembersHandleDeleteWithResponse request returning *RemoveMemberV1CampaignsCampaignIdMembersHandleDeleteResponse
+func (c *ClientWithResponses) RemoveMemberV1CampaignsCampaignIdMembersHandleDeleteWithResponse(ctx context.Context, campaignId openapi_types.UUID, handle string, reqEditors ...RequestEditorFn) (*RemoveMemberV1CampaignsCampaignIdMembersHandleDeleteResponse, error) {
+	rsp, err := c.RemoveMemberV1CampaignsCampaignIdMembersHandleDelete(ctx, campaignId, handle, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseRemoveMemberV1CampaignsCampaignIdMembersHandleDeleteResponse(rsp)
 }
 
 // ListItemsV1ItemsGetWithResponse request returning *ListItemsV1ItemsGetResponse
@@ -9472,6 +10283,98 @@ func ParseAddBookSpellV1BooksBookIdSpellsSpellIdPutResponse(rsp *http.Response) 
 	return response, nil
 }
 
+// ParseListMyInvitesV1CampaignInvitesGetResponse parses an HTTP response from a ListMyInvitesV1CampaignInvitesGetWithResponse call
+func ParseListMyInvitesV1CampaignInvitesGetResponse(rsp *http.Response) (*ListMyInvitesV1CampaignInvitesGetResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListMyInvitesV1CampaignInvitesGetResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest []MyCampaignInvite
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseAcceptInviteV1CampaignInvitesInviteIdAcceptPostResponse parses an HTTP response from a AcceptInviteV1CampaignInvitesInviteIdAcceptPostWithResponse call
+func ParseAcceptInviteV1CampaignInvitesInviteIdAcceptPostResponse(rsp *http.Response) (*AcceptInviteV1CampaignInvitesInviteIdAcceptPostResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &AcceptInviteV1CampaignInvitesInviteIdAcceptPostResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest HTTPValidationError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeclineInviteV1CampaignInvitesInviteIdDeclinePostResponse parses an HTTP response from a DeclineInviteV1CampaignInvitesInviteIdDeclinePostWithResponse call
+func ParseDeclineInviteV1CampaignInvitesInviteIdDeclinePostResponse(rsp *http.Response) (*DeclineInviteV1CampaignInvitesInviteIdDeclinePostResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeclineInviteV1CampaignInvitesInviteIdDeclinePostResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest HTTPValidationError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseListCampaignsV1CampaignsGetResponse parses an HTTP response from a ListCampaignsV1CampaignsGetWithResponse call
 func ParseListCampaignsV1CampaignsGetResponse(rsp *http.Response) (*ListCampaignsV1CampaignsGetResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -9754,6 +10657,241 @@ func ParseEnableBookV1CampaignsCampaignIdBooksBookIdPutResponse(rsp *http.Respon
 	}
 
 	response := &EnableBookV1CampaignsCampaignIdBooksBookIdPutResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest HTTPValidationError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListInvitesV1CampaignsCampaignIdInvitesGetResponse parses an HTTP response from a ListInvitesV1CampaignsCampaignIdInvitesGetWithResponse call
+func ParseListInvitesV1CampaignsCampaignIdInvitesGetResponse(rsp *http.Response) (*ListInvitesV1CampaignsCampaignIdInvitesGetResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListInvitesV1CampaignsCampaignIdInvitesGetResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest []CampaignInviteSummary
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest HTTPValidationError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseInviteMemberV1CampaignsCampaignIdInvitesPostResponse parses an HTTP response from a InviteMemberV1CampaignsCampaignIdInvitesPostWithResponse call
+func ParseInviteMemberV1CampaignsCampaignIdInvitesPostResponse(rsp *http.Response) (*InviteMemberV1CampaignsCampaignIdInvitesPostResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &InviteMemberV1CampaignsCampaignIdInvitesPostResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest CampaignInviteSummary
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest HTTPValidationError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 429:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON429 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseRevokeInviteV1CampaignsCampaignIdInvitesInviteIdDeleteResponse parses an HTTP response from a RevokeInviteV1CampaignsCampaignIdInvitesInviteIdDeleteWithResponse call
+func ParseRevokeInviteV1CampaignsCampaignIdInvitesInviteIdDeleteResponse(rsp *http.Response) (*RevokeInviteV1CampaignsCampaignIdInvitesInviteIdDeleteResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &RevokeInviteV1CampaignsCampaignIdInvitesInviteIdDeleteResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest HTTPValidationError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListMembersV1CampaignsCampaignIdMembersGetResponse parses an HTTP response from a ListMembersV1CampaignsCampaignIdMembersGetWithResponse call
+func ParseListMembersV1CampaignsCampaignIdMembersGetResponse(rsp *http.Response) (*ListMembersV1CampaignsCampaignIdMembersGetResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListMembersV1CampaignsCampaignIdMembersGetResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest []CampaignMemberSummary
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest HTTPValidationError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseRemoveMemberV1CampaignsCampaignIdMembersHandleDeleteResponse parses an HTTP response from a RemoveMemberV1CampaignsCampaignIdMembersHandleDeleteWithResponse call
+func ParseRemoveMemberV1CampaignsCampaignIdMembersHandleDeleteResponse(rsp *http.Response) (*RemoveMemberV1CampaignsCampaignIdMembersHandleDeleteResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &RemoveMemberV1CampaignsCampaignIdMembersHandleDeleteResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}

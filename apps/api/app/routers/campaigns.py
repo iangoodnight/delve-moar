@@ -1,27 +1,34 @@
 """Campaign endpoints -- owned collections that share books with members.
 
-CRUD for user-owned campaigns plus enabling/disabling the books a campaign
-shares. Reads are owner-or-member; writes (including enabling a book) are
-owner-only. Access goes through ``app.authz`` -- endpoints never hand-roll
-checks. Members read the *content* of a campaign's enabled books through the
-existing book/content endpoints, which now honor the campaign read branch
-(ADR 0011, ADR 0014). Invites land in a follow-up.
+CRUD for user-owned campaigns, the books a campaign shares, and its
+membership: inviting users by handle, listing/revoking pending invites, and
+the member roster. Reads are owner-or-member; writes (enabling a book,
+managing invites, removing members) are owner-only, except that a member may
+remove themselves. Access goes through ``app.authz`` -- endpoints never
+hand-roll checks. Members read the *content* of a campaign's enabled books
+through the existing book/content endpoints, which honor the campaign read
+branch (ADR 0011, ADR 0014). The invitee's side of invites (accept/decline)
+lives in ``app.routers.campaign_invites``.
 """
 
 import uuid
 from collections.abc import Sequence
+from datetime import UTC, datetime, timedelta
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, Request, status
 from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError
 
 from app.auth.dependencies import CurrentUser, require_csrf
 from app.authz import (
+    authorize_member_removal,
     get_readable_campaign,
     get_writable_book,
     get_writable_campaign,
     readable_campaigns_predicate,
 )
+from app.config import settings
 from app.db import DbSession
 from app.dependencies import (
     Pagination,
@@ -29,12 +36,24 @@ from app.dependencies import (
     ordering_dep,
     search_dep,
 )
-from app.models import Book, Campaign, CampaignBook, CampaignMember, User
+from app.exceptions import AppError, get_or_404
+from app.models import (
+    Book,
+    Campaign,
+    CampaignBook,
+    CampaignInvite,
+    CampaignMember,
+    User,
+)
+from app.rate_limit import enforce_campaign_invite_rate_limit
 from app.schemas.auth import Author
 from app.schemas.books import BookSummary
 from app.schemas.campaigns import (
     CampaignCreate,
     CampaignDetail,
+    CampaignInviteCreate,
+    CampaignInviteSummary,
+    CampaignMemberSummary,
     CampaignSummary,
     CampaignUpdate,
 )
@@ -73,6 +92,28 @@ _FORBIDDEN_OR_NOT_FOUND: dict[int | str, dict[str, Any]] = {
         "description": "Not the campaign's owner",
     },
     **_NOT_FOUND,
+}
+_INVITE_CREATE_RESPONSES: dict[int | str, dict[str, Any]] = {
+    status.HTTP_400_BAD_REQUEST: {
+        "model": ErrorResponse,
+        "description": "Cannot invite yourself",
+    },
+    status.HTTP_403_FORBIDDEN: {
+        "model": ErrorResponse,
+        "description": "Not the campaign's owner",
+    },
+    status.HTTP_404_NOT_FOUND: {
+        "model": ErrorResponse,
+        "description": "Campaign or user not found",
+    },
+    status.HTTP_409_CONFLICT: {
+        "model": ErrorResponse,
+        "description": "That user is already a member or already invited",
+    },
+    status.HTTP_429_TOO_MANY_REQUESTS: {
+        "model": ErrorResponse,
+        "description": "Too many invites",
+    },
 }
 
 
@@ -358,6 +399,242 @@ async def disable_book(
         select(CampaignBook).where(
             CampaignBook.campaign_id == campaign.id,
             CampaignBook.book_id == book_id,
+        )
+    )
+    if existing is not None:
+        await db.delete(existing)
+        await db.commit()
+
+
+# ── Membership: invites + roster ─────────────────────────────────────────────
+
+
+def _cannot_invite_self() -> AppError:
+    """Build the 400 for a campaign owner inviting themselves."""
+    return AppError(
+        status=status.HTTP_400_BAD_REQUEST,
+        developer_message="A campaign owner cannot invite themselves.",
+        user_message="You cannot invite yourself to your own campaign.",
+        error_code="CANNOT_INVITE_SELF",
+        more_info=f"{settings.public_url}/docs",
+    )
+
+
+def _already_member() -> AppError:
+    """Build the 409 for inviting a user who already belongs to the campaign."""
+    return AppError(
+        status=status.HTTP_409_CONFLICT,
+        developer_message="The user is already a member of the campaign.",
+        user_message="That user is already a member of this campaign.",
+        error_code="ALREADY_MEMBER",
+        more_info=f"{settings.public_url}/docs",
+    )
+
+
+def _already_invited() -> AppError:
+    """Build the 409 for a user who already has a pending invite."""
+    return AppError(
+        status=status.HTTP_409_CONFLICT,
+        developer_message="The user already has a pending invite.",
+        user_message="That user has already been invited.",
+        error_code="ALREADY_INVITED",
+        more_info=f"{settings.public_url}/docs",
+    )
+
+
+def _invite_schema(
+    invite: CampaignInvite, invitee_handle: str
+) -> CampaignInviteSummary:
+    """Project an invite to its owner-facing schema (invitee handle only)."""
+    return CampaignInviteSummary(
+        id=invite.id,
+        campaign_id=invite.campaign_id,
+        invitee=Author(username=invitee_handle),
+        expires_at=invite.expires_at,
+        created_at=invite.created_at,
+    )
+
+
+@router.post(
+    "/{campaign_id}/invites",
+    response_model=CampaignInviteSummary,
+    status_code=status.HTTP_201_CREATED,
+    summary="Invite a user to a campaign",
+    dependencies=[
+        Depends(require_csrf),
+        Depends(enforce_campaign_invite_rate_limit),
+    ],
+    responses=_INVITE_CREATE_RESPONSES,
+)
+async def invite_member(
+    campaign_id: uuid.UUID,
+    payload: CampaignInviteCreate,
+    db: DbSession,
+    user: CurrentUser,
+) -> CampaignInviteSummary:
+    """Invite a user to a campaign by their public handle (owner-only).
+
+    Invites go by handle, never email, so this never reveals which private
+    addresses are registered. An unknown handle is 404; inviting yourself, an
+    existing member, or an already-invited handle is rejected. The invite
+    grants nothing until the invitee accepts it.
+    """
+    campaign = await get_writable_campaign(db, campaign_id, user)
+    invitee = get_or_404(
+        await db.scalar(select(User).where(User.username == payload.handle)),
+        resource="user",
+        identifier=payload.handle,
+    )
+    if invitee.id == campaign.owner_id:
+        raise _cannot_invite_self()
+    already = await db.scalar(
+        select(CampaignMember).where(
+            CampaignMember.campaign_id == campaign.id,
+            CampaignMember.user_id == invitee.id,
+        )
+    )
+    if already is not None:
+        raise _already_member()
+
+    now = datetime.now(UTC)
+    expires_at = now + timedelta(seconds=settings.campaign_invite_ttl_seconds)
+    existing = await db.scalar(
+        select(CampaignInvite).where(
+            CampaignInvite.campaign_id == campaign.id,
+            CampaignInvite.invitee_user_id == invitee.id,
+        )
+    )
+    if existing is not None:
+        if existing.expires_at > now:
+            raise _already_invited()
+        # a lapsed invite still holds the unique slot -> refresh it rather
+        # than block re-inviting the same user
+        existing.expires_at = expires_at
+        invite = existing
+    else:
+        invite = CampaignInvite(
+            campaign_id=campaign.id,
+            invitee_user_id=invitee.id,
+            expires_at=expires_at,
+        )
+        db.add(invite)
+    try:
+        await db.flush()
+    except IntegrityError as exc:  # a concurrent invite won the unique slot
+        await db.rollback()
+        raise _already_invited() from exc
+    await db.refresh(invite)
+    await db.commit()
+    return _invite_schema(invite, invitee.username)
+
+
+@router.get(
+    "/{campaign_id}/invites",
+    response_model=list[CampaignInviteSummary],
+    summary="List a campaign's pending invites",
+    responses=_FORBIDDEN_OR_NOT_FOUND,
+)
+async def list_invites(
+    campaign_id: uuid.UUID, db: DbSession, user: CurrentUser
+) -> list[CampaignInviteSummary]:
+    """List a campaign's pending, unexpired invites (owner-only)."""
+    campaign = await get_writable_campaign(db, campaign_id, user)
+    rows = await db.execute(
+        select(CampaignInvite, User.username)
+        .join(User, User.id == CampaignInvite.invitee_user_id)
+        .where(
+            CampaignInvite.campaign_id == campaign.id,
+            CampaignInvite.expires_at > datetime.now(UTC),
+        )
+        .order_by(User.username.asc())
+    )
+    return [_invite_schema(invite, handle) for invite, handle in rows]
+
+
+@router.delete(
+    "/{campaign_id}/invites/{invite_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Revoke a pending invite",
+    dependencies=[Depends(require_csrf)],
+    responses=_FORBIDDEN_OR_NOT_FOUND,
+)
+async def revoke_invite(
+    campaign_id: uuid.UUID,
+    invite_id: uuid.UUID,
+    db: DbSession,
+    user: CurrentUser,
+) -> None:
+    """Revoke a pending invite on a campaign you own (idempotent).
+
+    Scoped to the campaign in the path, so an invite id from another campaign
+    is a no-op rather than a cross-campaign delete.
+    """
+    campaign = await get_writable_campaign(db, campaign_id, user)
+    existing = await db.scalar(
+        select(CampaignInvite).where(
+            CampaignInvite.id == invite_id,
+            CampaignInvite.campaign_id == campaign.id,
+        )
+    )
+    if existing is not None:
+        await db.delete(existing)
+        await db.commit()
+
+
+@router.get(
+    "/{campaign_id}/members",
+    response_model=list[CampaignMemberSummary],
+    summary="List a campaign's members",
+    responses=_NOT_FOUND,
+)
+async def list_members(
+    campaign_id: uuid.UUID, db: DbSession, user: CurrentUser
+) -> list[CampaignMemberSummary]:
+    """List the members of a campaign you can read (owner or member).
+
+    The roster carries public handles only. The owner is not a membership
+    row, so they are not listed here.
+    """
+    await get_readable_campaign(db, campaign_id, user)
+    rows = await db.execute(
+        select(User.username, CampaignMember.created_at)
+        .join(User, User.id == CampaignMember.user_id)
+        .where(CampaignMember.campaign_id == campaign_id)
+        .order_by(User.username.asc())
+    )
+    return [
+        CampaignMemberSummary(user=Author(username=handle), joined_at=joined)
+        for handle, joined in rows
+    ]
+
+
+@router.delete(
+    "/{campaign_id}/members/{handle}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Remove a member, or leave a campaign",
+    dependencies=[Depends(require_csrf)],
+    responses=_FORBIDDEN_OR_NOT_FOUND,
+)
+async def remove_member(
+    campaign_id: uuid.UUID,
+    handle: str,
+    db: DbSession,
+    user: CurrentUser,
+) -> None:
+    """Remove a member from a campaign, or leave one (idempotent).
+
+    Members are addressed by their public handle. The owner may remove any
+    member; a member may remove only themselves. Removing a member revokes the
+    read access their membership granted. Removing a non-member (or an unknown
+    handle) is a no-op.
+    """
+    await authorize_member_removal(db, campaign_id, handle, user)
+    existing = await db.scalar(
+        select(CampaignMember)
+        .join(User, User.id == CampaignMember.user_id)
+        .where(
+            CampaignMember.campaign_id == campaign_id,
+            User.username == handle,
         )
     )
     if existing is not None:
