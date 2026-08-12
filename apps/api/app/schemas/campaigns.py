@@ -6,7 +6,7 @@ from typing import Literal
 
 from pydantic import Field
 
-from app.schemas.auth import Author
+from app.schemas.auth import Author, Username
 from app.schemas.base import AppSchema
 
 
@@ -68,3 +68,62 @@ class CampaignDetail(CampaignSummary):
     book_count: int = Field(
         description="Number of books enabled on the campaign."
     )
+
+
+class CampaignMemberSummary(AppSchema):
+    """A member of a campaign, as shown in the roster."""
+
+    user: Author = Field(description="Public author projection of the member.")
+    joined_at: datetime = Field(
+        description="When the member joined (accepted their invite)."
+    )
+
+
+class CampaignInviteCreate(AppSchema):
+    """Payload to invite a user to a campaign by their public handle.
+
+    Invites go by handle, never email: the username is the public identity
+    (#185), so this never discloses which private email addresses exist.
+    """
+
+    handle: Username
+
+
+class CampaignInviteSummary(AppSchema):
+    """A pending invite, as the campaign owner sees it.
+
+    Carries the invitee's public handle only -- never their email or id.
+    """
+
+    id: uuid.UUID = Field(description="Unique identifier for the invite.")
+    campaign_id: uuid.UUID = Field(
+        description="The campaign the invite is for."
+    )
+    invitee: Author = Field(
+        description="Public author projection of the invited user."
+    )
+    expires_at: datetime = Field(
+        description="When the invite lapses if not accepted."
+    )
+    created_at: datetime = Field(description="When the invite was created.")
+
+
+class MyCampaignInvite(AppSchema):
+    """A pending invite addressed to the current user.
+
+    Shows the campaign and its owner's public handle so the invitee knows who
+    invited them and to what; no data about other members is exposed.
+    """
+
+    id: uuid.UUID = Field(description="Unique identifier for the invite.")
+    campaign_id: uuid.UUID = Field(
+        description="The campaign the invite is for."
+    )
+    campaign_name: str = Field(description="Name of the campaign.")
+    owner: Author = Field(
+        description="Public author projection of the campaign's owner."
+    )
+    expires_at: datetime = Field(
+        description="When the invite lapses if not accepted."
+    )
+    created_at: datetime = Field(description="When the invite was created.")

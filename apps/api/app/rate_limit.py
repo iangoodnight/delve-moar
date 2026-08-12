@@ -161,6 +161,20 @@ async def enforce_email_change_rate_limit(request: Request) -> None:
     )
 
 
+async def enforce_campaign_invite_rate_limit(request: Request) -> None:
+    """Rate-limit dependency for creating campaign invites (#176).
+
+    An invite resolves a public handle to an account, so capping how often one
+    IP can create invites blunts both handle enumeration and invite-spam
+    against a chosen victim.
+    """
+    await _enforce(
+        request,
+        scope="campaign_invite",
+        limit=settings.rate_limit_campaign_invite,
+    )
+
+
 async def reset_rate_limits() -> None:
     """Clear all rate-limit counters.
 

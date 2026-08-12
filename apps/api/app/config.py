@@ -183,6 +183,10 @@ class Settings(BaseSettings):
     rate_limit_password_reset: str = "5/hour"  # noqa: S105 (rate, not a secret)
     rate_limit_resend_verification: str = "5/hour"
     rate_limit_email_change: str = "5/hour"
+    # Creating a campaign invite resolves a public handle to an account, so an
+    # IP-keyed cap blunts handle enumeration and invite-spam. Generous: real
+    # DMs invite a table of players, not hundreds.
+    rate_limit_campaign_invite: str = "30/hour"
 
     # Email / mailer (#171). Verification and password-reset links are sent
     # through a provider-agnostic seam. ``mailer_transport`` selects the
@@ -208,6 +212,11 @@ class Settings(BaseSettings):
     # Change-email confirmation link; short since confirming it swaps the
     # account's login identity (#175).
     email_change_ttl_seconds: int = 3_600  # 1 hour
+    # How long a pending campaign invite stays actionable (#176). Longer than
+    # a reset link -- a player may not sign in for days -- but not forever, so
+    # a stale invite eventually lapses instead of lingering as read access
+    # waiting to be accepted.
+    campaign_invite_ttl_seconds: int = 1_209_600  # 14 days
 
     # Observability / error tracking (#167). Sentry is wired through a seam
     # (app/observability.py) that stays inert until sentry_dsn is set, so local
