@@ -187,6 +187,49 @@ import has no barrel equivalent. The carve-out is scoped to those two
 files, not all of `src/app/**`: route modules under `src/app/routes/`
 have no reason to import Radix directly either.
 
+## Prefetching on hover intent
+
+Navigable links and cards warm their destination's React Query cache on
+hover and keyboard focus, so the click renders without a loading flash.
+This is the default for any link or card that leads to a fetched page.
+The pieces are split to respect the boundary rules:
+
+- **Feature `api/` modules** export a `prefetch<Thing>` helper next to
+  each query-options factory. `prefetchMonster(queryClient, slug)` wraps
+  `queryClient.prefetchQuery(getMonsterQueryOptions(slug))`, and
+  `prefetchMonsters(queryClient, filters?)` the list. They are
+  fire-and-forget and respect `staleTime`, so warming an already-fresh
+  entry is a no-op.
+- **`hooks/use-hover-prefetch`** is the generic primitive. Given a
+  `prefetch` closure it returns pointer/focus handlers to spread onto a
+  link; it fires once per hover after a short debounce (cancelled if the
+  cursor leaves first) and no-ops when handed `undefined`.
+- **`lib/prefetch`** holds a path-keyed registry (`usePathPrefetch`) so a
+  component can warm a route by its path without importing feature code.
+- **`app/prefetch.ts`** builds the concrete nav registry, mapping each
+  nav path to its list prefetch. It lives in the app layer because it
+  reaches into feature `api/` modules, which `components/**` may not.
+
+A **card** (feature layer) wires its own feature's helper directly:
+
+```tsx
+const queryClient = useQueryClient();
+const hover = useHoverPrefetch(() => {
+  prefetchSpell(queryClient, spell.slug);
+});
+// <Card asChild><Link {...hover} to={...}>...</Link></Card>
+```
+
+A **nav link** (component layer, which may not import features) reads the
+registry instead, keeping the feature coupling in the app layer:
+
+```tsx
+const hover = useHoverPrefetch(usePathPrefetch(to));
+```
+
+To make a new nav path prefetch, add a `path -> prefetch` entry to
+`app/prefetch.ts`; the link picks it up automatically.
+
 ## Where to put new code
 
 A rough decision tree for new files:

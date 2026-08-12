@@ -444,6 +444,11 @@ would address each:
 - **Navigation link.** Step 7 registered the route; surfacing it in
   the primary navigation shell (the header and mobile menu) is a
   separate edit.
+- **Hover prefetch.** Cards and nav links warm their destination on
+  hover, so a new resource's `api/` module exports `prefetch*` helpers
+  next to its query-options factory, and its cards and nav links wire
+  `useHoverPrefetch`. See the prefetch section in
+  [web-features-layout.md](../architecture/web-features-layout.md).
 
 ## Where to look next
 

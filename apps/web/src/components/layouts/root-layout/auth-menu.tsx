@@ -11,13 +11,16 @@ import { Link, useNavigate } from 'react-router-dom';
 import { IconButton } from '@/components/ui/button';
 import { DropdownMenu } from '@/components/ui/dropdown-menu';
 import { paths } from '@/config/paths';
+import { useHoverPrefetch } from '@/hooks/use-hover-prefetch';
 import { useAuth, useLogout } from '@/lib/auth';
+import { usePathPrefetch } from '@/lib/prefetch';
 
 export function AuthMenu() {
   const navigate = useNavigate();
   const { status, user } = useAuth();
   const logout = useLogout();
   const isAuthenticated = status === 'authenticated' && user !== null;
+  const booksHover = useHoverPrefetch(usePathPrefetch(paths.accountBooks.path));
 
   return (
     <DropdownMenu.Root>
@@ -49,7 +52,7 @@ export function AuthMenu() {
               </Link>
             </DropdownMenu.Item>
             <DropdownMenu.Item asChild>
-              <Link to={paths.accountBooks.getHref()}>
+              <Link to={paths.accountBooks.getHref()} {...booksHover}>
                 <BooksIcon aria-hidden="true" /> My books
               </Link>
             </DropdownMenu.Item>

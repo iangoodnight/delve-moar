@@ -1,15 +1,20 @@
+import { QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it } from 'vitest';
+
+import { createTestQueryClient } from '@/testing/setup';
 
 import { DesktopNavigation } from '../desktop-navigation';
 import { LINKS } from '../links';
 
 function renderAt(path: string) {
   return render(
-    <MemoryRouter initialEntries={[path]}>
-      <DesktopNavigation />
-    </MemoryRouter>,
+    <QueryClientProvider client={createTestQueryClient()}>
+      <MemoryRouter initialEntries={[path]}>
+        <DesktopNavigation />
+      </MemoryRouter>
+    </QueryClientProvider>,
   );
 }
 

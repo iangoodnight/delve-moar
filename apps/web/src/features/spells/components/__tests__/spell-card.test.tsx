@@ -1,10 +1,12 @@
 import { Theme } from '@radix-ui/themes';
-import { render, screen } from '@testing-library/react';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { axe } from 'vitest-axe';
 
 import type { SpellSummary } from '@/features/spells/api';
+import { createTestQueryClient } from '@/testing/setup';
 
 import { SpellCard } from '../spell-card';
 
@@ -25,13 +27,19 @@ const SCHOOLLESS: SpellSummary = {
 };
 
 function renderCard(spell: SpellSummary) {
-  return render(
-    <Theme>
-      <MemoryRouter>
-        <SpellCard spell={spell} />
-      </MemoryRouter>
-    </Theme>,
-  );
+  const queryClient = createTestQueryClient();
+  return {
+    queryClient,
+    ...render(
+      <QueryClientProvider client={queryClient}>
+        <Theme>
+          <MemoryRouter>
+            <SpellCard spell={spell} />
+          </MemoryRouter>
+        </Theme>
+      </QueryClientProvider>,
+    ),
+  };
 }
 
 describe('SpellCard', () => {
@@ -71,5 +79,20 @@ describe('SpellCard', () => {
   it('has no accessibility violations', async () => {
     const { container } = renderCard(FIREBALL);
     expect(await axe(container)).toHaveNoViolations();
+  });
+
+  it('warms the spell detail cache on pointer enter', async () => {
+    const { queryClient } = renderCard(FIREBALL);
+    const prefetchSpy = vi
+      .spyOn(queryClient, 'prefetchQuery')
+      .mockResolvedValue(undefined);
+
+    fireEvent.mouseEnter(screen.getByRole('link'));
+
+    await waitFor(() => {
+      expect(prefetchSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ queryKey: ['spells', 'detail', 'fireball'] }),
+      );
+    });
   });
 });

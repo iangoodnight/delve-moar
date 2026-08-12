@@ -1,3 +1,4 @@
+import { useQueryClient } from '@tanstack/react-query';
 import { Link as ReactRouterLink } from 'react-router-dom';
 
 import { Badge } from '@/components/ui/badge';
@@ -7,7 +8,8 @@ import { Text } from '@/components/ui/typography';
 import { paths } from '@/config/paths';
 import { getItemCategoryLabel } from '@/constants/item-categories';
 import { getRarityOption } from '@/constants/item-rarities';
-import type { ItemSummary } from '@/features/items/api';
+import { type ItemSummary, prefetchItem } from '@/features/items/api';
+import { useHoverPrefetch } from '@/hooks/use-hover-prefetch';
 
 import styles from './item-card.module.css';
 
@@ -17,6 +19,10 @@ interface ItemCardProps {
 
 export function ItemCard({ item }: Readonly<ItemCardProps>) {
   const rarity = getRarityOption(item.rarity);
+  const queryClient = useQueryClient();
+  const hover = useHoverPrefetch(() => {
+    prefetchItem(queryClient, item.slug);
+  });
 
   return (
     <Card asChild>
@@ -24,6 +30,7 @@ export function ItemCard({ item }: Readonly<ItemCardProps>) {
         className={styles['item-card']}
         data-item={item.slug}
         to={paths.itemDetail.getHref(item.slug)}
+        {...hover}
       >
         <Row align="start" gap="3" justify="between">
           <Column gap="1">

@@ -1,10 +1,12 @@
 import { Theme } from '@radix-ui/themes';
-import { render, screen } from '@testing-library/react';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { axe } from 'vitest-axe';
 
 import type { ItemSummary } from '@/features/items/api';
+import { createTestQueryClient } from '@/testing/setup';
 
 import { ItemCard } from '../item-card';
 
@@ -33,13 +35,19 @@ const UNCATEGORIZED: ItemSummary = {
 };
 
 function renderCard(item: ItemSummary) {
-  return render(
-    <Theme>
-      <MemoryRouter>
-        <ItemCard item={item} />
-      </MemoryRouter>
-    </Theme>,
-  );
+  const queryClient = createTestQueryClient();
+  return {
+    queryClient,
+    ...render(
+      <QueryClientProvider client={queryClient}>
+        <Theme>
+          <MemoryRouter>
+            <ItemCard item={item} />
+          </MemoryRouter>
+        </Theme>
+      </QueryClientProvider>,
+    ),
+  };
 }
 
 describe('ItemCard', () => {
@@ -84,5 +92,20 @@ describe('ItemCard', () => {
   it('has no accessibility violations', async () => {
     const { container } = renderCard(AMULET);
     expect(await axe(container)).toHaveNoViolations();
+  });
+
+  it('warms the item detail cache on pointer enter', async () => {
+    const { queryClient } = renderCard(LONGSWORD);
+    const prefetchSpy = vi
+      .spyOn(queryClient, 'prefetchQuery')
+      .mockResolvedValue(undefined);
+
+    fireEvent.mouseEnter(screen.getByRole('link'));
+
+    await waitFor(() => {
+      expect(prefetchSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ queryKey: ['items', 'detail', 'longsword'] }),
+      );
+    });
   });
 });

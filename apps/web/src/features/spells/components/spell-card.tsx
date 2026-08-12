@@ -1,10 +1,12 @@
+import { useQueryClient } from '@tanstack/react-query';
 import { Link as ReactRouterLink } from 'react-router-dom';
 
 import { Card } from '@/components/ui/card';
 import { Column, Row } from '@/components/ui/layout';
 import { Text } from '@/components/ui/typography';
 import { paths } from '@/config/paths';
-import type { SpellSummary } from '@/features/spells/api';
+import { prefetchSpell, type SpellSummary } from '@/features/spells/api';
+import { useHoverPrefetch } from '@/hooks/use-hover-prefetch';
 
 import styles from './spell-card.module.css';
 
@@ -13,12 +15,18 @@ interface SpellCardProps {
 }
 
 export function SpellCard({ spell }: Readonly<SpellCardProps>) {
+  const queryClient = useQueryClient();
+  const hover = useHoverPrefetch(() => {
+    prefetchSpell(queryClient, spell.slug);
+  });
+
   return (
     <Card asChild>
       <ReactRouterLink
         className={styles['spell-card']}
         data-spell={spell.slug}
         to={paths.spellDetail.getHref(spell.slug)}
+        {...hover}
       >
         <Row gap="3" justify="between">
           <Column gap="1">

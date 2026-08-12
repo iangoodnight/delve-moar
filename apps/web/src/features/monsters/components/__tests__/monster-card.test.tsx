@@ -1,10 +1,12 @@
 import { Theme } from '@radix-ui/themes';
-import { render, screen } from '@testing-library/react';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { axe } from 'vitest-axe';
 
 import type { MonsterSummary } from '@/features/monsters/api';
+import { createTestQueryClient } from '@/testing/setup';
 
 import { MonsterCard } from '../monster-card';
 
@@ -25,13 +27,19 @@ const UNTYPED: MonsterSummary = {
 };
 
 function renderCard(monster: MonsterSummary) {
-  return render(
-    <Theme>
-      <MemoryRouter>
-        <MonsterCard monster={monster} />
-      </MemoryRouter>
-    </Theme>,
-  );
+  const queryClient = createTestQueryClient();
+  return {
+    queryClient,
+    ...render(
+      <QueryClientProvider client={queryClient}>
+        <Theme>
+          <MemoryRouter>
+            <MonsterCard monster={monster} />
+          </MemoryRouter>
+        </Theme>
+      </QueryClientProvider>,
+    ),
+  };
 }
 
 describe('MonsterCard', () => {
@@ -74,5 +82,22 @@ describe('MonsterCard', () => {
   it('has no accessibility violations', async () => {
     const { container } = renderCard(ADULT_RED_DRAGON);
     expect(await axe(container)).toHaveNoViolations();
+  });
+
+  it('warms the monster detail cache on pointer enter', async () => {
+    const { queryClient } = renderCard(ADULT_RED_DRAGON);
+    const prefetchSpy = vi
+      .spyOn(queryClient, 'prefetchQuery')
+      .mockResolvedValue(undefined);
+
+    fireEvent.mouseEnter(screen.getByRole('link'));
+
+    await waitFor(() => {
+      expect(prefetchSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          queryKey: ['monsters', 'detail', 'adult-red-dragon'],
+        }),
+      );
+    });
   });
 });

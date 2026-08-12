@@ -1,4 +1,5 @@
 import { PencilSimpleIcon, TrashIcon } from '@phosphor-icons/react';
+import { useQueryClient } from '@tanstack/react-query';
 
 import { IconButton } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -6,7 +7,9 @@ import { Column, Row } from '@/components/ui/layout';
 import { RouterLink } from '@/components/ui/navigation';
 import { Text } from '@/components/ui/typography';
 import { paths } from '@/config/paths';
+import { useHoverPrefetch } from '@/hooks/use-hover-prefetch';
 
+import { prefetchBook } from '../api/get-book';
 import type { BookSummary } from '../api/get-books';
 
 import styles from './book-card.module.css';
@@ -24,6 +27,10 @@ interface BookCardProps {
 export function BookCard({ book }: Readonly<BookCardProps>) {
   const deleteLabel = `Delete ${book.name}`;
   const editLabel = `Edit ${book.name}`;
+  const queryClient = useQueryClient();
+  const hover = useHoverPrefetch(() => {
+    prefetchBook(queryClient, book.id);
+  });
 
   return (
     <Card className={styles['card']} size="3">
@@ -34,6 +41,7 @@ export function BookCard({ book }: Readonly<BookCardProps>) {
             size="4"
             to={paths.accountBookDetail.getHref(book.id)}
             weight="medium"
+            {...hover}
           >
             {book.name}
           </RouterLink>

@@ -21,7 +21,10 @@ import {
 import { AuthProvider } from '@/lib/auth';
 import { captureError } from '@/lib/monitoring';
 import { notify } from '@/lib/notifications';
+import { PrefetchRegistryProvider } from '@/lib/prefetch';
 import { queryConfig } from '@/lib/react-query';
+
+import { navPrefetch } from './prefetch';
 
 interface AppProviderProps {
   readonly children: Readonly<ReactNode>;
@@ -67,7 +70,11 @@ export function AppProvider({ children }: Readonly<AppProviderProps>) {
             {import.meta.env.DEV && <ReactQueryDevtools />}
             <Theme>
               {import.meta.env.DEV && <ThemePanel defaultOpen={false} />}
-              <AuthProvider>{children}</AuthProvider>
+              <AuthProvider>
+                <PrefetchRegistryProvider registry={navPrefetch}>
+                  {children}
+                </PrefetchRegistryProvider>
+              </AuthProvider>
               <AppToaster />
             </Theme>
           </QueryClientProvider>

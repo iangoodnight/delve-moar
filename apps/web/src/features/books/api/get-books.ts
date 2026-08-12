@@ -1,5 +1,5 @@
 import type { components } from '@delve-moar/api-types';
-import { queryOptions } from '@tanstack/react-query';
+import { type QueryClient, queryOptions } from '@tanstack/react-query';
 
 import { apiClient } from '@/lib/api-client';
 
@@ -24,4 +24,9 @@ export function getOwnedBooksQueryOptions() {
     queryKey: [...BOOKS_QUERY_KEY, 'list', 'owned'] as const,
     queryFn: getOwnedBooks,
   });
+}
+
+// owner-scoped; an anonymous hover just no-ops on the 401
+export function prefetchOwnedBooks(queryClient: QueryClient): void {
+  void queryClient.prefetchQuery(getOwnedBooksQueryOptions());
 }
