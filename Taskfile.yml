@@ -36,14 +36,39 @@ tasks:
     cmd: golangci-lint run ./...
 
   lint:shell:
-    desc: Lint and format shell scripts
+    desc: Lint shell scripts (shellcheck + shfmt check)
     cmds:
       - shellcheck scripts/*.sh
-      - shfmt --indent 2 --case-indent --binary-next-line --write scripts/*.sh
+      - shfmt --indent 2 --case-indent --binary-next-line --diff scripts/*.sh
 
   lint:
     desc: Lint all services in parallel
     deps: [lint:api, lint:web, lint:cli, lint:shell]
+
+  # ── Formatting ─────────────────────────────────────────────────────────────
+
+  format:api:
+    desc: Format the Python API (ruff)
+    dir: "{{.API_DIR}}"
+    cmd: uv run ruff format .
+
+  format:web:
+    desc: Format the TypeScript web app (prettier)
+    dir: "{{.WEB_DIR}}"
+    cmd: pnpm format
+
+  format:cli:
+    desc: Format the Go CLI (gofmt + goimports)
+    dir: "{{.CLI_DIR}}"
+    cmd: golangci-lint fmt ./...
+
+  format:shell:
+    desc: Format shell scripts (shfmt)
+    cmd: shfmt --indent 2 --case-indent --binary-next-line --write scripts/*.sh
+
+  format:
+    desc: Format all services in parallel
+    deps: [format:api, format:web, format:cli, format:shell]
 
   # ── Testing ────────────────────────────────────────────────────────────────
 
