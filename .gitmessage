@@ -1,0 +1,8 @@
+
+refs: #
+# Above -- line 1: type(scope): imperative subject (~50 chars, no trailing
+# period). Add a blank line and a body (why more than what, wrapped ~72) above
+# the `refs:` trailer, and fill in the issue number. A commit with no issue
+# reference is rejected (see CONTRIBUTING "Commits"); Dependabot and release
+# commits are exempt. Types: feat fix docs chore refactor test ci build perf
+# style. Lines starting with # are stripped.

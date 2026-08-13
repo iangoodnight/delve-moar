@@ -168,8 +168,9 @@ belongs to. It links the commit to its issue without closing it, so each
 commit on a multi-commit branch still points back. Reserve the closing
 keyword for the PR: put `Closes #<issue>` in the PR description (not the
 commit body) so GitHub auto-closes the issue when the PR merges to `dev`
-(the default branch). Commitlint does not enforce the trailer today (no
-`references-empty` rule); add one only if drift becomes a problem.
+(the default branch). Commitlint enforces this with a `references-empty`
+rule (Dependabot and release commits are exempt), and `task setup:dev`
+sets a `.gitmessage` template so the trailer is prefilled.
 
 ## Pull requests
 

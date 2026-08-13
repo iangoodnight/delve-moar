@@ -206,6 +206,7 @@ tasks:
       - pre-commit install
       - pre-commit install --hook-type pre-push
       - pre-commit install --hook-type commit-msg
+      - git config commit.template .gitmessage
       - go install github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen@v2.6.0
       - pnpm install
       - cd {{.API_DIR}} && uv sync --group dev
