@@ -102,7 +102,7 @@ describe('ItemDetailBlock — magic item (amulet of health)', () => {
 });
 
 describe('ItemDetailBlock — armor edge cases', () => {
-  it('renders armor class, str minimum, and stealth disadvantage when present', () => {
+  it('renders armor type, armor class, str minimum, and stealth disadvantage when present', () => {
     const chainMail = {
       ...longswordItem,
       slug: 'chain-mail',
@@ -123,6 +123,7 @@ describe('ItemDetailBlock — armor edge cases', () => {
         <ItemDetailBlock item={chainMail} />
       </Theme>,
     );
+    expect(screen.getByText('Heavy')).toBeInTheDocument();
     expect(screen.getByText('16')).toBeInTheDocument();
     expect(screen.getByText(/Str 13/)).toBeInTheDocument();
     expect(screen.getByText('Disadvantage')).toBeInTheDocument();
@@ -146,6 +147,26 @@ describe('ItemDetailBlock — armor edge cases', () => {
       </Theme>,
     );
     expect(screen.getByText('15 + Dex (max 2)')).toBeInTheDocument();
+  });
+
+  it('formats AC with a Dex bonus but no max', () => {
+    const studdedLeather = {
+      ...longswordItem,
+      slug: 'studded-leather',
+      name: 'Studded Leather',
+      itemCategory: 'armor',
+      content: {
+        name: 'Studded Leather',
+        armorCategory: 'Light',
+        armorClass: { base: 12, dexBonus: true, maxBonus: null },
+      },
+    };
+    render(
+      <Theme>
+        <ItemDetailBlock item={studdedLeather} />
+      </Theme>,
+    );
+    expect(screen.getByText('12 + Dex')).toBeInTheDocument();
   });
 });
 

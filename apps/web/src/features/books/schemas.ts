@@ -3,7 +3,7 @@ import { z } from 'zod';
 // Mirror the server's rules (apps/api/app/schemas/book.py) for fast client
 // feedback. The server stays the source of truth.
 export const BOOK_NAME_MAX_LENGTH = 255;
-export const BOOK_DESCRIPTION_MAX_LENGTH = 2000;
+export const BOOK_DESCRIPTION_MAX_LENGTH = 2_000;
 
 export const bookFormSchema = z.object({
   name: z

@@ -63,6 +63,33 @@ function ItemStat({ label, value }: Readonly<ItemStatProps>) {
   );
 }
 
+function buildArmorStats(content: SrdItemContent): readonly ItemStatProps[] {
+  const stats: ItemStatProps[] = [];
+  if (content.armorCategory) {
+    stats.push({ label: 'Armor Type', value: content.armorCategory });
+  }
+  if (content.armorClass) {
+    stats.push({
+      label: 'Armor Class',
+      value: formatArmorClass(content.armorClass),
+    });
+  }
+  if (
+    content.strMinimum !== undefined &&
+    content.strMinimum !== null &&
+    content.strMinimum > 0
+  ) {
+    stats.push({
+      label: 'Strength Required',
+      value: `Str ${String(content.strMinimum)}`,
+    });
+  }
+  if (content.stealthDisadvantage) {
+    stats.push({ label: 'Stealth', value: 'Disadvantage' });
+  }
+  return stats;
+}
+
 function buildStats(content: SrdItemContent): readonly ItemStatProps[] {
   const stats: ItemStatProps[] = [];
   if (content.cost) {
@@ -97,28 +124,7 @@ function buildStats(content: SrdItemContent): readonly ItemStatProps[] {
       value: content.properties.map((p) => p.name).join(', '),
     });
   }
-  if (content.armorCategory) {
-    stats.push({ label: 'Armor Type', value: content.armorCategory });
-  }
-  if (content.armorClass) {
-    stats.push({
-      label: 'Armor Class',
-      value: formatArmorClass(content.armorClass),
-    });
-  }
-  if (
-    content.strMinimum !== undefined &&
-    content.strMinimum !== null &&
-    content.strMinimum > 0
-  ) {
-    stats.push({
-      label: 'Strength Required',
-      value: `Str ${String(content.strMinimum)}`,
-    });
-  }
-  if (content.stealthDisadvantage) {
-    stats.push({ label: 'Stealth', value: 'Disadvantage' });
-  }
+  stats.push(...buildArmorStats(content));
   if (content.requiresAttunement) {
     stats.push({ label: 'Attunement', value: content.requiresAttunement });
   }

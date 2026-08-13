@@ -39,5 +39,5 @@ if (import.meta.env.DEV) {
   const { default: axe } = await import('@axe-core/react');
   const { default: React } = await import('react');
   const { default: ReactDOM } = await import('react-dom');
-  await axe(React, ReactDOM, 1000);
+  await axe(React, ReactDOM, 1_000);
 }

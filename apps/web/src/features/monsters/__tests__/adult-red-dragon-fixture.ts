@@ -66,7 +66,7 @@ export const adultRedDragonMonster: Monster = {
     },
     languages: 'Common, Draconic',
     challengeRating: 17,
-    xp: 18000,
+    xp: 18_000,
     proficiencyBonus: 6,
     actions: [
       { name: 'Bite', desc: 'Melee Weapon Attack: +14 to hit.' },

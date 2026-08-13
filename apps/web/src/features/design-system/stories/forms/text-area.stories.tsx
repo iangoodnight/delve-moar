@@ -82,7 +82,7 @@ export const States: Story = {
 };
 
 const bookSchema = z.object({
-  description: z.string().max(2000, 'Use at most 2000 characters.'),
+  description: z.string().max(2_000, 'Use at most 2000 characters.'),
 });
 
 // Live form: edits flow through react-hook-form via FormTextArea.
