@@ -36,8 +36,8 @@ describe('formatXp', () => {
   it('groups thousands with commas (en-US)', () => {
     expect(formatXp(0)).toBe('0');
     expect(formatXp(450)).toBe('450');
-    expect(formatXp(18000)).toBe('18,000');
-    expect(formatXp(155000)).toBe('155,000');
+    expect(formatXp(18_000)).toBe('18,000');
+    expect(formatXp(155_000)).toBe('155,000');
   });
 });
 

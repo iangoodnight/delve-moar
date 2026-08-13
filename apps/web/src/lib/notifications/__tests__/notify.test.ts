@@ -30,8 +30,8 @@ describe('notify', () => {
   it('forwards per-call options', () => {
     const error = vi.spyOn(toast, 'error').mockReturnValue('');
 
-    notify.error('boom', { duration: 9000 });
+    notify.error('boom', { duration: 9_000 });
 
-    expect(error).toHaveBeenCalledWith('boom', { duration: 9000 });
+    expect(error).toHaveBeenCalledWith('boom', { duration: 9_000 });
   });
 });

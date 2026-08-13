@@ -18,6 +18,14 @@ How the system fits together. Read this before making structural changes.
 - [Web features layout](architecture/web-features-layout.md), bulletproof-react boundaries enforced by ESLint
 - [Web accessibility strategy](architecture/web-accessibility.md), the four-layer a11y approach
 
+### Conventions
+
+Coding conventions reviewers hold changes to.
+
+- [Conventions overview](conventions/README.md), the index for the web and markdown guides
+- [Web style guide](conventions/web-style-guide.md), TypeScript, React, and CSS conventions
+- [Markdown style guide](conventions/markdown-style-guide.md), where prose wraps and where it doesn't
+
 ### Recipes
 
 Walkthroughs for common contributor tasks.

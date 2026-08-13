@@ -12,6 +12,7 @@ import reactCompiler from 'eslint-plugin-react-compiler';
 import reactHooks from 'eslint-plugin-react-hooks';
 import reactRefresh from 'eslint-plugin-react-refresh';
 import simpleImportSort from 'eslint-plugin-simple-import-sort';
+import unicorn from 'eslint-plugin-unicorn';
 import tseslint from 'typescript-eslint';
 import prettier from 'eslint-config-prettier';
 
@@ -166,7 +167,14 @@ export default tseslint.config(
   }, // CODE STYLE
   {
     files: ['**/*.{ts,tsx}'],
+    plugins: { unicorn },
     rules: {
+      // cyclomatic cap; bump if a legitimately branchy function outgrows it.
+      complexity: ['error', 15],
+      'unicorn/numeric-separators-style': [
+        'error',
+        { number: { minimumDigits: 4 } },
+      ],
       'no-restricted-syntax': [
         'error',
         {
@@ -174,6 +182,11 @@ export default tseslint.config(
             'Program > VariableDeclaration > VariableDeclarator[init.type="ArrowFunctionExpression"]',
           message:
             'Prefer a function declaration at the module level. Use `function foo() {}` instead of `const foo = () => {}`.',
+        },
+        {
+          selector: 'TSEnumDeclaration',
+          message:
+            'Avoid `enum`; use an `as const` object or string-literal union instead (no runtime emit, real literal types).',
         },
       ],
     },

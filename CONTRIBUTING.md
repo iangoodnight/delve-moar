@@ -6,7 +6,14 @@ project is and how the apps fit together, see the [README](README.md).
 DelveMoar is a small project today, but the conventions here are written as if
 many people might land in the repo. Following them keeps the bar consistent.
 
-For deeper material (architecture, recipes, glossary), see
+Code style, naming, and structure conventions live in
+[`docs/conventions/`](docs/conventions/README.md): a
+[web style guide](docs/conventions/web-style-guide.md) (TypeScript, React, CSS)
+and a [markdown style guide](docs/conventions/markdown-style-guide.md). Read them
+before writing code; most rules are lint- or type-enforced, the rest are
+review-enforced.
+
+For other deeper material (architecture, recipes, glossary), see
 [`docs/`](docs/README.md).
 
 ## Local setup
@@ -225,6 +232,9 @@ satisfied.
 Some conventions are not (fully) machine-enforced. Check these by
 hand, and link the relevant record when you flag one:
 
+- **Code style and naming** beyond what the linters catch, per the
+  [conventions](docs/conventions/README.md) and the web guide's
+  review-enforced rules.
 - **Web architectural boundaries** beyond what ESLint enforces, per
   [web features layout](docs/architecture/web-features-layout.md).
 - **Coverage qualifying criteria** for pass-through wrappers, per
