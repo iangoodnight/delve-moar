@@ -21,8 +21,8 @@ indent_size = 4
 [Makefile]
 indent_style = tab
 
-# Markdown: keep trailing whitespace (two spaces = a line break). Wrap prose
-# at 70 -- advisory (honored by editors like Vim via textwidth; not CI-checked).
+# Markdown: keep trailing whitespace (two spaces = a line break). Prose wraps
+# at 80, enforced by Prettier (proseWrap: always) via task format:docs and CI.
 [*.md]
 trim_trailing_whitespace = false
-max_line_length = 70
+max_line_length = 80
