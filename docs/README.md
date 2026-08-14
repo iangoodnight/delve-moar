@@ -41,6 +41,14 @@ Operational procedures for production.
 - [Postgres backup and restore](runbooks/postgres-backup-restore.md), backup mechanisms, RPO/RTO, and the tested restore procedure
 - [Monitoring and alerting](runbooks/monitoring.md), error tracking, uptime, Postgres metrics, and alert setup
 
+### Policies
+
+What the project promises to integrators and how it handles data.
+
+- [API stability and deprecation](api-stability.md), what `/v1` guarantees and how breaking changes are signaled
+- [Data retention](data-retention.md), how long sessions, analytics, and user content are kept, and what deletion removes
+- [Analytics](analytics.md), the privacy-friendly, off-by-default usage analytics seam
+
 ### Decisions
 
 - [Architecture Decision Records](decisions/README.md), the durable
