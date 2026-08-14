@@ -26,6 +26,9 @@ importers:
       '@commitlint/config-conventional':
         specifier: ^21.2.0
         version: 21.2.0
+      prettier:
+        specifier: ^3.9.6
+        version: 3.9.6
       turbo:
         specifier: ^2
         version: 2.10.9

@@ -14,45 +14,59 @@ what belongs in the top-level `README.md`, see the
 How the system fits together. Read this before making structural changes.
 
 - [Three-app overview](architecture/README.md), how the API, web, and CLI relate
-- [OpenAPI pipeline](architecture/openapi-pipeline.md), the shared contract and codegen flow
-- [Web features layout](architecture/web-features-layout.md), bulletproof-react boundaries enforced by ESLint
-- [Web accessibility strategy](architecture/web-accessibility.md), the four-layer a11y approach
+- [OpenAPI pipeline](architecture/openapi-pipeline.md), the shared contract and
+  codegen flow
+- [Web features layout](architecture/web-features-layout.md), bulletproof-react
+  boundaries enforced by ESLint
+- [Web accessibility strategy](architecture/web-accessibility.md), the
+  four-layer a11y approach
 
 ### Conventions
 
 Coding conventions reviewers hold changes to.
 
-- [Conventions overview](conventions/README.md), the index for the web and markdown guides
-- [Web style guide](conventions/web-style-guide.md), TypeScript, React, and CSS conventions
-- [Markdown style guide](conventions/markdown-style-guide.md), where prose wraps and where it doesn't
+- [Conventions overview](conventions/README.md), the index for the web and
+  markdown guides
+- [Web style guide](conventions/web-style-guide.md), TypeScript, React, and CSS
+  conventions
+- [Markdown style guide](conventions/markdown-style-guide.md), where prose wraps
+  and where it doesn't
 
 ### Recipes
 
 Walkthroughs for common contributor tasks.
 
-- [Local development](recipes/local-development.md), commands and gotchas (reference style)
-- [Adding a new endpoint](recipes/adding-a-new-endpoint.md), end-to-end walkthrough (tutorial style)
-- [Deployment runbook](deploy.md), release ritual, rollback, and first-time infrastructure setup
+- [Local development](recipes/local-development.md), commands and gotchas
+  (reference style)
+- [Adding a new endpoint](recipes/adding-a-new-endpoint.md), end-to-end
+  walkthrough (tutorial style)
+- [Deployment runbook](deploy.md), release ritual, rollback, and first-time
+  infrastructure setup
 
 ### Runbooks
 
 Operational procedures for production.
 
-- [Postgres backup and restore](runbooks/postgres-backup-restore.md), backup mechanisms, RPO/RTO, and the tested restore procedure
-- [Monitoring and alerting](runbooks/monitoring.md), error tracking, uptime, Postgres metrics, and alert setup
+- [Postgres backup and restore](runbooks/postgres-backup-restore.md), backup
+  mechanisms, RPO/RTO, and the tested restore procedure
+- [Monitoring and alerting](runbooks/monitoring.md), error tracking, uptime,
+  Postgres metrics, and alert setup
 
 ### Policies
 
 What the project promises to integrators and how it handles data.
 
-- [API stability and deprecation](api-stability.md), what `/v1` guarantees and how breaking changes are signaled
-- [Data retention](data-retention.md), how long sessions, analytics, and user content are kept, and what deletion removes
-- [Analytics](analytics.md), the privacy-friendly, off-by-default usage analytics seam
+- [API stability and deprecation](api-stability.md), what `/v1` guarantees and
+  how breaking changes are signaled
+- [Data retention](data-retention.md), how long sessions, analytics, and user
+  content are kept, and what deletion removes
+- [Analytics](analytics.md), the privacy-friendly, off-by-default usage
+  analytics seam
 
 ### Decisions
 
-- [Architecture Decision Records](decisions/README.md), the durable
-  record of why the project is shaped the way it is
+- [Architecture Decision Records](decisions/README.md), the durable record of
+  why the project is shaped the way it is
 
 ### Roadmap
 
@@ -67,17 +81,17 @@ What the project promises to integrators and how it handles data.
 Three places hold project knowledge. Each has a job:
 
 - **`README.md`** at the repo root, the front door. Quick start, project
-  description, links into `docs/`. The audience is anyone landing on the
-  GitHub page for the first time.
+  description, links into `docs/`. The audience is anyone landing on the GitHub
+  page for the first time.
 - **`docs/`** (this directory), depth. Architecture, recipes, glossary,
   decisions. Reviewed and versioned. The audience is contributors who have
   decided to dig in.
-- **`planning/`** (gitignored, local-only), working memory. Roadmap notes,
-  open questions, session logs. Not reviewed, not shared. The audience is
-  whoever is actively driving the project, including LLM sessions.
+- **`planning/`** (gitignored, local-only), working memory. Roadmap notes, open
+  questions, session logs. Not reviewed, not shared. The audience is whoever is
+  actively driving the project, including LLM sessions.
 
-Anything in `planning/` that becomes settled should graduate to either
-`docs/` or `README.md`. The goal is for `planning/` to stay small.
+Anything in `planning/` that becomes settled should graduate to either `docs/`
+or `README.md`. The goal is for `planning/` to stay small.
 
-Diagrams in this directory use [Mermaid](https://mermaid.js.org/), which
-renders natively on GitHub.
+Diagrams in this directory use [Mermaid](https://mermaid.js.org/), which renders
+natively on GitHub.

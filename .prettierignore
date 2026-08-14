@@ -1,0 +1,19 @@
+# This root Prettier config governs Markdown only (see task format:docs).
+# Everything below is either not ours to format or must never be touched.
+
+# Local-only working notes (gitignored) -- never reformat these.
+planning/
+
+# Dependencies, virtualenvs, and provider caches (node_modules is ignored by
+# default; .venv and .terraform are not, and both are full of vendored docs).
+**/node_modules/
+**/.venv/
+.venv/
+**/.terraform/
+
+# Build and tool outputs
+**/dist/
+**/coverage/
+**/storybook-static/
+**/.turbo/
+backups/

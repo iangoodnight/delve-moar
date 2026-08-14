@@ -31,7 +31,8 @@ assignees: []
 <!-- Fill in whichever apply. -->
 
 - App affected: <!-- web, api, cli -->
-- Version or commit: <!-- e.g. main@abc1234, or version from package.json / pyproject.toml / go.mod -->
+- Version or commit:
+  <!-- e.g. main@abc1234, or version from package.json / pyproject.toml / go.mod -->
 - OS: <!-- macOS 14, Ubuntu 24.04, Windows 11 -->
 - Browser (if web): <!-- e.g. Chrome 130 -->
 - Node, Python, or Go version (if relevant):

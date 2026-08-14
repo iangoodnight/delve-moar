@@ -75,6 +75,17 @@ repos:
         files: ^apps/web/.*\.(ts|tsx|css|json)$
         stages: [pre-commit]
 
+  # ── Markdown — format (prettier, proseWrap at 80) ─────────────────────────
+  - repo: local
+    hooks:
+      - id: prettier-docs
+        name: prettier (docs)
+        language: system
+        entry: pnpm exec prettier --write
+        files: \.md$
+        exclude: ^planning/
+        stages: [pre-commit]
+
   # ── Commit message — commitlint ──────────────────────────────────────────
   - repo: local
     hooks:
