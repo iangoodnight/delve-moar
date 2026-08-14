@@ -1,7 +1,7 @@
 # Local development
 
-Reference card for day-to-day work in DelveMoar. For first-time setup, see
-the [Quick start](../../README.md#quick-start) in the root README.
+Reference card for day-to-day work in DelveMoar. For first-time setup, see the
+[Quick start](../../README.md#quick-start) in the root README.
 
 ## One-time setup
 
@@ -13,62 +13,62 @@ task setup                 # git hooks, codegen tools, and all app deps
 ```
 
 `task setup` installs the pre-commit hooks at three stages (`pre-commit`,
-`commit-msg`, and `pre-push`), the oapi-codegen tool, and the
-JavaScript, Python (uv), and Go dependencies. The hooks run
-automatically on the corresponding git operations; see
-[hooks](#hooks) below.
+`commit-msg`, and `pre-push`), the oapi-codegen tool, and the JavaScript, Python
+(uv), and Go dependencies. The hooks run automatically on the corresponding git
+operations; see [hooks](#hooks) below.
 
 ## Day to day
 
-| To...                                | Run                       |
-| ------------------------------------ | ------------------------- |
-| Start everything (postgres, api, web) | `task dev`                |
-| Start only postgres + api            | `task dev:api`            |
-| Start only postgres                  | `task db:up`              |
-| Stop only postgres                   | `task db:down`            |
-| Lint everything                      | `task lint`               |
-| Lint one app                         | `task lint:api`, `task lint:web`, `task lint:cli`, `task lint:shell` |
-| Format everything                    | `task format`             |
-| Format one app                       | `task format:api`, `task format:web`, `task format:cli`, `task format:shell` |
-| Test everything                      | `task test`               |
-| Test one suite                       | `task test:api`, `task test:web`, `task test:cli`, `task test:shell` |
-| Build everything                     | `task build`              |
-| Regenerate OpenAPI types             | `task gen:types`          |
-| Apply pending DB migrations          | `task db:migrate`          |
-| Roll back the last migration         | `task db:rollback`         |
-| Create a new DB migration            | `task db:revision -- "..."`|
+| To...                                 | Run                                                                          |
+| ------------------------------------- | ---------------------------------------------------------------------------- |
+| Start everything (postgres, api, web) | `task dev`                                                                   |
+| Start only postgres + api             | `task dev:api`                                                               |
+| Start only postgres                   | `task db:up`                                                                 |
+| Stop only postgres                    | `task db:down`                                                               |
+| Lint everything                       | `task lint`                                                                  |
+| Lint one app                          | `task lint:api`, `task lint:web`, `task lint:cli`, `task lint:shell`         |
+| Format everything                     | `task format`                                                                |
+| Format one app                        | `task format:api`, `task format:web`, `task format:cli`, `task format:shell` |
+| Test everything                       | `task test`                                                                  |
+| Test one suite                        | `task test:api`, `task test:web`, `task test:cli`, `task test:shell`         |
+| Build everything                      | `task build`                                                                 |
+| Regenerate OpenAPI types              | `task gen:types`                                                             |
+| Apply pending DB migrations           | `task db:migrate`                                                            |
+| Roll back the last migration          | `task db:rollback`                                                           |
+| Create a new DB migration             | `task db:revision -- "..."`                                                  |
 
 Full list: `task --list`.
 
 ## Service URLs (when `task dev` is up)
 
-| Service          | URL                              |
-| ---------------- | -------------------------------- |
-| API              | http://localhost:8000            |
-| Swagger UI       | http://localhost:8000/docs       |
-| ReDoc            | http://localhost:8000/redoc      |
-| OpenAPI JSON     | http://localhost:8000/openapi.json |
-| Web app (Vite)   | http://localhost:5173            |
-| Postgres         | localhost:5432 (per `.env`)      |
+| Service        | URL                                |
+| -------------- | ---------------------------------- |
+| API            | http://localhost:8000              |
+| Swagger UI     | http://localhost:8000/docs         |
+| ReDoc          | http://localhost:8000/redoc        |
+| OpenAPI JSON   | http://localhost:8000/openapi.json |
+| Web app (Vite) | http://localhost:5173              |
+| Postgres       | localhost:5432 (per `.env`)        |
 
 ## Hooks
 
-`task setup` installs three hook stages via [pre-commit](https://pre-commit.com/):
+`task setup` installs three hook stages via
+[pre-commit](https://pre-commit.com/):
 
-| Stage         | What runs                                                    |
-| ------------- | ------------------------------------------------------------ |
-| `pre-commit`  | trailing whitespace, end-of-file fixer, check yaml/json/toml, no large files, shellcheck, shfmt, ruff (check + format), golangci-lint (cli), eslint (web), prettier (web) |
-| `commit-msg`  | commitlint (Conventional Commits)                            |
-| `pre-push`    | pytest (api), vitest (web), go test (cli)                    |
-| skip a hook   | `git commit --no-verify` for `pre-commit`/`commit-msg` (please don't); for `pre-push`, `git push --no-verify` |
+| Stage        | What runs                                                                                                                                                                 |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pre-commit` | trailing whitespace, end-of-file fixer, check yaml/json/toml, no large files, shellcheck, shfmt, ruff (check + format), golangci-lint (cli), eslint (web), prettier (web) |
+| `commit-msg` | commitlint (Conventional Commits)                                                                                                                                         |
+| `pre-push`   | pytest (api), vitest (web), go test (cli)                                                                                                                                 |
+| skip a hook  | `git commit --no-verify` for `pre-commit`/`commit-msg` (please don't); for `pre-push`, `git push --no-verify`                                                             |
 
-Skipping hooks is a code smell. The hooks exist because CI runs the same
-checks; skipping locally just delays the failure.
+Skipping hooks is a code smell. The hooks exist because CI runs the same checks;
+skipping locally just delays the failure.
 
 ## Database
 
-The local database is a Docker container managed by Docker Compose. State
-lives in a named volume and survives container restarts.
+The local database is a Docker container managed by Docker Compose. State lives
+in a named volume and survives container restarts.
 
 ### Reset the database
 
@@ -82,8 +82,8 @@ task db:migrate
 task seed:srd       # all SRD data, or use seed:srd:monsters / spells / items
 ```
 
-The `init.sql` in `infra/postgres/` runs once when the volume is first
-created; it sets up extensions like `uuid-ossp` and `pgcrypto`.
+The `init.sql` in `infra/postgres/` runs once when the volume is first created;
+it sets up extensions like `uuid-ossp` and `pgcrypto`.
 
 ### Connect with psql
 
@@ -103,8 +103,8 @@ task seed:srd:spells        # just spells
 task seed:srd:items         # equipment + magic items
 ```
 
-Source: [dnd5eapi.co](https://www.dnd5eapi.co). Idempotent. Re-running
-skips records that already exist.
+Source: [dnd5eapi.co](https://www.dnd5eapi.co). Idempotent. Re-running skips
+records that already exist.
 
 ## OpenAPI types
 
@@ -121,8 +121,8 @@ Commit any diff in:
 - `apps/cli/go.mod`, `apps/cli/go.sum` (only if Go deps changed)
 
 CI will fail your PR if the generated files drift. See
-[architecture/openapi-pipeline.md](../architecture/openapi-pipeline.md) for
-the full pipeline and the OpenAPI 3.0 downgrade quirk.
+[architecture/openapi-pipeline.md](../architecture/openapi-pipeline.md) for the
+full pipeline and the OpenAPI 3.0 downgrade quirk.
 
 ## Migrations
 
@@ -145,16 +145,16 @@ cd apps/api && uv run alembic current
 cd apps/api && uv run alembic history
 ```
 
-Always inspect autogenerated migrations before committing them. Alembic
-catches schema diffs but does not always reach the right SQL.
+Always inspect autogenerated migrations before committing them. Alembic catches
+schema diffs but does not always reach the right SQL.
 
 ## Common gotchas
 
 ### "Port 8000 / 5173 / 5432 is already in use"
 
-Another `task dev` (or stray uvicorn / vite / postgres) is already
-running. `task dev` has no auto-stop. Either find and kill the other
-process, or use `task dev:api` if you only need the API.
+Another `task dev` (or stray uvicorn / vite / postgres) is already running.
+`task dev` has no auto-stop. Either find and kill the other process, or use
+`task dev:api` if you only need the API.
 
 ### "Container exits immediately on `task dev`"
 
@@ -162,38 +162,38 @@ Most often, a missing `.env`. Run `cp .env.example .env` once.
 
 ### Pre-commit installed but not running
 
-Run `task setup` again (it is idempotent). If hooks still do not run,
-check `.git/hooks/pre-commit` exists and is executable.
+Run `task setup` again (it is idempotent). If hooks still do not run, check
+`.git/hooks/pre-commit` exists and is executable.
 
 ### `pnpm install` is slow or fails
 
-This repo uses pnpm workspaces. Install from the repo root, not from
-inside an app:
+This repo uses pnpm workspaces. Install from the repo root, not from inside an
+app:
 
 ```sh
 # in repo root
 pnpm install
 ```
 
-Inside `apps/web`, `pnpm install` will work but is slower because pnpm
-walks up to the workspace root anyway.
+Inside `apps/web`, `pnpm install` will work but is slower because pnpm walks up
+to the workspace root anyway.
 
 ### Web tests cannot find a generated type
 
-You changed the API but did not regenerate. Run `task gen:types`. If you
-have not started the API since the change, `gen:types` will start it for
-you in the background.
+You changed the API but did not regenerate. Run `task gen:types`. If you have
+not started the API since the change, `gen:types` will start it for you in the
+background.
 
 ### Pytest passes locally but fails on CI
 
-Two common causes: a test relies on local DB state (CI does not have
-seeded data; tests that need data should use fixtures), or a test relies
-on local environment variables not in `.env.example`.
+Two common causes: a test relies on local DB state (CI does not have seeded
+data; tests that need data should use fixtures), or a test relies on local
+environment variables not in `.env.example`.
 
 ### "Architectural boundary" ESLint error in the web app
 
-You imported across features, or from a layer that is not allowed to
-import from the source layer. See
+You imported across features, or from a layer that is not allowed to import from
+the source layer. See
 [architecture/web-features-layout.md](../architecture/web-features-layout.md)
 for what is allowed.
 

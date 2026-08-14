@@ -11,12 +11,12 @@ This walkthrough adds a new resource end-to-end: a `conditions` catalog
 6. Regenerate the OpenAPI client code
 7. Consume the endpoint from the web app
 
-By the end, `/v1/conditions` will return a paginated list of conditions,
-typed end-to-end from Python to TypeScript.
+By the end, `/v1/conditions` will return a paginated list of conditions, typed
+end-to-end from Python to TypeScript.
 
-The example is real but compact; in a production change you would also
-write tests at each layer. Tests are mentioned where they belong but not
-fully specified.
+The example is real but compact; in a production change you would also write
+tests at each layer. Tests are mentioned where they belong but not fully
+specified.
 
 ## Before you start
 
@@ -26,16 +26,16 @@ Make sure your environment is up:
 task dev:api          # postgres + API
 ```
 
-Open the existing `monsters` resource in another window. We will mirror
-its shape:
+Open the existing `monsters` resource in another window. We will mirror its
+shape:
 
 - `apps/api/app/models/monster.py`
 - `apps/api/app/schemas/monsters.py`
 - `apps/api/app/routers/monsters.py`
 
-Mirroring an existing resource is the fastest way to stay consistent with
-the conventions already in use (pagination, error handling, response
-envelope, OpenAPI tags).
+Mirroring an existing resource is the fastest way to stay consistent with the
+conventions already in use (pagination, error handling, response envelope,
+OpenAPI tags).
 
 ## Step 1: define the model
 
@@ -80,8 +80,8 @@ class Condition(Base):
     )
 ```
 
-Then export it from `apps/api/app/models/__init__.py` so Alembic's
-autogenerate finds it:
+Then export it from `apps/api/app/models/__init__.py` so Alembic's autogenerate
+finds it:
 
 ```python
 from app.models.condition import Condition  # noqa: F401
@@ -94,8 +94,8 @@ cd apps/api
 uv run alembic revision --autogenerate -m "add conditions table"
 ```
 
-Open the generated file under `apps/api/alembic/versions/` and inspect
-it. Autogenerate is good but not perfect; check that:
+Open the generated file under `apps/api/alembic/versions/` and inspect it.
+Autogenerate is good but not perfect; check that:
 
 - The `op.create_table` matches the model
 - Server defaults like `gen_random_uuid()` are present
@@ -231,11 +231,11 @@ async def get_condition(
     return ConditionDetail.model_validate(condition)
 ```
 
-The pagination, ordering, and search helpers (`Pagination`,
-`ordering_dep`, `search_dep`, `fetch_page`, `paginate`, `build_links`)
-already exist; they handle the White House API standards envelope. The
-`get_or_404` helper raises a typed `HTTPException` that the global
-exception handlers turn into a `404` `ErrorResponse`.
+The pagination, ordering, and search helpers (`Pagination`, `ordering_dep`,
+`search_dep`, `fetch_page`, `paginate`, `build_links`) already exist; they
+handle the White House API standards envelope. The `get_or_404` helper raises a
+typed `HTTPException` that the global exception handlers turn into a `404`
+`ErrorResponse`.
 
 ## Step 5: mount the router under `/v1/`
 
@@ -270,36 +270,35 @@ modified:   packages/api-types/src/index.ts
 modified:   apps/cli/internal/apiclient/client.gen.go
 ```
 
-(Also possibly `apps/cli/go.mod` and `go.sum` if a new oapi-codegen
-runtime import was needed.) Commit them.
+(Also possibly `apps/cli/go.mod` and `go.sum` if a new oapi-codegen runtime
+import was needed.) Commit them.
 
 For the full pipeline, see
 [architecture/openapi-pipeline.md](../architecture/openapi-pipeline.md).
 
 ## Step 7: consume from the web app
 
-The web app uses [TanStack Query](https://tanstack.com/query) over a
-typed wrapper around the generated client. Mirror an existing
-resource: the `spells` feature (`apps/web/src/features/spells/`) is
-the closest match for a paginated list.
+The web app uses [TanStack Query](https://tanstack.com/query) over a typed
+wrapper around the generated client. Mirror an existing resource: the `spells`
+feature (`apps/web/src/features/spells/`) is the closest match for a paginated
+list.
 
 ### The data layer
 
-Inside the feature, a query-options factory is the unit of data
-access (not bare `useQuery` calls scattered through components). For a
-paginated list, mirror `features/spells/api/get-spells.ts`:
+Inside the feature, a query-options factory is the unit of data access (not bare
+`useQuery` calls scattered through components). For a paginated list, mirror
+`features/spells/api/get-spells.ts`:
 
 ```ts
 // apps/web/src/features/conditions/api/get-conditions.ts
-import type { components } from '@delve-moar/api-types';
-import { infiniteQueryOptions } from '@tanstack/react-query';
+import type { components } from "@delve-moar/api-types";
+import { infiniteQueryOptions } from "@tanstack/react-query";
 
-import { apiClient } from '@/lib/api-client';
+import { apiClient } from "@/lib/api-client";
 
-export type ConditionSummary =
-  components['schemas']['ConditionSummary'];
+export type ConditionSummary = components["schemas"]["ConditionSummary"];
 export type ConditionListResponse =
-  components['schemas']['PaginatedResultset_ConditionSummary_'];
+  components["schemas"]["PaginatedResultset_ConditionSummary_"];
 
 export interface ConditionFilters {
   // `| undefined` required for `exactOptionalPropertyTypes: true`
@@ -312,7 +311,7 @@ function getConditions(
   filters: ConditionFilters,
   offset = 0,
 ): Promise<ConditionListResponse> {
-  return apiClient.get<ConditionListResponse>('/v1/conditions', {
+  return apiClient.get<ConditionListResponse>("/v1/conditions", {
     params: {
       ...(filters.search && { search: filters.search }),
       limit: LIMIT,
@@ -321,11 +320,9 @@ function getConditions(
   });
 }
 
-export function getConditionsInfiniteQueryOptions(
-  filters: ConditionFilters,
-) {
+export function getConditionsInfiniteQueryOptions(filters: ConditionFilters) {
   return infiniteQueryOptions({
-    queryKey: ['conditions', 'list', filters] as const,
+    queryKey: ["conditions", "list", filters] as const,
     queryFn: ({ pageParam }) => getConditions(filters, pageParam),
     initialPageParam: 0,
     getNextPageParam: (lastPage) => {
@@ -336,25 +333,22 @@ export function getConditionsInfiniteQueryOptions(
 }
 ```
 
-Notice the conventions: `apiClient.get<T>()` returns typed data
-directly (no `res.data` unwrap); pagination is offset/limit driven by
-`metadata.resultset`, not a `page` number; and filter fields are
-typed `| undefined` for `exactOptionalPropertyTypes`. Re-export from a
-barrel so consumers import from `@/features/<x>/api`:
+Notice the conventions: `apiClient.get<T>()` returns typed data directly (no
+`res.data` unwrap); pagination is offset/limit driven by `metadata.resultset`,
+not a `page` number; and filter fields are typed `| undefined` for
+`exactOptionalPropertyTypes`. Re-export from a barrel so consumers import from
+`@/features/<x>/api`:
 
 ```ts
 // apps/web/src/features/conditions/api/index.ts
-export type {
-  ConditionFilters,
-  ConditionSummary,
-} from './get-conditions';
-export { getConditionsInfiniteQueryOptions } from './get-conditions';
+export type { ConditionFilters, ConditionSummary } from "./get-conditions";
+export { getConditionsInfiniteQueryOptions } from "./get-conditions";
 ```
 
 ### Register the route
 
-There is no `src/pages/` directory. A route is its own lazy module
-under `src/app/routes/<resource>/`, plus two registrations.
+There is no `src/pages/` directory. A route is its own lazy module under
+`src/app/routes/<resource>/`, plus two registrations.
 
 Add the path to `src/config/paths.ts`:
 
@@ -379,19 +373,18 @@ Add a lazy child to the `AppRoot` children in `src/app/router.tsx`:
 
 ### The route module
 
-The module is the route's default export and consumes the feature's
-query options. A compact version (a real feature splits the list into
-presentational components under `features/conditions/components/`, as
-`spells` does):
+The module is the route's default export and consumes the feature's query
+options. A compact version (a real feature splits the list into presentational
+components under `features/conditions/components/`, as `spells` does):
 
 ```tsx
 // apps/web/src/app/routes/conditions/conditions.tsx
-import { useInfiniteQuery } from '@tanstack/react-query';
+import { useInfiniteQuery } from "@tanstack/react-query";
 
-import { Head } from '@/components/seo/head';
-import { Column } from '@/components/ui/layout';
-import { H1 } from '@/components/ui/typography';
-import { getConditionsInfiniteQueryOptions } from '@/features/conditions/api';
+import { Head } from "@/components/seo/head";
+import { Column } from "@/components/ui/layout";
+import { H1 } from "@/components/ui/typography";
+import { getConditionsInfiniteQueryOptions } from "@/features/conditions/api";
 
 export default function Conditions() {
   const { data, isError, isLoading } = useInfiniteQuery(
@@ -418,43 +411,43 @@ export default function Conditions() {
 
 Two things to notice:
 
-- The module imports from `@/features/conditions/...`, `@/lib/...`,
-  and shared `@/components/...`, but never from another feature. That
-  is the bulletproof boundary in action; see
+- The module imports from `@/features/conditions/...`, `@/lib/...`, and shared
+  `@/components/...`, but never from another feature. That is the bulletproof
+  boundary in action; see
   [architecture/web-features-layout.md](../architecture/web-features-layout.md).
-- Types come from the generated `@delve-moar/api-types` package, not
-  from hand-written interfaces. If the API shape changes and you forget
-  to regenerate, TypeScript will tell you on the next build.
+- Types come from the generated `@delve-moar/api-types` package, not from
+  hand-written interfaces. If the API shape changes and you forget to
+  regenerate, TypeScript will tell you on the next build.
 
 ## What we did not cover
 
-For brevity, the walkthrough left out these layers. In a real PR you
-would address each:
+For brevity, the walkthrough left out these layers. In a real PR you would
+address each:
 
-- **API tests.** A `tests/test_conditions.py` exercising the list and
-  detail endpoints, with at least one fixture row.
-- **Seed script.** Most likely a new function in
-  `apps/api/scripts/seed_srd.py` to populate from
-  [dnd5eapi.co](https://www.dnd5eapi.co), wired into `task seed:srd`.
-- **Web tests.** A `__tests__/conditions-list-page.test.tsx` using
-  Testing Library.
+- **API tests.** A `tests/test_conditions.py` exercising the list and detail
+  endpoints, with at least one fixture row.
+- **Seed script.** Most likely a new function in `apps/api/scripts/seed_srd.py`
+  to populate from [dnd5eapi.co](https://www.dnd5eapi.co), wired into
+  `task seed:srd`.
+- **Web tests.** A `__tests__/conditions-list-page.test.tsx` using Testing
+  Library.
 - **CLI.** If conditions should be browsable from the CLI too, add a
-  `conditions` subcommand under `apps/cli/cmd/` that uses the regenerated
-  Go client.
-- **Navigation link.** Step 7 registered the route; surfacing it in
-  the primary navigation shell (the header and mobile menu) is a
-  separate edit.
-- **Hover prefetch.** Cards and nav links warm their destination on
-  hover, so a new resource's `api/` module exports `prefetch*` helpers
-  next to its query-options factory, and its cards and nav links wire
-  `useHoverPrefetch`. See the prefetch section in
+  `conditions` subcommand under `apps/cli/cmd/` that uses the regenerated Go
+  client.
+- **Navigation link.** Step 7 registered the route; surfacing it in the primary
+  navigation shell (the header and mobile menu) is a separate edit.
+- **Hover prefetch.** Cards and nav links warm their destination on hover, so a
+  new resource's `api/` module exports `prefetch*` helpers next to its
+  query-options factory, and its cards and nav links wire `useHoverPrefetch`.
+  See the prefetch section in
   [web-features-layout.md](../architecture/web-features-layout.md).
 
 ## Where to look next
 
 - [Architecture overview](../architecture/README.md)
-- [OpenAPI pipeline](../architecture/openapi-pipeline.md), the codegen step in detail
+- [OpenAPI pipeline](../architecture/openapi-pipeline.md), the codegen step in
+  detail
 - [Web features layout](../architecture/web-features-layout.md)
 - [Local development](local-development.md), commands you ran above
-- An existing resource (`monsters`, `spells`, `items`) for a fully
-  fleshed-out example with tests
+- An existing resource (`monsters`, `spells`, `items`) for a fully fleshed-out
+  example with tests

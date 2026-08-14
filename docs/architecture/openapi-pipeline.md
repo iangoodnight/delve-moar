@@ -1,23 +1,23 @@
 # OpenAPI pipeline
 
-The API's `openapi.json` is the single source of truth for the contract
-between the server and its clients. The web app's TypeScript types and the
-CLI's Go HTTP client are both generated from it. CI fails any PR that lets
-the generated files drift.
+The API's `openapi.json` is the single source of truth for the contract between
+the server and its clients. The web app's TypeScript types and the CLI's Go HTTP
+client are both generated from it. CI fails any PR that lets the generated files
+drift.
 
-This document explains how the pipeline works, when to run it, and what to
-do when it breaks.
+This document explains how the pipeline works, when to run it, and what to do
+when it breaks.
 
 ## Why a generated client
 
-The shape of every request and response is defined once, in the API's
-Pydantic schemas. The clients then receive that shape automatically:
+The shape of every request and response is defined once, in the API's Pydantic
+schemas. The clients then receive that shape automatically:
 
 - The web app gets compile-time type safety for every endpoint without
   hand-writing TypeScript that mirrors the Python.
 - The CLI gets a typed Go HTTP client without hand-writing structs.
-- Drift between client and server is impossible to commit, because CI
-  re-runs the generator and diffs the output.
+- Drift between client and server is impossible to commit, because CI re-runs
+  the generator and diffs the output.
 
 The cost is that two files in the tree are generated, never hand-edited:
 
@@ -39,23 +39,21 @@ flowchart LR
     E --> F[Stop uvicorn<br/>via trap on EXIT]
 ```
 
-1. **Start the API in the background.** `uv run uvicorn app.main:app` on
-   port 8000, log level `warning`. The script captures the PID and sets a
-   `trap` so the server is killed on exit, even if a later step fails.
-2. **Wait for `/health` to respond.** Up to 30 seconds. If the API never
-   becomes healthy, the script bails with a pointer to check `apps/api`
-   for errors.
+1. **Start the API in the background.** `uv run uvicorn app.main:app` on port
+   8000, log level `warning`. The script captures the PID and sets a `trap` so
+   the server is killed on exit, even if a later step fails.
+2. **Wait for `/health` to respond.** Up to 30 seconds. If the API never becomes
+   healthy, the script bails with a pointer to check `apps/api` for errors.
 3. **Generate TypeScript types.** `pnpm dlx openapi-typescript` reads
    `http://localhost:8000/openapi.json` and writes
    `packages/api-types/src/index.ts`. The web app imports from
    `@delve-moar/api-types`, which is a workspace package.
-4. **Generate the Go client.** `oapi-codegen -config .oapi-codegen.yaml`
-   reads the same URL and writes
-   `apps/cli/internal/apiclient/client.gen.go`. The config (in
-   `apps/cli/.oapi-codegen.yaml`) sets `package: apiclient` and emits
+4. **Generate the Go client.** `oapi-codegen -config .oapi-codegen.yaml` reads
+   the same URL and writes `apps/cli/internal/apiclient/client.gen.go`. The
+   config (in `apps/cli/.oapi-codegen.yaml`) sets `package: apiclient` and emits
    both models and a client.
-5. **Sync Go modules.** `go mod tidy` in `apps/cli` so any new
-   `oapi-codegen` runtime imports land in `go.mod` and `go.sum`.
+5. **Sync Go modules.** `go mod tidy` in `apps/cli` so any new `oapi-codegen`
+   runtime imports land in `go.mod` and `go.sum`.
 
 When you regenerate, four files may change. Commit any that diff:
 
@@ -83,20 +81,20 @@ You should run it any time you change:
 - A FastAPI router signature, response model, query params, or status codes
 - The OpenAPI metadata (title, version, tags, descriptions) in
   `apps/api/app/main.py`
-- Anything that changes how the schema is serialized (e.g. the OpenAPI
-  3.0 downgrade in `apps/api/app/openapi.py`)
+- Anything that changes how the schema is serialized (e.g. the OpenAPI 3.0
+  downgrade in `apps/api/app/openapi.py`)
 
 Forgetting is harmless locally, because CI catches it.
 
 ## The OpenAPI 3.1 to 3.0.3 downgrade
 
-FastAPI plus Pydantic v2 emits OpenAPI 3.1 by default. `oapi-codegen` does
-not yet support 3.1 (tracked in
+FastAPI plus Pydantic v2 emits OpenAPI 3.1 by default. `oapi-codegen` does not
+yet support 3.1 (tracked in
 [oapi-codegen #373](https://github.com/oapi-codegen/oapi-codegen/issues/373)),
 so the API downgrades the schema to 3.0.3 at serve time.
 
-The implementation lives in `apps/api/app/openapi.py` and is wired up at
-the bottom of `apps/api/app/main.py`:
+The implementation lives in `apps/api/app/openapi.py` and is wired up at the
+bottom of `apps/api/app/main.py`:
 
 ```python
 _base_openapi = app.openapi
@@ -107,18 +105,18 @@ def _openapi_30() -> dict[str, Any]:
 app.openapi = _openapi_30  # type: ignore[method-assign]
 ```
 
-This is a temporary workaround. Remove the override, the helper, and this
-note once `oapi-codegen` ships 3.1 support.
+This is a temporary workaround. Remove the override, the helper, and this note
+once `oapi-codegen` ships 3.1 support.
 
-If you see Go codegen fail with a parser error on your local machine but
-the same schema works in the browser at `/docs`, the most likely cause is
-that the downgrade helper is mishandling something new in your schema.
-Open an issue and tag it `area:api`.
+If you see Go codegen fail with a parser error on your local machine but the
+same schema works in the browser at `/docs`, the most likely cause is that the
+downgrade helper is mishandling something new in your schema. Open an issue and
+tag it `area:api`.
 
 ## CI drift check
 
-The `gen-types-check` job in `.github/workflows/ci.yml` runs the same
-script on every PR, then:
+The `gen-types-check` job in `.github/workflows/ci.yml` runs the same script on
+every PR, then:
 
 ```sh
 git diff --exit-code \
@@ -135,28 +133,28 @@ Run 'task gen:types' locally and commit the updated files.
 
 Fix is mechanical: run `task gen:types` locally, commit the diff, push.
 
-The job depends on `lint-and-test-api` (so a broken API does not also
-flood the queue with confusing drift failures).
+The job depends on `lint-and-test-api` (so a broken API does not also flood the
+queue with confusing drift failures).
 
 ## Common failure modes
 
 ### `task gen:types` hangs forever
 
-The API is not becoming healthy. Check the script output for the API's
-own log messages, or run the API directly:
+The API is not becoming healthy. Check the script output for the API's own log
+messages, or run the API directly:
 
 ```sh
 cd apps/api && uv run uvicorn app.main:app --port 8000
 ```
 
-Most likely: a Python import error, a config validation error, or
-postgres not reachable. The script does not need a database connection
-itself, but `app.main` calls `init_db` at startup.
+Most likely: a Python import error, a config validation error, or postgres not
+reachable. The script does not need a database connection itself, but `app.main`
+calls `init_db` at startup.
 
 ### `pnpm dlx openapi-typescript` fails with a network error
 
-`pnpm dlx` resolves the package on first run. Behind a corporate proxy
-or with a stale registry mirror, it will fail. Try:
+`pnpm dlx` resolves the package on first run. Behind a corporate proxy or with a
+stale registry mirror, it will fail. Try:
 
 ```sh
 pnpm dlx openapi-typescript@latest --version
@@ -174,15 +172,14 @@ Make sure `$(go env GOPATH)/bin` is in your `$PATH`.
 
 ### CI drift check passes locally but fails on CI
 
-Usually whitespace or line endings. The repo enforces LF via
-`.gitattributes`. Re-run `task gen:types`, check `git status`, and confirm
-nothing else (autoformatters, IDE plugins) is modifying the generated
-files on save.
+Usually whitespace or line endings. The repo enforces LF via `.gitattributes`.
+Re-run `task gen:types`, check `git status`, and confirm nothing else
+(autoformatters, IDE plugins) is modifying the generated files on save.
 
 ### You hand-edited a generated file by accident
 
-Re-run `task gen:types` to overwrite. Both generated files have a
-"do not edit" comment at the top for this reason.
+Re-run `task gen:types` to overwrite. Both generated files have a "do not edit"
+comment at the top for this reason.
 
 ## Where to look next
 

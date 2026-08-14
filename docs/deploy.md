@@ -2,57 +2,55 @@
 
 DelveMoar runs on two platforms:
 
-| Layer | Platform | URL |
-|---|---|---|
-| Web (SPA) | Vercel (Hobby) | `https://delvemoar.com` |
-| API | Fly.io (`delvemoar-api`) | `https://api.delvemoar.com` |
-| Postgres | Fly Postgres (`delvemoar-db`) | private network only |
+| Layer     | Platform                      | URL                         |
+| --------- | ----------------------------- | --------------------------- |
+| Web (SPA) | Vercel (Hobby)                | `https://delvemoar.com`     |
+| API       | Fly.io (`delvemoar-api`)      | `https://api.delvemoar.com` |
+| Postgres  | Fly Postgres (`delvemoar-db`) | private network only        |
 
 ## How production deploys work
 
 ### Web (Vercel)
 
-Vercel's GitHub integration watches `main`. Every push to `main`
-triggers a production deploy automatically. Preview deploys run on
-every PR branch and on `dev`. No GitHub Actions step is needed for the
-web side.
+Vercel's GitHub integration watches `main`. Every push to `main` triggers a
+production deploy automatically. Preview deploys run on every PR branch and on
+`dev`. No GitHub Actions step is needed for the web side.
 
 ### API (Fly.io)
 
-The CD workflow (`.github/workflows/deploy.yml`) fires when a GitHub
-Release is published on `main`. Steps in order:
+The CD workflow (`.github/workflows/deploy.yml`) fires when a GitHub Release is
+published on `main`. Steps in order:
 
-1. Build the Docker image from `apps/api/Dockerfile`, tagged with the
-   git SHA (`registry.fly.io/delvemoar-api:<sha>`). Never `latest`.
+1. Build the Docker image from `apps/api/Dockerfile`, tagged with the git SHA
+   (`registry.fly.io/delvemoar-api:<sha>`). Never `latest`.
 2. Push the image to the Fly registry.
-3. Run `alembic upgrade head` in an ephemeral Fly machine using the
-   new image. If migrations fail the workflow exits non-zero and the
-   deploy is aborted before traffic swaps over.
+3. Run `alembic upgrade head` in an ephemeral Fly machine using the new image.
+   If migrations fail the workflow exits non-zero and the deploy is aborted
+   before traffic swaps over.
 4. Deploy via `flyctl deploy --image <sha>`.
 
-The CD workflow requires one secret in the `production` GitHub
-environment: `FLY_API_TOKEN`.
+The CD workflow requires one secret in the `production` GitHub environment:
+`FLY_API_TOKEN`.
 
 ## Release ritual
 
-See [CONTRIBUTING.md](../CONTRIBUTING.md#cutting-a-release-manual) for
-the full step-by-step. In brief:
+See [CONTRIBUTING.md](../CONTRIBUTING.md#cutting-a-release-manual) for the full
+step-by-step. In brief:
 
 1. Bump `VERSION` + date the changelog on `dev` in a PR.
 2. Open a `dev` -> `main` Release PR titled `chore(release): vX.Y.Z`.
 3. Merge it as a merge commit, never a squash.
 4. Tag the merge commit: `git tag vX.Y.Z && git push origin vX.Y.Z`.
-5. Create a GitHub Release pointing at the tag. This triggers the CD
-   workflow.
-6. Back-merge `main` into `dev` from a dedicated branch (never `main`
-   itself as the PR head), so the next release stays conflict-free.
+5. Create a GitHub Release pointing at the tag. This triggers the CD workflow.
+6. Back-merge `main` into `dev` from a dedicated branch (never `main` itself as
+   the PR head), so the next release stays conflict-free.
 
 ## Rollback
 
 ### Web rollback
 
-In the Vercel dashboard, open the project, find the previous
-deployment, and click "Promote to Production". Instant, no rebuild.
+In the Vercel dashboard, open the project, find the previous deployment, and
+click "Promote to Production". Instant, no rebuild.
 
 Alternatively via CLI:
 
@@ -62,8 +60,8 @@ vercel rollback --scope delvemoar
 
 ### API rollback
 
-Re-deploy a previous image SHA. The prior SHA is visible in the
-GitHub release history or the Fly deployment log.
+Re-deploy a previous image SHA. The prior SHA is visible in the GitHub release
+history or the Fly deployment log.
 
 ```bash
 flyctl deploy \
@@ -72,8 +70,7 @@ flyctl deploy \
   --ha=false
 ```
 
-If the rollback requires reversing a migration, run a down migration
-manually:
+If the rollback requires reversing a migration, run a down migration manually:
 
 ```bash
 fly ssh console --app delvemoar-api \
@@ -82,21 +79,20 @@ fly ssh console --app delvemoar-api \
 
 ## Backup and restore
 
-Database recovery (daily volume snapshots, on-demand logical dumps,
-and the tested restore procedure) lives in its own runbook:
-[Postgres backup and restore](runbooks/postgres-backup-restore.md).
-Take a logical backup before any release that runs a migration; the
-[release checklist](../CONTRIBUTING.md#cutting-a-release-manual) calls
-this out.
+Database recovery (daily volume snapshots, on-demand logical dumps, and the
+tested restore procedure) lives in its own runbook:
+[Postgres backup and restore](runbooks/postgres-backup-restore.md). Take a
+logical backup before any release that runs a migration; the
+[release checklist](../CONTRIBUTING.md#cutting-a-release-manual) calls this out.
 
 ## Seeding the database
 
 The SRD catalog (monsters, spells, items) is populated by
 `apps/api/scripts/seed_srd.py`, which pulls from the public
-[5e-bits/5e-database](https://github.com/5e-bits/5e-database) dataset
-over HTTP. The script ships in the deployed image, so seeding runs
-inside the container, with no local tunnel or working tree required.
-It is idempotent, so re-running it is safe.
+[5e-bits/5e-database](https://github.com/5e-bits/5e-database) dataset over HTTP.
+The script ships in the deployed image, so seeding runs inside the container,
+with no local tunnel or working tree required. It is idempotent, so re-running
+it is safe.
 
 Seed (or reseed) production over `fly ssh`:
 
@@ -105,26 +101,25 @@ fly ssh console --app delvemoar-api \
   -C "sh -c 'PYTHONPATH=. uv run python scripts/seed_srd.py all'"
 ```
 
-`all` seeds monsters, spells, and items; pass `monsters`, `spells`, or
-`items` to seed a single resource. The container needs outbound
-internet (the default on Fly) and `DATABASE_URL` (the attached
-Postgres sets it). This is the supported path for both first-deploy
-seeding and disaster-recovery reseeding (see the
+`all` seeds monsters, spells, and items; pass `monsters`, `spells`, or `items`
+to seed a single resource. The container needs outbound internet (the default on
+Fly) and `DATABASE_URL` (the attached Postgres sets it). This is the supported
+path for both first-deploy seeding and disaster-recovery reseeding (see the
 [backup and restore runbook](runbooks/postgres-backup-restore.md)).
 
 ## Infrastructure provisioning (first-time setup)
 
-These steps are one-time. The repo ships with the IaC config; apply it
-once to stand up the production infrastructure.
+These steps are one-time. The repo ships with the IaC config; apply it once to
+stand up the production infrastructure.
 
 ### Prerequisites
 
 - `flyctl` installed and authenticated (`fly auth login`)
 - `terraform` >= 1.5 installed
-- A [Terraform Cloud](https://app.terraform.io) free account, org
-  named `delvemoar`, workspace named `delvemoar-fly`
-- `TF_TOKEN_app_terraform_io` set in the shell (or in GitHub Actions
-  secrets for CI)
+- A [Terraform Cloud](https://app.terraform.io) free account, org named
+  `delvemoar`, workspace named `delvemoar-fly`
+- `TF_TOKEN_app_terraform_io` set in the shell (or in GitHub Actions secrets for
+  CI)
 
 ### Fly app and Postgres
 
@@ -153,8 +148,8 @@ terraform init
 terraform apply
 ```
 
-This provisions the Fly app record and dedicated IPv4/IPv6 addresses.
-Use the output `api_ipv4` and `api_ipv6` values when configuring DNS.
+This provisions the Fly app record and dedicated IPv4/IPv6 addresses. Use the
+output `api_ipv4` and `api_ipv6` values when configuring DNS.
 
 ### Vercel project
 
@@ -162,38 +157,38 @@ Use the output `api_ipv4` and `api_ipv6` values when configuring DNS.
 2. Set **Root Directory** to `apps/web`.
 3. Vercel auto-detects Vite; confirm framework is "Vite".
 4. Add environment variables (`VITE_APP_API_URL=https://api.delvemoar.com`,
-   `VITE_APP_TITLE=DelveMoar`). To turn on privacy-friendly analytics,
-   also set `VITE_APP_ANALYTICS_DOMAIN` (and, for a self-hosted
-   Plausible instance, `VITE_APP_ANALYTICS_SRC`); leave them unset to
-   keep analytics off. See [analytics](analytics.md).
-5. Deploy. Note the `VERCEL_ORG_ID` and `VERCEL_PROJECT_ID` for CI
-   if you ever want to trigger Vercel deploys from Actions.
+   `VITE_APP_TITLE=DelveMoar`). To turn on privacy-friendly analytics, also set
+   `VITE_APP_ANALYTICS_DOMAIN` (and, for a self-hosted Plausible instance,
+   `VITE_APP_ANALYTICS_SRC`); leave them unset to keep analytics off. See
+   [analytics](analytics.md).
+5. Deploy. Note the `VERCEL_ORG_ID` and `VERCEL_PROJECT_ID` for CI if you ever
+   want to trigger Vercel deploys from Actions.
 
 ### DNS
 
-| Record | Type | Value |
-|---|---|---|
-| `delvemoar.com` | A | Vercel's IP (shown in Vercel > Domains) |
-| `delvemoar.com` | AAAA | Vercel's IPv6 |
-| `www.delvemoar.com` | CNAME | `cname.vercel-dns.com` |
-| `api.delvemoar.com` | A | `api_ipv4` from Terraform output |
-| `api.delvemoar.com` | AAAA | `api_ipv6` from Terraform output |
+| Record              | Type  | Value                                   |
+| ------------------- | ----- | --------------------------------------- |
+| `delvemoar.com`     | A     | Vercel's IP (shown in Vercel > Domains) |
+| `delvemoar.com`     | AAAA  | Vercel's IPv6                           |
+| `www.delvemoar.com` | CNAME | `cname.vercel-dns.com`                  |
+| `api.delvemoar.com` | A     | `api_ipv4` from Terraform output        |
+| `api.delvemoar.com` | AAAA  | `api_ipv6` from Terraform output        |
 
-Vercel handles the `www` -> apex redirect automatically once both
-domains are added to the project.
+Vercel handles the `www` -> apex redirect automatically once both domains are
+added to the project.
 
 ### GitHub Actions secrets
 
 Add these in **Settings > Environments > production**:
 
-| Secret | Value |
-|---|---|
+| Secret          | Value                                                 |
+| --------------- | ----------------------------------------------------- |
 | `FLY_API_TOKEN` | Output of `fly tokens create deploy -a delvemoar-api` |
 
 And in **Settings > Secrets and variables > Actions** (repo-level):
 
-| Secret | Value |
-|---|---|
+| Secret                      | Value                      |
+| --------------------------- | -------------------------- |
 | `TF_TOKEN_app_terraform_io` | Terraform Cloud user token |
 
 ## Observability
@@ -205,6 +200,6 @@ Quick log and health surfaces:
 - **Vercel logs**: Vercel dashboard > project > Deployments > Functions
 - **Health check**: `curl https://api.delvemoar.com/health`
 
-For error tracking, uptime checks, Postgres metrics, and alerting (Sentry
-plus Fly Grafana), and the production secrets that turn them on, see the
+For error tracking, uptime checks, Postgres metrics, and alerting (Sentry plus
+Fly Grafana), and the production secrets that turn them on, see the
 [monitoring and alerting runbook](runbooks/monitoring.md).
