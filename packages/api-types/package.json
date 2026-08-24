@@ -11,7 +11,7 @@
     "gen:zod": "kubb generate"
   },
   "devDependencies": {
-    "@kubb/cli": "^4.39.3",
+    "@kubb/cli": "^5.0.1",
     "@kubb/core": "^4.39.3",
     "@kubb/plugin-oas": "^4.39.3",
     "@kubb/plugin-zod": "^4.39.3"
