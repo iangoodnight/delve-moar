@@ -43,6 +43,14 @@ updates:
     ignore:
       - dependency-name: "typescript"
         update-types: ["version-update:semver-major"]
+      # kubb 5 is an architectural rewrite (new @kubb/fabric-* peer deps) whose
+      # config API and generated Zod output shift across the major. It spans
+      # several @kubb/* packages that can only upgrade as a coordinated set, not
+      # one Dependabot PR at a time, so the per-package major PRs each fail the
+      # drift check. Hold the major until 5.x settles; minor and patch bumps
+      # still flow through npm-minor-patch above. Tracked in #398.
+      - dependency-name: "@kubb/*"
+        update-types: ["version-update:semver-major"]
 
   # ── Python / uv (apps/api) ─────────────────────────────────────────────────
   - package-ecosystem: uv
