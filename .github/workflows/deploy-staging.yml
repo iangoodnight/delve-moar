@@ -1,0 +1,63 @@
+name: Deploy (staging)
+
+# Manual trigger for now (ADR 0015): staging deploys when we choose, while its
+# secrets and environment are still settling. Once it is proven, flip this to
+#   on:
+#     push:
+#       branches: [dev]
+# for auto-deploy on every merge to dev. The web app deploys to staging through
+# Vercel's native dev-branch integration, so this workflow covers the API only,
+# exactly as the production deploy.yml does.
+on:
+  workflow_dispatch:
+
+# One staging deploy at a time; a newer run cancels an in-progress one.
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: true
+
+jobs:
+  # ── API: build, migrate, deploy to the staging Fly app ────────────────────
+  deploy-api:
+    name: Deploy API to Fly.io (staging)
+    runs-on: ubuntu-latest
+    environment: staging
+
+    env:
+      IMAGE: registry.fly.io/delvemoar-api-staging:${{ github.sha }}
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Authenticate with Fly registry
+        run: flyctl auth docker
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+      - name: Build API image
+        working-directory: apps/api
+        run: docker build --tag "$IMAGE" .
+
+      - name: Push image to Fly registry
+        run: docker push "$IMAGE"
+
+      - name: Run database migrations
+        # Runs alembic in an ephemeral machine using the new image, so
+        # migrations execute against the STAGING database before traffic swaps
+        # over. Exits non-zero on migration failure, aborting the deploy.
+        run: |
+          flyctl machine run "$IMAGE" \
+            --app delvemoar-api-staging \
+            --restart no \
+            --rm \
+            -- uv run alembic upgrade head
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+      - name: Deploy to Fly.io (staging)
+        working-directory: apps/api
+        run: flyctl deploy --config fly.staging.toml --image "$IMAGE" --ha=false
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
