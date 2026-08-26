@@ -42,8 +42,8 @@ tasks:
       - shfmt --indent 2 --case-indent --binary-next-line --diff scripts/*.sh
 
   lint:docs:
-    desc: Check committed Markdown formatting (prettier)
-    cmd: "git ls-files -z '*.md' | xargs -0 pnpm exec prettier --check"
+    desc: Check Markdown formatting (prettier)
+    cmd: "git ls-files -z --cached --others --exclude-standard '*.md' | xargs -0 pnpm exec prettier --check"
 
   lint:
     desc: Lint all services in parallel
@@ -71,8 +71,8 @@ tasks:
     cmd: shfmt --indent 2 --case-indent --binary-next-line --write scripts/*.sh
 
   format:docs:
-    desc: Format committed Markdown (prettier)
-    cmd: "git ls-files -z '*.md' | xargs -0 pnpm exec prettier --write"
+    desc: Format Markdown (prettier)
+    cmd: "git ls-files -z --cached --others --exclude-standard '*.md' | xargs -0 pnpm exec prettier --write"
 
   format:
     desc: Format all services in parallel
