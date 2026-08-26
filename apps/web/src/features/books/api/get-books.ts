@@ -28,5 +28,7 @@ export function getOwnedBooksQueryOptions() {
 
 // owner-scoped; an anonymous hover just no-ops on the 401
 export function prefetchOwnedBooks(queryClient: QueryClient): void {
+  // react-query deprecated prefetch* in 5.102 (removed in v6); migrate in #400
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
   void queryClient.prefetchQuery(getOwnedBooksQueryOptions());
 }

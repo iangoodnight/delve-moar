@@ -24,6 +24,8 @@ export function getBookQueryOptions(bookId: string) {
 }
 
 export function prefetchBook(queryClient: QueryClient, bookId: string): void {
+  // react-query deprecated prefetch* in 5.102 (removed in v6); migrate in #400
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
   void queryClient.prefetchQuery(getBookQueryOptions(bookId));
 }
 

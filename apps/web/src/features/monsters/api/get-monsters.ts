@@ -52,6 +52,8 @@ export function prefetchMonsters(
   queryClient: QueryClient,
   filters: MonsterFilters = {},
 ): void {
+  // react-query deprecated prefetch* in 5.102 (removed in v6); migrate in #400
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
   void queryClient.prefetchInfiniteQuery(
     getMonstersInfiniteQueryOptions(filters),
   );
