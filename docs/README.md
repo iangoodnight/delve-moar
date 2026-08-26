@@ -51,6 +51,8 @@ Operational procedures for production.
   mechanisms, RPO/RTO, and the tested restore procedure
 - [Monitoring and alerting](runbooks/monitoring.md), error tracking, uptime,
   Postgres metrics, and alert setup
+- [Staging environment](runbooks/staging.md), standing up and operating the
+  dev-deployed staging stack
 
 ### Policies
 
