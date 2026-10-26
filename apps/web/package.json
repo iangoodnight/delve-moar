@@ -22,7 +22,7 @@
     "@fontsource/atkinson-hyperlegible": "^5.3.0",
     "@fontsource/major-mono-display": "^5.3.0",
     "@goodnight-dev/string": "^0.4.0",
-    "@hookform/resolvers": "^5.9.2",
+    "@hookform/resolvers": "^6.0.0",
     "@phosphor-icons/react": "^2.1.10",
     "@radix-ui/react-navigation-menu": "^1.4.1",
     "@radix-ui/themes": "^3.3.0",
