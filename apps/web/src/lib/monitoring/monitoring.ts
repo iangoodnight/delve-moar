@@ -51,7 +51,14 @@ export function initMonitoring(): void {
     dsn: env.SENTRY_DSN,
     environment: import.meta.env.MODE,
     tracesSampleRate: 0,
-    sendDefaultPii: false,
+    // v11 replaced sendDefaultPii with dataCollection and flipped the default to
+    // collect-everything, so keep the PII vectors off explicitly (was sendDefaultPii: false).
+    dataCollection: {
+      userInfo: false,
+      cookies: false,
+      httpHeaders: false,
+      urlQueryParams: false,
+    },
     beforeSend,
     beforeBreadcrumb,
   });
