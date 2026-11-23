@@ -70,8 +70,11 @@ function stubMatchMedia(query: string): MediaQueryList {
     onchange: null,
     addEventListener: () => undefined,
     removeEventListener: () => undefined,
+    // legacy MQL listener API: deprecated, but the MediaQueryList type still requires it
+    /* eslint-disable @typescript-eslint/no-deprecated */
     addListener: () => undefined,
     removeListener: () => undefined,
+    /* eslint-enable @typescript-eslint/no-deprecated */
     dispatchEvent: () => false,
   };
 }
